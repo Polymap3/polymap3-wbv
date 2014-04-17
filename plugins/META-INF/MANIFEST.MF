@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: WBV
+Bundle-SymbolicName: org.polymap.wbv
+Bundle-Version: 1.0.0.qualifier
+Bundle-Activator: org.polymap.wbv.WbvPlugin
+Bundle-Vendor: Polymap GmbH
+Require-Bundle: org.eclipse.core.runtime,
+ org.polymap.core;bundle-version="3.1.0",
+ org.polymap.rhei.form;bundle-version="2.0.0",
+ org.polymap.core.data;bundle-version="3.1.0",
+ org.polymap.core.catalog;bundle-version="3.1.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-ActivationPolicy: lazy
