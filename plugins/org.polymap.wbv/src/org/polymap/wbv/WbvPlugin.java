@@ -15,6 +15,9 @@
 package org.polymap.wbv;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+
+import org.polymap.wbv.model.WbvRepository;
+
 import org.osgi.framework.BundleContext;
 
 /**
@@ -47,6 +50,24 @@ public class WbvPlugin extends AbstractUIPlugin {
 	public void start( BundleContext context ) throws Exception {
 		super.start( context );
 		instance = this;
+		
+//	    private static final DefaultSessionContextProvider contextProvider;
+//	    
+//	    
+//	    static {
+//	        contextProvider = new DefaultSessionContextProvider();
+//	        SessionContext.addProvider( contextProvider );
+//	    }
+//	    
+//	    public static void mapContext( String sessionKey ) {
+//	        contextProvider.mapContext( sessionKey, false );    
+//	    }
+//
+//	    public static void unmapContext() {
+//	        contextProvider.unmapContext();
+//	    }
+
+		WbvRepository.init();
 	}
 
 	

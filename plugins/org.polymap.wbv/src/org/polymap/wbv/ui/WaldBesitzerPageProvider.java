@@ -23,6 +23,8 @@ import org.opengis.feature.Feature;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.polymap.rhei.field.NullValidator;
+import org.polymap.rhei.field.StringFormField;
 import org.polymap.rhei.form.DefaultFormEditorPage;
 import org.polymap.rhei.form.FormEditor;
 import org.polymap.rhei.form.IFormEditorPage;
@@ -47,7 +49,7 @@ public class WaldBesitzerPageProvider
     public List<IFormEditorPage> addPages( FormEditor formEditor, Feature feature ) {
         log.debug( "addPages(): feature= " + feature );
         List<IFormEditorPage> result = new ArrayList();
-        if (feature.getType().getName().getLocalPart().equalsIgnoreCase( "waldbesitzer" )) {
+        if (true /*feature.getType().getName().getLocalPart().equalsIgnoreCase( "waldbesitzer" )*/) {
             result.add( new BaseFormEditorPage( feature, formEditor.getFeatureStore() ) );
         }
         return result;
@@ -63,8 +65,6 @@ public class WaldBesitzerPageProvider
 
         private WaldBesitzer            entity;
 
-        private IFormEditorPageSite     site;
-
         private IFormEditorToolkit      tk;
 
         private WbvRepository           repo;
@@ -72,9 +72,24 @@ public class WaldBesitzerPageProvider
 
         protected BaseFormEditorPage( Feature feature, FeatureStore fs ) {
             super( "", "Waldbesitzer", feature, fs );
-            this.repo = WbvRepository.instance();
-            this.entity = repo.entityForState( WaldBesitzer.class, feature );
+//            this.repo = WbvRepository.instance();
+//            this.entity = repo.entityForState( WaldBesitzer.class, feature );
         }
+
+
+        @Override
+        public void createFormContent( IFormEditorPageSite _site ) {
+            log.debug( "createFormContent(): feature= " + feature );
+            super.createFormContent( _site );
+            tk = pageSite.getToolkit();
+            
+            // ein Attributfeld im Formular erzeugen
+            newFormField( "name" ).setLabel( "Besitzer" )
+                    .setField( new StringFormField() )
+                    .setValidator( new NullValidator() )
+                    .create();
+        }
+        
     }
     
 }

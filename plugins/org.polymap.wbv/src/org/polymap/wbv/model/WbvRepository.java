@@ -15,29 +15,15 @@
 package org.polymap.wbv.model;
 
 import java.util.Collection;
-import java.util.List;
-
 import java.io.IOException;
-import java.net.URL;
-
-import net.refractions.udig.catalog.CatalogPlugin;
-import net.refractions.udig.catalog.ICatalog;
-import net.refractions.udig.catalog.IResolve;
-import net.refractions.udig.catalog.IService;
-
 import org.geotools.data.DataAccess;
-import org.geotools.data.DataStore;
 import org.geotools.factory.CommonFactoryFinder;
 import org.opengis.filter.FilterFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.eclipse.core.runtime.NullProgressMonitor;
-
-import org.polymap.core.data.feature.recordstore.catalog.RServiceExtension;
 import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.engine.EntityRepositoryImpl;
 import org.polymap.core.model2.runtime.ConcurrentEntityModificationException;
 import org.polymap.core.model2.runtime.EntityRepository;
 import org.polymap.core.model2.runtime.EntityRepositoryConfiguration;
@@ -71,36 +57,37 @@ public class WbvRepository
     /**
      * Configure and initializing the global #repo.
      */
-    static {
+    public static void init() {
         try {
-            // find service for SERVICE_ID
-            IService service = null;
-            URL url = RServiceExtension.toURL( DB_NAME );
-            ICatalog catalog = CatalogPlugin.getDefault().getLocalCatalog();
-            List<IResolve> canditates = catalog.find( url, new NullProgressMonitor() );
-            for (IResolve resolve : canditates) {
-                if (resolve.getStatus() == IResolve.Status.BROKEN) {
-                    continue;
-                }
-                if (resolve instanceof IService) {
-                    service = (IService)resolve;
-                }
-            }
-            if (service == null) {
-                throw new RuntimeException( "Kein Service im Katalog für URL: " + url );
-            }
-
-            // find DataStore from service
-            ds = service.resolve( DataStore.class, new NullProgressMonitor() );
-            if (ds == null) {
-                throw new RuntimeException( "Kein DataStore für Service: " + service );
-            }
-            // create repo
-            EntityRepositoryConfiguration repoConfig = EntityRepository.newConfiguration()
-                    .setEntities( new Class[] {
-                            WaldBesitzer.class} )
-                    .setStore( new FeatureStoreAdapter( ds ) );
-            repo = new EntityRepositoryImpl( repoConfig );
+            log.info( "Assembling repository..." );
+//            // find service for SERVICE_ID
+//            IService service = null;
+//            URL url = RServiceExtension.toURL( DB_NAME );
+//            ICatalog catalog = new CatalogPluginSession().getLocalCatalog(); //CatalogPlugin.getDefault().getLocalCatalog();
+//            List<IResolve> canditates = catalog.find( url, new NullProgressMonitor() );
+//            for (IResolve resolve : canditates) {
+//                if (resolve.getStatus() == IResolve.Status.BROKEN) {
+//                    continue;
+//                }
+//                if (resolve instanceof IService) {
+//                    service = (IService)resolve;
+//                }
+//            }
+//            if (service == null) {
+//                throw new RuntimeException( "Kein Service im Katalog für URL: " + url );
+//            }
+//
+//            // find DataStore from service
+//            ds = service.resolve( DataStore.class, new NullProgressMonitor() );
+//            if (ds == null) {
+//                throw new RuntimeException( "Kein DataStore für Service: " + service );
+//            }
+//            // create repo
+//            EntityRepositoryConfiguration repoConfig = EntityRepository.newConfiguration()
+//                    .setEntities( new Class[] {
+//                            WaldBesitzer.class} )
+//                    .setStore( new FeatureStoreAdapter( ds ) );
+//            repo = new EntityRepositoryImpl( repoConfig );
         }
         catch (RuntimeException e) {
             throw e;
@@ -115,6 +102,9 @@ public class WbvRepository
      * The {@link WbvRepository} instance for the session of the calling thread. 
      */
     public static WbvRepository instance() {
+        if (repo == null) {
+            init();
+        }
         return instance( WbvRepository.class );
     };
 

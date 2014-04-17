@@ -6,7 +6,6 @@
       <pageProvider
             class="org.polymap.wbv.ui.WaldBesitzerPageProvider"
             id="org.polymap.wbv.WaldBesitzerPageProvider"
-            isStandard="false"
             name="WaldBesitzer">
       </pageProvider>
    </extension>
