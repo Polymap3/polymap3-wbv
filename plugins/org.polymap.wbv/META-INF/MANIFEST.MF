@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: WBV
-Bundle-SymbolicName: org.polymap.wbv
+Bundle-SymbolicName: org.polymap.wbv;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: org.polymap.wbv.WbvPlugin
 Bundle-Vendor: Polymap GmbH

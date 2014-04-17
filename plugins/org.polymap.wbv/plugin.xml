@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.polymap.rhei.form.pageProviders">
+      <pageProvider
+            class="org.polymap.wbv.ui.WaldBesitzerPageProvider"
+            id="org.polymap.wbv.WaldBesitzerPageProvider"
+            isStandard="false"
+            name="WaldBesitzer">
+      </pageProvider>
+   </extension>
+
+</plugin>
