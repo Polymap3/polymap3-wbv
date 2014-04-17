@@ -14,6 +14,7 @@
  */
 package org.polymap.wbv.model;
 
+import java.util.Collection;
 import java.util.List;
 
 import java.io.IOException;
@@ -35,10 +36,14 @@ import org.apache.commons.logging.LogFactory;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
 import org.polymap.core.data.feature.recordstore.catalog.RServiceExtension;
+import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.engine.EntityRepositoryImpl;
+import org.polymap.core.model2.runtime.ConcurrentEntityModificationException;
 import org.polymap.core.model2.runtime.EntityRepository;
 import org.polymap.core.model2.runtime.EntityRepositoryConfiguration;
+import org.polymap.core.model2.runtime.ModelRuntimeException;
 import org.polymap.core.model2.runtime.UnitOfWork;
+import org.polymap.core.model2.runtime.ValueInitializer;
 import org.polymap.core.model2.store.feature.FeatureStoreAdapter;
 import org.polymap.core.runtime.SessionSingleton;
 
@@ -125,4 +130,41 @@ public class WbvRepository
         uow = repo.newUnitOfWork();
     }
 
+
+    public <T extends Entity> T entityForState( Class<T> entityClass, Object state ) {
+        return uow.entityForState( entityClass, state );
+    }
+
+
+    public <T extends Entity> T entity( Class<T> entityClass, Object id ) {
+        return uow.entity( entityClass, id );
+    }
+
+
+    public <T extends Entity> T createEntity( Class<T> entityClass, Object id,
+            ValueInitializer<T> initializer ) {
+        return uow.createEntity( entityClass, id, initializer );
+    }
+
+
+    public void removeEntity( Entity entity ) {
+        uow.removeEntity( entity );
+    }
+
+
+    public void prepare() throws IOException, ConcurrentEntityModificationException {
+        uow.prepare();
+    }
+
+
+    public void commit() throws ModelRuntimeException {
+        uow.commit();
+    }
+
+
+    public <T extends Entity> Collection<T> find( Class<T> entityClass ) {
+        return uow.find( entityClass );
+    }
+
+    
 }

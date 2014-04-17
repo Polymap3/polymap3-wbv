@@ -47,7 +47,7 @@ public class WaldBesitzerPageProvider
     public List<IFormEditorPage> addPages( FormEditor formEditor, Feature feature ) {
         log.debug( "addPages(): feature= " + feature );
         List<IFormEditorPage> result = new ArrayList();
-        if (feature.getType().getName().getLocalPart().equalsIgnoreCase( "biotop" )) {
+        if (feature.getType().getName().getLocalPart().equalsIgnoreCase( "waldbesitzer" )) {
             result.add( new BaseFormEditorPage( feature, formEditor.getFeatureStore() ) );
         }
         return result;
@@ -73,7 +73,7 @@ public class WaldBesitzerPageProvider
         protected BaseFormEditorPage( Feature feature, FeatureStore fs ) {
             super( "", "Waldbesitzer", feature, fs );
             this.repo = WbvRepository.instance();
-            this.entity = repo.findEntity( BiotopComposite.class, feature.getIdentifier().getID() );
+            this.entity = repo.entityForState( WaldBesitzer.class, feature );
         }
     }
     
