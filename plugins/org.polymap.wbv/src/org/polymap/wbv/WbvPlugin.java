@@ -14,11 +14,17 @@
  */
 package org.polymap.wbv;
 
+import org.osgi.framework.BundleContext;
+
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
-import org.polymap.wbv.model.WbvRepository;
+import org.polymap.core.runtime.DefaultSessionContextProvider;
+import org.polymap.core.runtime.Polymap;
+import org.polymap.core.runtime.SessionContext;
+import org.polymap.core.security.SecurityUtils;
+import org.polymap.core.security.UserPrincipal;
 
-import org.osgi.framework.BundleContext;
+import org.polymap.wbv.model.WbvRepository;
 
 /**
  * 
@@ -32,6 +38,7 @@ public class WbvPlugin extends AbstractUIPlugin {
 
 	private static WbvPlugin       instance;
 	
+    private static DefaultSessionContextProvider contextProvider;
 
 	/**
      * Returns the shared instance
@@ -44,30 +51,24 @@ public class WbvPlugin extends AbstractUIPlugin {
     // instance *******************************************
     
     public WbvPlugin() {
+        contextProvider = new DefaultSessionContextProvider();
+        SessionContext.addProvider( contextProvider );
 	}
 
     
 	public void start( BundleContext context ) throws Exception {
 		super.start( context );
 		instance = this;
-		
-//	    private static final DefaultSessionContextProvider contextProvider;
-//	    
-//	    
-//	    static {
-//	        contextProvider = new DefaultSessionContextProvider();
-//	        SessionContext.addProvider( contextProvider );
-//	    }
-//	    
-//	    public static void mapContext( String sessionKey ) {
-//	        contextProvider.mapContext( sessionKey, false );    
-//	    }
-//
-//	    public static void unmapContext() {
-//	        contextProvider.unmapContext();
-//	    }
 
-		WbvRepository.init();
+		try {
+		    contextProvider.mapContext( "wbv_init", true );
+            Polymap.instance().addPrincipal( new AdminPrincipal() );
+
+            WbvRepository.init();
+	    }
+		finally {
+            contextProvider.unmapContext();
+		}
 	}
 
 	
@@ -75,5 +76,22 @@ public class WbvPlugin extends AbstractUIPlugin {
 		instance = null;
 		super.stop( context );
 	}
+
+	
+    /**
+     * 
+     */
+    static class AdminPrincipal
+            extends UserPrincipal {
+
+        public AdminPrincipal() {
+            super( SecurityUtils.ADMIN_USER );
+        }
+
+        public String getPassword() {
+            throw new RuntimeException( "not yet implemented." );
+        }
+        
+    }
 
 }
