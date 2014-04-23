@@ -19,14 +19,13 @@ import org.apache.commons.logging.LogFactory;
 
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.Property;
-import org.polymap.core.model2.store.feature.SRS;
 
 /**
  * 
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-@SRS( "EPSG:31468" )
+//@SRS( "EPSG:31468" )
 public class WaldBesitzer
         extends Entity {
 
@@ -36,5 +35,10 @@ public class WaldBesitzer
      * Der Vorname fals es sich um eine natürliche Person handelt.
      */
     public Property<String>         vorname;
+    
+    /**
+     * Testen...
+     */
+    public Property<Integer>        nummer;
     
 }

@@ -14,7 +14,6 @@
  */
 package org.polymap.wbv.model;
 
-import java.util.Collection;
 import java.util.List;
 
 import java.io.IOException;
@@ -36,7 +35,6 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 
 import org.polymap.core.data.feature.recordstore.catalog.RServiceExtension;
 import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.engine.EntityRepositoryImpl;
 import org.polymap.core.model2.runtime.ConcurrentEntityModificationException;
 import org.polymap.core.model2.runtime.EntityRepository;
 import org.polymap.core.model2.runtime.EntityRepositoryConfiguration;
@@ -94,11 +92,11 @@ public class WbvRepository
                 throw new RuntimeException( "Kein DataStore für Service: " + service );
             }
             // create repo
-            EntityRepositoryConfiguration repoConfig = EntityRepository.newConfiguration()
+            repo = EntityRepository.newConfiguration()
                     .setEntities( new Class[] {
                             WaldBesitzer.class} )
-                    .setStore( new FeatureStoreAdapter( ds ) );
-            repo = new EntityRepositoryImpl( repoConfig );
+                    .setStore( new FeatureStoreAdapter( ds ) )
+                    .create();
         }
         catch (RuntimeException e) {
             throw e;
@@ -163,9 +161,8 @@ public class WbvRepository
     }
 
 
-    public <T extends Entity> Collection<T> find( Class<T> entityClass ) {
-        return uow.find( entityClass );
-    }
-
+//    public <T extends Entity> Collection<T> find( Class<T> entityClass ) {
+//        return uow.find( entityClass );
+//    }
     
 }

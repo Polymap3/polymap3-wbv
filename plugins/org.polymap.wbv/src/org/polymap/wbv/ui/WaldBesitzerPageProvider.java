@@ -84,9 +84,12 @@ public class WaldBesitzerPageProvider
             tk = pageSite.getToolkit();
             
             // ein Attributfeld im Formular erzeugen
-            newFormField( "name" ).setLabel( "Besitzer" )
+            newFormField( "vorname" ).setLabel( "Besitzer" )
                     .setField( new StringFormField() )
                     .setValidator( new NullValidator() )
+                    .create();
+            // ein Attributfeld im Formular erzeugen
+            newFormField( "nummer" ).setLabel( "Nummer" )
                     .create();
         }
         
