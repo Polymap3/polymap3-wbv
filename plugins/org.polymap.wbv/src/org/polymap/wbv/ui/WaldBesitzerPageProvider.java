@@ -89,7 +89,7 @@ public class WaldBesitzerPageProvider
                     .setValidator( new NullValidator() )
                     .create();
             // ein Attributfeld im Formular erzeugen
-            newFormField( "nummer" ).setLabel( "Nummer" )
+            newFormField( "name" ).setLabel( "Familienname" )
                     .create();
         }
         
