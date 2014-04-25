@@ -12,36 +12,41 @@
  */
 package org.polymap.wbv.model;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.polymap.core.model2.Association;
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.Property;
 import org.polymap.core.model2.store.feature.SRS;
 
-/**
- * 
- * 
- * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
- */
 @SRS("EPSG:4326")
-public class WaldBesitzer
-        extends Entity {
-
-    private static Log      log = LogFactory.getLog( WaldBesitzer.class );
+public class ForstBetriebsGemeinschaft extends Entity {
 
     /**
-     * Der Vorname einer natürlichen Person.
-     */
-    public Property<String> vorname;
-
-    /**
-     * Der Familienname einer natürlichen Person.
+     * Der Name der Forstbetriebsgemeinschaft
      */
     public Property<String> name;
 
     /**
-     * Die optionale Forstbetriebsgemeinschaft, bei der ein Waldbesitzer Mitglied ist. 
+     * Rechtsform nach BGB
      */
-    public Association<ForstBetriebsGemeinschaft> forstBetriebsGemeinschaft; 
+    public Property<String> rechtsForm;
+//  public Property<RechtsForm> rechtsForm;
+    
+    public enum RechtsForm {
+    	/** Eingetragener Verein */
+    	EV, 
+
+    	/** Wirtschaftlicher Verein */
+    	WV, 
+    	
+    	/** Eingetragene Erwerbs- und Wirtschaftsgenossenschaft */
+    	EG, 
+    	
+    	/** Gesellschaft mit beschränkter Haftung */
+    	GMBH, 
+    	
+    	/** Aktiengesellschaft */
+    	AG, 
+    	
+    	/** Kommanditgesellschaft auf Aktien */
+    	KG
+    }
 }
