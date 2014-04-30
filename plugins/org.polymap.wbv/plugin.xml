@@ -9,5 +9,24 @@
             name="WaldBesitzer">
       </pageProvider>
    </extension>
+   <extension
+         point="org.eclipse.rap.ui.branding">
+      <branding
+            body="resources/html/body.html"
+            defaultEntrypointId="org.polymap.rhei.batik.entrypoint"
+            id="org.polymap.wbv.branding"
+            servletName="wbv"
+            themeId="org.polymap.rhei.batik.theme"
+            title="WBV">
+         <additionalHeaders></additionalHeaders>
+      </branding>
+   </extension>
+   <extension
+         point="org.polymap.rhei.batik.panels">
+      <panel
+            class="org.polymap.wbv.ui.StartPanel"
+            id="org.polymap.wbv.StartPanel">
+      </panel>
+   </extension>
 
 </plugin>
