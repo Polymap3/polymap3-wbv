@@ -163,6 +163,11 @@ public class WbvRepository
     }
 
 
+    public DataAccess ds() {
+        return ds;
+    }
+
+
 //    public <T extends Entity> Collection<T> find( Class<T> entityClass ) {
 //        return uow.find( entityClass );
 //    }

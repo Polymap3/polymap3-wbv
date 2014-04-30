@@ -14,9 +14,12 @@
  */
 package org.polymap.wbv.ui;
 
+import org.opengis.filter.Filter;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
 import org.polymap.rhei.batik.DefaultPanel;
@@ -45,10 +48,22 @@ public class StartPanel
         getSite().setTitle( "Start" );
         IPanelToolkit tk = getSite().toolkit();        
     
-        IPanelSection welcome = tk.createPanelSection( parent, "Willkommen" );
+        IPanelSection welcome = tk.createPanelSection( parent, "Suche" );
         welcome.addConstraint( new PriorityConstraint( 10 ) );
-        tk.createFlowText( welcome.getBody(), "**Waldbesitzen** ist eine wunderbare Sache. Viele Leute wollen das - nur wenige tun es. Um hier den Überblick nicht zu verlieren, ist ein Verzeichnis unabdingbar." );
-    
+        tk.createText( welcome.getBody(), "Volltext...", SWT.BORDER );
+
+//        FormContainer searchForm = new FormContainer() {
+//            public void createFormContent( IFormEditorPageSite site ) {
+//                BaseFormEditorPage delegate = new WaldBesitzerPageProvider.BaseFormEditorPage( feature, fs );
+//            }
+//        };
+        
+        // results table
+        IPanelSection tableSection = tk.createPanelSection( parent, null );
+        tableSection.addConstraint( new PriorityConstraint( 0 ) );
+        new WaldbesitzerTableViewer( tableSection.getBody(), Filter.INCLUDE, SWT.NONE );
+
+        // map
         IPanelSection image = tk.createPanelSection( parent, null );
         image.addConstraint( new PriorityConstraint( 5 ) );
         tk.createFlowText( image.getBody(), "**[Karte]**" );
