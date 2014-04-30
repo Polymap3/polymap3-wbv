@@ -12,6 +12,8 @@
  */
 package org.polymap.wbv.model;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.polymap.core.model2.Entity;
@@ -31,11 +33,13 @@ public class WaldBesitzer
     /**
      * Der Vorname einer natürlichen Person.
      */
+    @Nullable
     public Property<String> vorname;
 
     /**
      * Der Familienname einer natürlichen Person.
      */
+    @Nullable
     public Property<String> name;
 
 }

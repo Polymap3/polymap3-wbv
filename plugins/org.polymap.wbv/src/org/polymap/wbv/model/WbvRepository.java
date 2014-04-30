@@ -34,10 +34,11 @@ import org.apache.commons.logging.LogFactory;
 import org.eclipse.core.runtime.NullProgressMonitor;
 
 import org.polymap.core.data.feature.recordstore.catalog.RServiceExtension;
+import org.polymap.core.model2.Composite;
 import org.polymap.core.model2.Entity;
+import org.polymap.core.model2.runtime.CompositeInfo;
 import org.polymap.core.model2.runtime.ConcurrentEntityModificationException;
 import org.polymap.core.model2.runtime.EntityRepository;
-import org.polymap.core.model2.runtime.EntityRepositoryConfiguration;
 import org.polymap.core.model2.runtime.ModelRuntimeException;
 import org.polymap.core.model2.runtime.UnitOfWork;
 import org.polymap.core.model2.runtime.ValueInitializer;
@@ -61,8 +62,6 @@ public class WbvRepository
     private static EntityRepository         repo;
     
     private static DataAccess               ds;
-    
-    private static FeatureStoreAdapter      store;
     
     
     /**
@@ -123,9 +122,7 @@ public class WbvRepository
     private UnitOfWork                  uow;
     
 
-    public WbvRepository( EntityRepositoryConfiguration config ) throws IOException {
-        store = (FeatureStoreAdapter)config.getStore();
-        ds = store.getStore();
+    public WbvRepository() {
         uow = repo.newUnitOfWork();
     }
 
@@ -137,6 +134,11 @@ public class WbvRepository
 
     public <T extends Entity> T entity( Class<T> entityClass, Object id ) {
         return uow.entity( entityClass, id );
+    }
+
+
+    public <T extends Composite> CompositeInfo<T> infoOf( Class<T> compositeClass ) {
+        return repo.infoOf( compositeClass );
     }
 
 

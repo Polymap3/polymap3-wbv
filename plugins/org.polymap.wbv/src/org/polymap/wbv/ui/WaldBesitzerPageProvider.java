@@ -23,6 +23,10 @@ import org.opengis.feature.Feature;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.eclipse.swt.widgets.Composite;
+
+import org.eclipse.ui.forms.widgets.Section;
+
 import org.polymap.rhei.field.NullValidator;
 import org.polymap.rhei.field.StringFormField;
 import org.polymap.rhei.form.DefaultFormEditorPage;
@@ -49,7 +53,7 @@ public class WaldBesitzerPageProvider
     public List<IFormEditorPage> addPages( FormEditor formEditor, Feature feature ) {
         log.debug( "addPages(): feature= " + feature );
         List<IFormEditorPage> result = new ArrayList();
-        if (true /*feature.getType().getName().getLocalPart().equalsIgnoreCase( "waldbesitzer" )*/) {
+        if (feature.getType().getName().getLocalPart().equalsIgnoreCase( "waldbesitzer" )) {
             result.add( new BaseFormEditorPage( feature, formEditor.getFeatureStore() ) );
         }
         return result;
@@ -65,31 +69,36 @@ public class WaldBesitzerPageProvider
 
         private WaldBesitzer            entity;
 
-        private IFormEditorToolkit      tk;
-
-        private WbvRepository           repo;
+        private WbvRepository           repo = WbvRepository.instance();
         
 
         protected BaseFormEditorPage( Feature feature, FeatureStore fs ) {
-            super( "", "Waldbesitzer", feature, fs );
-//            this.repo = WbvRepository.instance();
-//            this.entity = repo.entityForState( WaldBesitzer.class, feature );
+            super( "Basisdaten", "Basisdaten", feature, fs );
+            this.entity = repo.entityForState( WaldBesitzer.class, feature );
         }
 
 
         @Override
         public void createFormContent( IFormEditorPageSite _site ) {
             log.debug( "createFormContent(): feature= " + feature );
+
             super.createFormContent( _site );
-            tk = pageSite.getToolkit();
+            _site.setEditorTitle( "Waldbesitzer: " + entity.name.get() );
             
-            // ein Attributfeld im Formular erzeugen
-            newFormField( "vorname" ).setLabel( "Besitzer" )
+            //WaldBesitzer template = repo.infoOf( WaldBesitzer.class ).getTemplate();
+
+            IFormEditorToolkit tk = _site.getToolkit();
+            Section section = newSection( "Basisdaten", false, null );
+
+            // name
+            newFormField( entity.name.getInfo().getName() ).setLabel( "Name" )
+                    .setParent( (Composite)section.getClient() )
                     .setField( new StringFormField() )
                     .setValidator( new NullValidator() )
                     .create();
-            // ein Attributfeld im Formular erzeugen
-            newFormField( "name" ).setLabel( "Familienname" )
+            //
+            newFormField( entity.vorname.getInfo().getName() )
+                    .setParent( (Composite)section.getClient() )
                     .create();
         }
         
