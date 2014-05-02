@@ -29,6 +29,8 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
 import org.polymap.core.model2.runtime.ValueInitializer;
+import org.polymap.core.ui.FormDataFactory;
+import org.polymap.core.ui.FormLayoutFactory;
 
 import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.rhei.batik.DefaultPanel;
@@ -38,6 +40,7 @@ import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
+import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 
 import org.polymap.wbv.model.WaldBesitzer;
@@ -91,8 +94,11 @@ public class StartPanel
         
         // results table
         IPanelSection tableSection = tk.createPanelSection( parent, null );
-        tableSection.addConstraint( new PriorityConstraint( 0 ) );
+        tableSection.addConstraint( new PriorityConstraint( 0 ), new MinWidthConstraint( 500, 0 ) );
+        tableSection.getBody().setLayout( FormLayoutFactory.defaults().create() );
+
         final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( tableSection.getBody(), Filter.INCLUDE, SWT.NONE );
+        FormDataFactory.filled().height( 300 ).width( 420 ).applyTo( viewer.getTable() );
         viewer.addSelectionChangedListener( new ISelectionChangedListener() {
             @Override
             public void selectionChanged( SelectionChangedEvent ev ) {
