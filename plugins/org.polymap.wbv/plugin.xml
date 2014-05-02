@@ -27,6 +27,10 @@
             class="org.polymap.wbv.ui.StartPanel"
             id="org.polymap.wbv.StartPanel">
       </panel>
+      <panel
+            class="org.polymap.wbv.ui.WaldbesitzerPanel"
+            id="org.polymap.wbv.WaldbesitzerPanel">
+      </panel>
    </extension>
 
 </plugin>

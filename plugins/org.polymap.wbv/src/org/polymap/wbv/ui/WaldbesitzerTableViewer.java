@@ -14,8 +14,15 @@
  */
 package org.polymap.wbv.ui;
 
+import static com.google.common.collect.ImmutableList.copyOf;
+import static com.google.common.collect.Iterables.transform;
+import static java.util.Arrays.asList;
+
+import java.util.List;
+
 import org.geotools.data.FeatureSource;
 import org.geotools.feature.NameImpl;
+import org.opengis.feature.Feature;
 import org.opengis.feature.type.FeatureType;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.filter.Filter;
@@ -24,6 +31,7 @@ import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.google.common.base.Function;
 import com.vividsolutions.jts.geom.Geometry;
 
 import org.eclipse.swt.SWT;
@@ -31,6 +39,9 @@ import org.eclipse.swt.widgets.Composite;
 
 import org.polymap.core.data.ui.featuretable.DefaultFeatureTableColumn;
 import org.polymap.core.data.ui.featuretable.FeatureTableViewer;
+import org.polymap.core.data.ui.featuretable.IFeatureTableElement;
+import org.polymap.core.data.ui.featuretable.SimpleFeatureTableElement;
+
 import org.polymap.wbv.model.WaldBesitzer;
 import org.polymap.wbv.model.WbvRepository;
 
@@ -82,6 +93,16 @@ public class WaldbesitzerTableViewer
         catch (Exception e) {
             throw new RuntimeException( e );
         }
+    }
+
+    
+    public List<WaldBesitzer> getSelected() {
+        return copyOf( transform( asList( getSelectedElements() ), new Function<IFeatureTableElement,WaldBesitzer>() {
+            public WaldBesitzer apply( IFeatureTableElement input ) {
+                Feature feature = ((SimpleFeatureTableElement)input).feature();
+                return repo.entityForState( WaldBesitzer.class, feature );
+            }
+        }));
     }
 
     

@@ -16,7 +16,6 @@ import javax.annotation.Nullable;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.polymap.core.model2.Association;
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.Property;
 import org.polymap.core.model2.store.feature.SRS;
@@ -44,8 +43,8 @@ public class WaldBesitzer
     @Nullable
     public Property<String> name;
 
-    /**
-     * Die optionale Forstbetriebsgemeinschaft, bei der ein Waldbesitzer Mitglied ist. 
-     */
-    public Association<ForstBetriebsGemeinschaft> forstBetriebsGemeinschaft; 
+//    /**
+//     * Die optionale Forstbetriebsgemeinschaft, bei der ein Waldbesitzer Mitglied ist. 
+//     */
+//    public Association<ForstBetriebsGemeinschaft> forstBetriebsGemeinschaft; 
 }

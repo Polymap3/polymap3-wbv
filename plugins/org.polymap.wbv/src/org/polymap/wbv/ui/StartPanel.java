@@ -22,12 +22,20 @@ import org.apache.commons.logging.LogFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+
+import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.rhei.batik.DefaultPanel;
+import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanel;
+import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
+
+import org.polymap.wbv.model.WaldBesitzer;
 
 /**
  * 
@@ -42,6 +50,19 @@ public class StartPanel
 
     public static final PanelIdentifier ID = new PanelIdentifier( "start" );
 
+    private ContextProperty<WaldBesitzer>   selected;
+    
+    @Override
+    public boolean init( IPanelSite site, IAppContext context ) {
+        super.init( site, context );
+        // nur als start panel darstellen (ohne kinder)
+        if (site.getPath().size() == 1) {
+            // init ...
+            return true;
+        }
+        return false;
+    }
+    
 
     @Override
     public void createContents( Composite parent ) {
@@ -61,7 +82,14 @@ public class StartPanel
         // results table
         IPanelSection tableSection = tk.createPanelSection( parent, null );
         tableSection.addConstraint( new PriorityConstraint( 0 ) );
-        new WaldbesitzerTableViewer( tableSection.getBody(), Filter.INCLUDE, SWT.NONE );
+        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( tableSection.getBody(), Filter.INCLUDE, SWT.NONE );
+        viewer.addSelectionChangedListener( new ISelectionChangedListener() {
+            @Override
+            public void selectionChanged( SelectionChangedEvent ev ) {
+                selected.set( viewer.getSelected().get( 0 ) );
+                getContext().openPanel( WaldbesitzerPanel.ID );
+            }
+        });
 
         // map
         IPanelSection image = tk.createPanelSection( parent, null );
