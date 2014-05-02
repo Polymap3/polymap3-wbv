@@ -14,10 +14,6 @@
  */
 package org.polymap.wbv.ui;
 
-import java.io.IOException;
-
-import org.geotools.data.FeatureStore;
-import org.geotools.feature.NameImpl;
 import org.opengis.feature.Feature;
 
 import org.apache.commons.logging.Log;
@@ -37,15 +33,18 @@ import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
+import org.polymap.rhei.batik.app.BatikApplication;
 import org.polymap.rhei.batik.app.FormContainer;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
-import org.polymap.rhei.field.NullValidator;
+import org.polymap.rhei.batik.toolkit.PriorityConstraint;
+import org.polymap.rhei.field.FormFieldEvent;
+import org.polymap.rhei.field.IFormFieldListener;
+import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.StringFormField;
 import org.polymap.rhei.form.IFormEditorPageSite;
 
 import org.polymap.wbv.model.WaldBesitzer;
 import org.polymap.wbv.model.WbvRepository;
-import org.polymap.wbv.ui.WaldBesitzerPageProvider.BaseFormEditorPage;
 
 /**
  * 
@@ -63,6 +62,10 @@ public class WaldbesitzerPanel
     private ContextProperty<WaldBesitzer>   entity;
     
     private ContextProperty<WbvRepository>  repo;
+
+    private WaldbesitzerForm                wbForm;
+
+    private IFormFieldListener              wbFormListener;
     
 
     @Override
@@ -80,50 +83,53 @@ public class WaldbesitzerPanel
     public void dispose() {
         // wenn vorher commit, dann schadet das nicht; ansonsten neue Entity verwerfen
         repo.get().rollback();
+        wbForm.removeFieldListener( wbFormListener );
     }
 
 
     @Override
     public void createContents( Composite parent ) {
         getSite().setTitle( "Waldbesitzer" );
-        IPanelSection section = getSite().toolkit().createPanelSection( parent, "Basisdaten" );
-        
-        FormContainer searchForm = new FormContainer() {
-            public void createFormContent( IFormEditorPageSite site ) {
+
+        IPanelSection basis = getSite().toolkit().createPanelSection( parent, "Basisdaten" );
+        basis.addConstraint( new PriorityConstraint( 8 ) );
+        (wbForm = new WaldbesitzerForm()).createContents( basis );
+
+        IPanelSection besitzer = getSite().toolkit().createPanelSection( parent, "Besitzer" );
+        besitzer.addConstraint( new PriorityConstraint( 7 ) );
+
+        IPanelSection karte = getSite().toolkit().createPanelSection( parent, null );
+        karte.addConstraint( new PriorityConstraint( 9 ) );
+        getSite().toolkit().createLabel( karte.getBody(), "[Karte]\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n." );
+
+        IPanelSection action = getSite().toolkit().createPanelSection( parent, null );
+        action.addConstraint( new PriorityConstraint( 10 ) );
+        createActions( action );
+    }
+
+
+    protected void createActions( IPanelSection section ) {
+        final Button submitBtn = getSite().toolkit().createButton( section.getBody(), "Fertig", SWT.PUSH );
+        submitBtn.setEnabled( false );
+        submitBtn.addSelectionListener( new SelectionAdapter() {
+            public void widgetSelected( SelectionEvent ev ) {
                 try {
-                    //
-                    NameImpl typeName = new NameImpl( repo.get().infoOf( WaldBesitzer.class ).getNameInStore() );
-                    FeatureStore fs = (FeatureStore)repo.get().ds().getFeatureSource( typeName );
-                    Feature feature = (Feature)entity.get().state();
-                    
-                    //
-                    BaseFormEditorPage delegate = new WaldBesitzerPageProvider.BaseFormEditorPage( feature, fs );
-                    delegate.createFormContent( site );
-                    
-                    //
-                    Button okBtn = site.getToolkit().createButton( site.getPageBody(), "Anlegen", SWT.PUSH );
-                    okBtn.addSelectionListener( new SelectionAdapter() {
-                        @Override
-                        public void widgetSelected( SelectionEvent ev ) {
-                            try {
-                                submitEditor();
-                                repo.get().commit();
-                            }
-                            catch (Exception e) {
-                                throw new RuntimeException( e );
-                            }
-                        }
-                    });
+                    wbForm.submit();
+                    repo.get().commit();
+                    getContext().closePanel( getSite().getPath() );
                 }
-                catch (IOException e) {
-                    throw new RuntimeException( e );
+                catch (Exception e) {
+                    BatikApplication.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );
                 }
             }
-        };
-        searchForm.createContents( section );
-        
-        //
-        new WaldbesitzerForm( entity.get() ).createContents( section );
+        });
+        wbForm.addFieldListener( wbFormListener = new IFormFieldListener() {
+            public void fieldChange( FormFieldEvent ev ) {
+                if (ev.getEventCode() == IFormFieldListener.VALUE_CHANGE && !submitBtn.isDisposed()) {
+                    submitBtn.setEnabled( wbForm.isDirty() && wbForm.isValid() );
+                }
+            }
+        });
     }
 
 
@@ -136,31 +142,24 @@ public class WaldbesitzerPanel
     /**
      * 
      */
-    public static class WaldbesitzerForm
+    public class WaldbesitzerForm
             extends FormContainer {
-
-        private WaldBesitzer            entity;
-        
-        
-        public WaldbesitzerForm( WaldBesitzer entity ) {
-            this.entity = entity;
-        }
-
 
         @Override
         public void createFormContent( IFormEditorPageSite site ) {
             site.getPageBody().setLayout( ColumnLayoutFactory.defaults().spacing( 5 ).margins( 10, 10 ).columns( 1, 1 ).create() );
-            Feature feature = (Feature)entity.state();
+            WaldBesitzer e = entity.get();
+            Feature feature = (Feature)e.state();
             
             // name
-            createField( feature.getProperty( entity.name.getInfo().getName() ) )
+            createField( feature.getProperty( e.name.getInfo().getName() ) )
                     .setLabel( "Name2" )
                     .setField( new StringFormField() )
-                    .setValidator( new NullValidator() )
+                    .setValidator( new NotEmptyValidator() )
                     .create();
             
             // einfach, mit defaults
-            createField( feature.getProperty( entity.vorname.getInfo().getName() ) ).create();
+            createField( feature.getProperty( e.vorname.getInfo().getName() ) ).create();
         }
         
     }

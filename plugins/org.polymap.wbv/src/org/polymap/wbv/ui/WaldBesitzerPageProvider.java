@@ -86,7 +86,8 @@ public class WaldBesitzerPageProvider
             //Section section = newSection( "Basisdaten", false, null );
 
             // name
-            newFormField( entity.name.getInfo().getName() ).setLabel( "Name" )
+            newFormField( entity.name.getInfo().getName() )
+                    .setLabel( "Name" )
                     .setParent( _site.getPageBody() )
                     .setField( new StringFormField() )
                     .setValidator( new NullValidator() )

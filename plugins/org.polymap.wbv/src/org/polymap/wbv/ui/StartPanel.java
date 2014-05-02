@@ -111,10 +111,10 @@ public class StartPanel
         createBtn.addSelectionListener( new SelectionAdapter() {
             @Override
             public void widgetSelected( SelectionEvent e ) {
-                WbvRepository repo = WbvRepository.instance();
-                WaldBesitzer entity = repo.createEntity( WaldBesitzer.class, null, new ValueInitializer<WaldBesitzer>() {
+                WaldBesitzer entity = repo.get().createEntity( WaldBesitzer.class, null, new ValueInitializer<WaldBesitzer>() {
                     @Override
                     public WaldBesitzer initialize( WaldBesitzer value ) throws Exception {
+                        value.vorname.set( "..." );
                         return value;
                     }
                 });
