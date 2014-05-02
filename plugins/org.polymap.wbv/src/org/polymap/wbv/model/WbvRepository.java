@@ -163,6 +163,11 @@ public class WbvRepository
     }
 
 
+    public void rollback() throws ModelRuntimeException {
+        uow.rollback();
+    }
+
+
     public DataAccess ds() {
         return ds;
     }

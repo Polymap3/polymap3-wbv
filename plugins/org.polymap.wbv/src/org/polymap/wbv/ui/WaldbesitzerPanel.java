@@ -14,17 +14,34 @@
  */
 package org.polymap.wbv.ui;
 
+import java.io.IOException;
+
+import org.geotools.data.FeatureStore;
+import org.geotools.feature.NameImpl;
+import org.opengis.feature.Feature;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 
+import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
+import org.polymap.rhei.batik.app.FormContainer;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
+import org.polymap.rhei.form.IFormEditorPageSite;
+
+import org.polymap.wbv.model.WaldBesitzer;
+import org.polymap.wbv.model.WbvRepository;
+import org.polymap.wbv.ui.WaldBesitzerPageProvider.BaseFormEditorPage;
 
 /**
  * 
@@ -39,12 +56,26 @@ public class WaldbesitzerPanel
 
     public static final PanelIdentifier ID = new PanelIdentifier( "wbv", "waldbesitzer" );
 
+    private ContextProperty<WaldBesitzer>   entity;
     
+    private ContextProperty<WbvRepository>  repo;
+    
+
     @Override
     public boolean init( IPanelSite site, IAppContext context ) {
         super.init( site, context );
+        if (entity.get() != null) {
+            log.info( "Waldbesitzer: " + entity.get() );
+        }
         // nur Anzeigen wenn direkt aufgerufen
         return false;
+    }
+
+
+    @Override
+    public void dispose() {
+        // wenn vorher commit, dann schadet das nicht; ansonsten neue Entity verwerfen
+        repo.get().rollback();
     }
 
 
@@ -52,6 +83,40 @@ public class WaldbesitzerPanel
     public void createContents( Composite parent ) {
         getSite().setTitle( "Waldbesitzer" );
         IPanelSection section = getSite().toolkit().createPanelSection( parent, "Basisdaten" );
+        
+        FormContainer searchForm = new FormContainer() {
+            public void createFormContent( IFormEditorPageSite site ) {
+                try {
+                    //
+                    NameImpl typeName = new NameImpl( repo.get().infoOf( WaldBesitzer.class ).getNameInStore() );
+                    FeatureStore fs = (FeatureStore)repo.get().ds().getFeatureSource( typeName );
+                    Feature feature = (Feature)entity.get().state();
+                    
+                    //
+                    BaseFormEditorPage delegate = new WaldBesitzerPageProvider.BaseFormEditorPage( feature, fs );
+                    delegate.createFormContent( site );
+                    
+                    //
+                    Button okBtn = site.getToolkit().createButton( site.getPageBody(), "Anlegen", SWT.PUSH );
+                    okBtn.addSelectionListener( new SelectionAdapter() {
+                        @Override
+                        public void widgetSelected( SelectionEvent ev ) {
+                            try {
+                                submitEditor();
+                                repo.get().commit();
+                            }
+                            catch (Exception e) {
+                                throw new RuntimeException( e );
+                            }
+                        }
+                    });
+                }
+                catch (IOException e) {
+                    throw new RuntimeException( e );
+                }
+            }
+        };
+        searchForm.createContents( section );
     }
 
 

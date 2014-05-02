@@ -23,17 +23,12 @@ import org.opengis.feature.Feature;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.eclipse.swt.widgets.Composite;
-
-import org.eclipse.ui.forms.widgets.Section;
-
 import org.polymap.rhei.field.NullValidator;
 import org.polymap.rhei.field.StringFormField;
 import org.polymap.rhei.form.DefaultFormEditorPage;
 import org.polymap.rhei.form.FormEditor;
 import org.polymap.rhei.form.IFormEditorPage;
 import org.polymap.rhei.form.IFormEditorPageSite;
-import org.polymap.rhei.form.IFormEditorToolkit;
 import org.polymap.rhei.form.IFormPageProvider;
 
 import org.polymap.wbv.model.WaldBesitzer;
@@ -83,22 +78,22 @@ public class WaldBesitzerPageProvider
             log.debug( "createFormContent(): feature= " + feature );
 
             super.createFormContent( _site );
-            _site.setEditorTitle( "Waldbesitzer: " + entity.name.get() );
+            //_site.setEditorTitle( "Waldbesitzer: " + entity.name.get() );
             
             //WaldBesitzer template = repo.infoOf( WaldBesitzer.class ).getTemplate();
 
-            IFormEditorToolkit tk = _site.getToolkit();
-            Section section = newSection( "Basisdaten", false, null );
+            //IFormEditorToolkit tk = _site.getToolkit();
+            //Section section = newSection( "Basisdaten", false, null );
 
             // name
             newFormField( entity.name.getInfo().getName() ).setLabel( "Name" )
-                    .setParent( (Composite)section.getClient() )
+                    .setParent( _site.getPageBody() )
                     .setField( new StringFormField() )
                     .setValidator( new NullValidator() )
                     .create();
             //
             newFormField( entity.vorname.getInfo().getName() )
-                    .setParent( (Composite)section.getClient() )
+                    .setParent( _site.getPageBody() )
                     .create();
         }
         

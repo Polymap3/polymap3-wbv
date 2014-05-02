@@ -20,10 +20,15 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+
+import org.polymap.core.model2.runtime.ValueInitializer;
 
 import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.rhei.batik.DefaultPanel;
@@ -36,6 +41,7 @@ import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 
 import org.polymap.wbv.model.WaldBesitzer;
+import org.polymap.wbv.model.WbvRepository;
 
 /**
  * 
@@ -52,12 +58,16 @@ public class StartPanel
 
     private ContextProperty<WaldBesitzer>   selected;
     
+    private ContextProperty<WbvRepository>  repo;
+    
+    
     @Override
     public boolean init( IPanelSite site, IAppContext context ) {
         super.init( site, context );
         // nur als start panel darstellen (ohne kinder)
         if (site.getPath().size() == 1) {
             // init ...
+            repo.set( WbvRepository.instance() );
             return true;
         }
         return false;
@@ -87,6 +97,22 @@ public class StartPanel
             @Override
             public void selectionChanged( SelectionChangedEvent ev ) {
                 selected.set( viewer.getSelected().get( 0 ) );
+                getContext().openPanel( WaldbesitzerPanel.ID );
+            }
+        });
+        
+        Button createBtn = tk.createButton( parent, "Waldbesitzer anlegen...", SWT.PUSH );
+        createBtn.addSelectionListener( new SelectionAdapter() {
+            @Override
+            public void widgetSelected( SelectionEvent e ) {
+                WbvRepository repo = WbvRepository.instance();
+                WaldBesitzer entity = repo.createEntity( WaldBesitzer.class, null, new ValueInitializer<WaldBesitzer>() {
+                    @Override
+                    public WaldBesitzer initialize( WaldBesitzer value ) throws Exception {
+                        return value;
+                    }
+                });
+                selected.set( entity );
                 getContext().openPanel( WaldbesitzerPanel.ID );
             }
         });
