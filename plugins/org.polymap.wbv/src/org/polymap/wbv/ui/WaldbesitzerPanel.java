@@ -29,6 +29,8 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 
+import org.polymap.core.ui.ColumnLayoutFactory;
+
 import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.IAppContext;
@@ -37,6 +39,8 @@ import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.app.FormContainer;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
+import org.polymap.rhei.field.NullValidator;
+import org.polymap.rhei.field.StringFormField;
 import org.polymap.rhei.form.IFormEditorPageSite;
 
 import org.polymap.wbv.model.WaldBesitzer;
@@ -117,12 +121,48 @@ public class WaldbesitzerPanel
             }
         };
         searchForm.createContents( section );
+        
+        //
+        new WaldbesitzerForm( entity.get() ).createContents( section );
     }
 
 
     @Override
     public PanelIdentifier id() {
         return ID;
+    }
+    
+    
+    /**
+     * 
+     */
+    public static class WaldbesitzerForm
+            extends FormContainer {
+
+        private WaldBesitzer            entity;
+        
+        
+        public WaldbesitzerForm( WaldBesitzer entity ) {
+            this.entity = entity;
+        }
+
+
+        @Override
+        public void createFormContent( IFormEditorPageSite site ) {
+            site.getPageBody().setLayout( ColumnLayoutFactory.defaults().spacing( 5 ).margins( 10, 10 ).columns( 1, 1 ).create() );
+            Feature feature = (Feature)entity.state();
+            
+            // name
+            createField( feature.getProperty( entity.name.getInfo().getName() ) )
+                    .setLabel( "Name2" )
+                    .setField( new StringFormField() )
+                    .setValidator( new NullValidator() )
+                    .create();
+            
+            // einfach, mit defaults
+            createField( feature.getProperty( entity.vorname.getInfo().getName() ) ).create();
+        }
+        
     }
     
 }
