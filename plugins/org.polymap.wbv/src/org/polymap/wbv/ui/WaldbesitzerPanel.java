@@ -23,6 +23,7 @@ import org.opengis.feature.Feature;
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.runtime.EntityRuntimeContext.EntityStatus;
 import org.polymap.core.ui.ColumnLayoutFactory;
+import org.polymap.openlayers.rap.widget.OpenLayersWidget;
 import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.IAppContext;
@@ -31,8 +32,11 @@ import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.app.BatikApplication;
 import org.polymap.rhei.batik.app.FormContainer;
+import org.polymap.rhei.batik.toolkit.ConstraintData;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
+import org.polymap.rhei.batik.toolkit.MinHeightConstraint;
+import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.field.FormFieldEvent;
 import org.polymap.rhei.field.IFormFieldListener;
@@ -69,6 +73,8 @@ public class WaldbesitzerPanel
     private WaldbesitzerForm               wbForm;
 
     private IFormFieldListener             wbFormListener;
+
+    private WBVMapViewer                   map;
 
 
     @Override
@@ -108,8 +114,11 @@ public class WaldbesitzerPanel
 
         IPanelSection karte = toolKit.createPanelSection( parent, null );
         karte.addConstraint( new PriorityConstraint( 9 ) );
-        getSite().toolkit().createLabel( karte.getBody(),
-                "[Karte]\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n." );
+
+        map = new WBVMapViewer();
+        OpenLayersWidget widget = map.createContents( karte.getBody() );
+        widget.setLayoutData( new ConstraintData( new MinWidthConstraint( 400, 1 ),
+                new MinHeightConstraint( 400, 1 ) ) );
 
         IPanelSection action = toolKit.createPanelSection( parent, null );
         action.addConstraint( new PriorityConstraint( 10 ) );
