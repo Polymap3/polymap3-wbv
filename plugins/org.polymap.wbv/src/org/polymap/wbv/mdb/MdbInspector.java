@@ -79,7 +79,14 @@ public class MdbInspector {
         List<Relationship> relationShips = db.getRelationships( table );
         for (Relationship relationship : relationShips) {
             relationship.getName();
-            printer.printRelationShip( relationship.getToTable().getName() );
+            String tableNameA = relationship.getFromTable().getName();
+            String tableNameB = relationship.getToTable().getName();
+            if (table.getName().equals( tableNameB )) {
+                printer.printForeignKey( tableNameA, tableNameB );
+            }
+            else {
+                printer.printReference( tableNameA, tableNameB );
+            }
         }
     }
 

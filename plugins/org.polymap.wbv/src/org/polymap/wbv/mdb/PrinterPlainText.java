@@ -62,8 +62,13 @@ public class PrinterPlainText {
     }
 
 
-    public void printRelationShip( String name ) {
-        out.printf( " FK: %s\n", name );
+    public void printForeignKey( String from, String to ) {
+        out.printf( " FK: %s -> %s\n", to, from );
+    }
+
+
+    public void printReference( String from, String to ) {
+        out.printf( "Ref: %s -> %s\n", to, from );
     }
 
 }
