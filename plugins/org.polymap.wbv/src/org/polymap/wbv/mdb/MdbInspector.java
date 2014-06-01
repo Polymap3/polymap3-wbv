@@ -75,36 +75,23 @@ public class MdbInspector {
     }
 
 
-    private void printRelationShips( Table table ) {
-        try {
-            List<Relationship> relationShips = db.getRelationships( table );
-            for (Relationship relationship : relationShips) {
-                relationship.getName();
-                printer.printRelationShip( relationship.getToTable().getName() );
-            }
-        }
-        catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+    private void printRelationShips( Table table ) throws IOException {
+        List<Relationship> relationShips = db.getRelationships( table );
+        for (Relationship relationship : relationShips) {
+            relationship.getName();
+            printer.printRelationShip( relationship.getToTable().getName() );
         }
     }
 
 
-    private void printFields( Table table ) {
+    private void printFields( Table table ) throws IOException {
         List<? extends Column> columns = table.getColumns();
         for (Column column : columns) {
-            try {
-                PropertyMap colProps = column.getProperties();
-                Object descProp = colProps.getValue( PropertyMap.DESCRIPTION_PROP );
-                String printableDesc = descProp instanceof String ? (String)descProp : "";
-                printer.printTableField( column.getColumnIndex(), column.getName(), column
-                        .getType().name(), column.getLength(), printableDesc );
-            }
-            catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
+            PropertyMap colProps = column.getProperties();
+            Object descProp = colProps.getValue( PropertyMap.DESCRIPTION_PROP );
+            String printableDesc = descProp instanceof String ? (String)descProp : "";
+            printer.printTableField( column.getColumnIndex(), column.getName(), column.getType()
+                    .name(), column.getLength(), printableDesc );
         }
     }
 
