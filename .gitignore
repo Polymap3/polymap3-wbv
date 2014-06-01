@@ -1,0 +1,3 @@
+plugins/org.polymap.wbv/build/
+plugins/org.polymap.wbv/lib/
+plugins/org.polymap.wbv/*.mdb
