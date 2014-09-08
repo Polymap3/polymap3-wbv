@@ -4,7 +4,7 @@
  from several maven repositories on the net. See copy.properties for
  general settings. 
  -->
-<project name="org.polymap.core.data" default="build" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+<project name="org.polymap.wbv" default="build" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 	<description>Download open source jars from the internet.</description>
 
 	<property name="lib" value="${basedir}${file.separator}lib" />
