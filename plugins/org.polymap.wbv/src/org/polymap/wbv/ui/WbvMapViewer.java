@@ -14,7 +14,7 @@ import org.polymap.openlayers.rap.widget.controls.ScaleControl;
 import org.polymap.openlayers.rap.widget.controls.ScaleLineControl;
 import org.polymap.openlayers.rap.widget.layers.WMSLayer;
 
-public class WBVMapViewer {
+public class WbvMapViewer {
 
     OpenLayersMap map;
 

@@ -1,5 +1,5 @@
 /*
- * polymap.org Copyright (C) 2014, Falko Bräutigam. All rights reserved.
+ * Copyright (C) 2014, Falko Bräutigam. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -14,20 +14,21 @@ package org.polymap.wbv.ui;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.opengis.filter.Filter;
+
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+
 import org.polymap.core.model2.runtime.ValueInitializer;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
-import org.polymap.openlayers.rap.widget.OpenLayersWidget;
+
 import org.polymap.rhei.batik.ContextProperty;
-import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.IPanelSite;
@@ -38,7 +39,11 @@ import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.MinHeightConstraint;
 import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
-import org.polymap.wbv.model.WaldBesitzer;
+
+import org.polymap.openlayers.rap.widget.OpenLayersWidget;
+import org.polymap.wbv.model.Kontakt;
+import org.polymap.wbv.model.Waldbesitzer;
+import org.polymap.wbv.model.Waldbesitzer.Klasse;
 import org.polymap.wbv.model.WbvRepository;
 
 /**
@@ -47,27 +52,26 @@ import org.polymap.wbv.model.WbvRepository;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class StartPanel
-        extends DefaultPanel
+        extends WbvPanel
         implements IPanel {
 
     private static Log                     log = LogFactory.getLog( StartPanel.class );
 
     public static final PanelIdentifier    ID  = new PanelIdentifier( "start" );
 
-    private ContextProperty<WaldBesitzer>  selected;
+    private ContextProperty<Waldbesitzer>  selected;
 
-    private ContextProperty<WbvRepository> repo;
-
-    private WBVMapViewer                   map;
+    private WbvMapViewer                   map;
 
 
     @Override
     public boolean init( IPanelSite site, IAppContext context ) {
         super.init( site, context );
-        // nur als start panel darstellen (ohne kinder)
+        
+        // nur als start panel darstellen
         if (site.getPath().size() == 1) {
-            // init ...
-            repo.set( WbvRepository.instance() );
+            // init root UnitOfWork
+            repo.set( new WbvRepository() );
             return true;
         }
         return false;
@@ -86,7 +90,7 @@ public class StartPanel
         // FormContainer searchForm = new FormContainer() {
         // public void createFormContent( IFormEditorPageSite site ) {
         // BaseFormEditorPage delegate = new
-        // WaldBesitzerPageProvider.BaseFormEditorPage( feature, fs );
+        // WaldbesitzerPageProvider.BaseFormEditorPage( feature, fs );
         // }
         // };
 
@@ -95,11 +99,11 @@ public class StartPanel
         tableSection.addConstraint( new PriorityConstraint( 0 ), new MinWidthConstraint( 500, 0 ) );
         tableSection.getBody().setLayout( FormLayoutFactory.defaults().create() );
 
-        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( tableSection.getBody(),
-                Filter.INCLUDE, SWT.NONE );
+        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( repo.get(), tableSection.getBody(),
+                repo.get().query( Waldbesitzer.class ), SWT.NONE );
+        getContext().propagate( viewer );
         FormDataFactory.filled().height( 300 ).width( 420 ).applyTo( viewer.getTable() );
         viewer.addSelectionChangedListener( new ISelectionChangedListener() {
-
             @Override
             public void selectionChanged( SelectionChangedEvent ev ) {
                 selected.set( viewer.getSelected().get( 0 ) );
@@ -109,18 +113,21 @@ public class StartPanel
 
         Button createBtn = tk.createButton( parent, "Waldbesitzer anlegen...", SWT.PUSH );
         createBtn.addSelectionListener( new SelectionAdapter() {
-
             @Override
             public void widgetSelected( SelectionEvent e ) {
-                WaldBesitzer entity = repo.get().createEntity( WaldBesitzer.class, null,
-                        new ValueInitializer<WaldBesitzer>() {
-
-                            @Override
-                            public WaldBesitzer initialize( WaldBesitzer value ) throws Exception {
-                                value.vorname.set( "..." );
-                                return value;
-                            }
-                        } );
+                Waldbesitzer entity = repo.get().createEntity( Waldbesitzer.class, null,
+                    new ValueInitializer<Waldbesitzer>() {
+                        public Waldbesitzer initialize( Waldbesitzer prototype ) throws Exception {
+                            prototype.klasse.set( Klasse.Privat );
+                            prototype.ansprechpartner.createElement( new ValueInitializer<Kontakt>() {
+                                public Kontakt initialize( Kontakt kontakt ) throws Exception {
+                                    kontakt.name.set( "Beispiel" );
+                                    return kontakt;
+                                }
+                            });
+                            return prototype;
+                        }
+                });
                 selected.set( entity );
                 getContext().openPanel( WaldbesitzerPanel.ID );
             }
@@ -129,7 +136,7 @@ public class StartPanel
         // map
         IPanelSection karte = tk.createPanelSection( parent, null );
         karte.addConstraint( new PriorityConstraint( 5 ) );
-        map = new WBVMapViewer();
+        map = new WbvMapViewer();
         OpenLayersWidget widget = map.createContents( karte.getBody() );
         widget.setLayoutData( new ConstraintData( new MinWidthConstraint( 400, 1 ),
                 new MinHeightConstraint( 400, 1 ) ) );

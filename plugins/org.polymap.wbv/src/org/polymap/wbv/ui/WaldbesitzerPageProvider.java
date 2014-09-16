@@ -23,26 +23,23 @@ import org.opengis.feature.Feature;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.rhei.field.NullValidator;
-import org.polymap.rhei.field.StringFormField;
 import org.polymap.rhei.form.DefaultFormEditorPage;
 import org.polymap.rhei.form.FormEditor;
 import org.polymap.rhei.form.IFormEditorPage;
 import org.polymap.rhei.form.IFormEditorPageSite;
 import org.polymap.rhei.form.IFormPageProvider;
 
-import org.polymap.wbv.model.WaldBesitzer;
-import org.polymap.wbv.model.WbvRepository;
+import org.polymap.wbv.model.Waldbesitzer;
 
 /**
  * 
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public class WaldBesitzerPageProvider
+public class WaldbesitzerPageProvider
         implements IFormPageProvider {
 
-    private static Log log = LogFactory.getLog( WaldBesitzerPageProvider.class );
+    private static Log log = LogFactory.getLog( WaldbesitzerPageProvider.class );
 
 
     public List<IFormEditorPage> addPages( FormEditor formEditor, Feature feature ) {
@@ -62,40 +59,40 @@ public class WaldBesitzerPageProvider
             extends DefaultFormEditorPage
             implements IFormEditorPage {
 
-        private WaldBesitzer            entity;
+        private Waldbesitzer            entity;
 
-        private WbvRepository           repo = WbvRepository.instance();
+//        private WbvRepository           repo = WbvRepository.instance();
         
 
         protected BaseFormEditorPage( Feature feature, FeatureStore fs ) {
             super( "Basisdaten", "Basisdaten", feature, fs );
-            this.entity = repo.entityForState( WaldBesitzer.class, feature );
+//            this.entity = repo.entityForState( Waldbesitzer.class, feature );
         }
 
 
         @Override
         public void createFormContent( IFormEditorPageSite _site ) {
-            log.debug( "createFormContent(): feature= " + feature );
-
-            super.createFormContent( _site );
-            //_site.setEditorTitle( "Waldbesitzer: " + entity.name.get() );
-            
-            //WaldBesitzer template = repo.infoOf( WaldBesitzer.class ).getTemplate();
-
-            //IFormEditorToolkit tk = _site.getToolkit();
-            //Section section = newSection( "Basisdaten", false, null );
-
-            // name
-            newFormField( entity.name.getInfo().getName() )
-                    .setLabel( "Name" )
-                    .setParent( _site.getPageBody() )
-                    .setField( new StringFormField() )
-                    .setValidator( new NullValidator() )
-                    .create();
-            //
-            newFormField( entity.vorname.getInfo().getName() )
-                    .setParent( _site.getPageBody() )
-                    .create();
+//            log.debug( "createFormContent(): feature= " + feature );
+//
+//            super.createFormContent( _site );
+//            //_site.setEditorTitle( "Waldbesitzer: " + entity.name.get() );
+//            
+//            //Waldbesitzer template = repo.infoOf( Waldbesitzer.class ).getTemplate();
+//
+//            //IFormEditorToolkit tk = _site.getToolkit();
+//            //Section section = newSection( "Basisdaten", false, null );
+//
+//            // name
+//            newFormField( entity.name.getInfo().getName() )
+//                    .setLabel( "Name" )
+//                    .setParent( _site.getPageBody() )
+//                    .setField( new StringFormField() )
+//                    .setValidator( new NullValidator() )
+//                    .create();
+//            //
+//            newFormField( entity.vorname.getInfo().getName() )
+//                    .setParent( _site.getPageBody() )
+//                    .create();
         }
         
     }

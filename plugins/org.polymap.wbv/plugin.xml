@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-   <extension
+   <!--extension
          point="org.polymap.rhei.form.pageProviders">
       <pageProvider
-            class="org.polymap.wbv.ui.WaldBesitzerPageProvider"
+            class="org.polymap.wbv.ui.WaldbesitzerPageProvider"
             id="org.polymap.wbv.WaldBesitzerPageProvider"
             name="WaldBesitzer">
       </pageProvider>
-   </extension>
+   </extension-->
    <extension
          point="org.eclipse.rap.ui.branding">
       <branding

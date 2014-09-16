@@ -12,39 +12,35 @@
  */
 package org.polymap.wbv.model;
 
-import javax.annotation.Nullable;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.Property;
+import org.polymap.core.model2.Queryable;
 import org.polymap.core.model2.store.feature.SRS;
 
 /**
- * 
+ * Siehe <a href="http://polymap.org/wbv/wiki/Konzept#b5t">Spezifikation</a>.
  * 
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 @SRS("EPSG:4326")
-public class WaldBesitzer
+public class Baumart
         extends Entity {
 
-    private static Log      log = LogFactory.getLog( WaldBesitzer.class );
-
-    /**
-     * Der Vorname einer natürlichen Person.
-     */
-    @Nullable
-    public Property<String> vorname;
-
-    /**
-     * Der Familienname einer natürlichen Person.
-     */
-    @Nullable
-    public Property<String> name;
-
-//    /**
-//     * Die optionale Forstbetriebsgemeinschaft, bei der ein Waldbesitzer Mitglied ist. 
-//     */
-//    public Association<ForstBetriebsGemeinschaft> forstBetriebsGemeinschaft; 
+    public enum Haerte {
+        Hartholf, Weichholz;
+    }
+    
+    public enum Blatt {
+        Laub, Nadel;
+    }
+    
+    @Queryable
+    public Property<String>         name;
+    
+    @Queryable
+    public Property<Haerte>         haerte;
+    
+    @Queryable
+    public Property<Blatt>          blatt;
+    
 }

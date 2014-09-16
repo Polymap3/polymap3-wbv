@@ -1,5 +1,5 @@
 /*
- * polymap.org Copyright (C) 2013, Falko Bräutigam. All rights reserved.
+ * Copyright (C) 2013-2014, Falko Bräutigam. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -16,33 +16,39 @@ import static com.google.common.collect.ImmutableList.copyOf;
 import static com.google.common.collect.Iterables.transform;
 import static java.util.Arrays.asList;
 
-import java.beans.PropertyChangeEvent;
 import java.util.List;
 
+import java.beans.PropertyChangeEvent;
+
+import org.geotools.feature.NameImpl;
+import org.geotools.feature.type.AttributeDescriptorImpl;
+import org.geotools.feature.type.AttributeTypeImpl;
+import org.opengis.feature.Feature;
+import org.opengis.feature.type.AttributeType;
+import org.opengis.feature.type.PropertyDescriptor;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import com.google.common.base.Function;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-import org.geotools.data.FeatureSource;
-import org.geotools.feature.NameImpl;
-import org.opengis.feature.Feature;
-import org.opengis.feature.type.FeatureType;
-import org.opengis.feature.type.PropertyDescriptor;
-import org.opengis.filter.Filter;
+
+import org.eclipse.jface.viewers.ColumnLabelProvider;
+
 import org.polymap.core.data.ui.featuretable.DefaultFeatureTableColumn;
 import org.polymap.core.data.ui.featuretable.FeatureTableViewer;
 import org.polymap.core.data.ui.featuretable.IFeatureTableElement;
 import org.polymap.core.data.ui.featuretable.SimpleFeatureTableElement;
+import org.polymap.core.model2.query.Query;
 import org.polymap.core.runtime.event.Event;
 import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
-import org.polymap.wbv.model.WaldBesitzer;
-import org.polymap.wbv.model.WbvRepository;
 
-import com.google.common.base.Function;
-import com.vividsolutions.jts.geom.Geometry;
+import org.polymap.wbv.model.Waldbesitzer;
+import org.polymap.wbv.model.WbvRepository;
+import org.polymap.wbv.ui.CompositesFeatureContentProvider.FeatureTableElement;
 
 /**
  * 
@@ -56,47 +62,28 @@ public class WaldbesitzerTableViewer
 
     private static final FastDateFormat df   = FastDateFormat.getInstance( "dd.MM.yyyy" );
 
-    private Filter                      baseFilter;
+    private Query<Waldbesitzer>         query;
 
-    private FeatureSource               fs;
-
-    private FeatureType                 schema;
-
-    private WbvRepository               repo = WbvRepository.instance();
+    private WbvRepository               repo;
 
 
-    public WaldbesitzerTableViewer( Composite parent, Filter baseFilter, int style ) {
+    public WaldbesitzerTableViewer( WbvRepository repo, Composite parent, Query<Waldbesitzer> query, int style ) {
         super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | SWT.FULL_SELECTION | */SWT.NONE );
+        this.repo = repo;
+        this.query = query;
         try {
-            NameImpl typeName = new NameImpl( repo.infoOf( WaldBesitzer.class ).getNameInStore() );
-            fs = repo.ds().getFeatureSource( typeName );
-            schema = fs.getSchema();
-
-            // addColumn( new NatureColumn() );
-            // addColumn( new NameColumn() );
-            // addColumn( new DateColumn() );
-
-            for (PropertyDescriptor prop : schema.getDescriptors()) {
-                if (Geometry.class.isAssignableFrom( prop.getType().getBinding() )) {
-                    // skip Geometry
-                }
-                else {
-                    addColumn( new DefaultFeatureTableColumn( prop ) );
-                }
-            }
+            addColumn( new NameColumn() );
 
             // suppress deferred loading to fix "empty table" issue
             // setContent( fs.getFeatures( this.baseFilter ) );
-            setContent( fs, baseFilter );
+            setContent( new CompositesFeatureContentProvider( query.execute() ) );
 
             /* Register for property change events */
             EventManager.instance().subscribe( this, new EventFilter<PropertyChangeEvent>() {
-
-                @Override
                 public boolean apply( PropertyChangeEvent input ) {
-                    return input.getSource() instanceof WaldBesitzer;
+                    return input.getSource() instanceof Waldbesitzer;
                 }
-            } );
+            });
         }
         catch (Exception e) {
             throw new RuntimeException( e );
@@ -104,7 +91,7 @@ public class WaldbesitzerTableViewer
     }
 
 
-    @EventHandler(display = true, delay = 1000, scope = Event.Scope.JVM)
+    @EventHandler(display=true, delay=1000, scope=Event.Scope.JVM)
     protected void someWaldBesitzerChanged( List<PropertyChangeEvent> ev ) {
         if (!getControl().isDisposed()) {
             refresh();
@@ -112,115 +99,42 @@ public class WaldbesitzerTableViewer
     }
 
 
-    public List<WaldBesitzer> getSelected() {
+    public List<Waldbesitzer> getSelected() {
         return copyOf( transform( asList( getSelectedElements() ),
-                new Function<IFeatureTableElement,WaldBesitzer>() {
+                new Function<IFeatureTableElement,Waldbesitzer>() {
 
                     @Override
-                    public WaldBesitzer apply( IFeatureTableElement input ) {
+                    public Waldbesitzer apply( IFeatureTableElement input ) {
                         Feature feature = ((SimpleFeatureTableElement)input).feature();
-                        return repo.entityForState( WaldBesitzer.class, feature );
+                        return repo.entityForState( Waldbesitzer.class, feature );
                     }
                 } ) );
     }
 
-    // public IMosaicCase entity( String fid ) {
-    // return repo.entity( MosaicCase2.class, fid );
-    // }
-    //
-    //
-    // public IMosaicCase entity( Feature entityState ) {
-    // return repo.entityForState( MosaicCase2.class, entityState );
-    // }
+    /**
+     *
+     */
+    class NameColumn
+            extends DefaultFeatureTableColumn {
 
-    // /**
-    // *
-    // */
-    // class StatusColumn
-    // extends DefaultFeatureTableColumn {
-    //
-    // public StatusColumn() {
-    // super( schema.getDescriptor( new NameImpl( "name" ) ) );
-    // setWeight( 1, 90 );
-    // setHeader( "" );
-    // setAlign( SWT.CENTER );
-    // setSortable( false );
-    //
-    // setLabelProvider( new ColumnLabelProvider() {
-    // @Override
-    // public String getText( Object elm ) {
-    // String fid = ((IFeatureTableElement)elm).fid();
-    // MosaicCase2 mcase = repo.entity( MosaicCase2.class, fid );
-    // String status = mcase.getStatus(); //MosaicCaseEvents.caseStatus( mcase );
-    // if (IMosaicCaseEvent.TYPE_NEW.equals( status )) {
-    // return "NEU";
-    // }
-    // else if (IMosaicCaseEvent.TYPE_CLOSED.equals( status )) {
-    // return "ERLEDIGT";
-    // }
-    // else {
-    // return "OFFEN";
-    // }
-    // }
-    // @Override
-    // public Color getBackground( Object elm ) {
-    // String fid = ((IFeatureTableElement)elm).fid();
-    // MosaicCase2 mcase = repo.entity( MosaicCase2.class, fid );
-    // String status = mcase.getStatus(); //MosaicCaseEvents.caseStatus( mcase );
-    // if (IMosaicCaseEvent.TYPE_NEW.equals( status )) {
-    // return MosaicUiPlugin.COLOR_NEW.get();
-    // }
-    // else if (IMosaicCaseEvent.TYPE_CLOSED.equals( status )) {
-    // return MosaicUiPlugin.COLOR_CLOSED.get();
-    // }
-    // else {
-    // return MosaicUiPlugin.COLOR_OPEN.get();
-    // }
-    // }
-    // @Override
-    // public Color getForeground( Object elm ) {
-    // return MosaicUiPlugin.COLOR_STATUS_FOREGROUND.get();
-    // }
-    // // @Override
-    // // public Font getFont( Object element ) {
-    // // FontData[] defaultFont = getTable().getFont().getFontData();
-    // // FontData bold = new FontData(defaultFont[0].getName(),
-    // defaultFont[0].getHeight(), SWT.BOLD);
-    // // return Graphics.getFont( bold );
-    // // }
-    // });
-    // }
-    // }
-    //
-    //
-    // /**
-    // *
-    // */
-    // class NameColumn
-    // extends DefaultFeatureTableColumn {
-    //
-    // public NameColumn() {
-    // super( createDescriptor( "name", String.class ) );
-    // setWeight( 2, 120 );
-    // setHeader( "Bezeichnung" );
-    // setAlign( SWT.LEFT );
-    // setLabelProvider( new ColumnLabelProvider() {
-    // @Override
-    // public String getText( Object elm ) {
-    // IMosaicCase mcase = new CaseFinder().apply( (IFeatureTableElement)elm );
-    // return mcase.getName();
-    // }
-    // @Override
-    // public String getToolTipText( Object elm ) {
-    // String fid = ((IFeatureTableElement)elm).fid();
-    // MosaicCase2 mcase = repo.entity( MosaicCase2.class, fid );
-    // String username = mcase.get( "user" );
-    // return username;
-    // }
-    // });
-    // }
-    // }
-    //
+        public NameColumn() {
+            super( createDescriptor( "name", String.class ) );
+            setWeight( 2, 120 );
+            setHeader( "Name" );
+            setAlign( SWT.LEFT );
+            setLabelProvider( new ColumnLabelProvider() {
+                @Override
+                public String getText( Object elm ) {
+                    Waldbesitzer waldbesitzer = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
+                    return waldbesitzer.besitzer().anzeigename();
+                }
+//                @Override
+//                public String getToolTipText( Object elm ) {
+//                }
+            });
+        }
+    }
+
     //
     // /**
     // *
@@ -264,13 +178,11 @@ public class WaldbesitzerTableViewer
     // });
     // }
     // }
-    //
-    // public static PropertyDescriptor createDescriptor( String _name, Class binding
-    // ) {
-    // NameImpl name = new NameImpl( _name );
-    // AttributeType type = new AttributeTypeImpl( name,binding, true, false, null,
-    // null, null );
-    // return new AttributeDescriptorImpl( type, name, 1, 1, false, null );
-    // }
+
+    public static PropertyDescriptor createDescriptor( String _name, Class binding ) {
+        NameImpl name = new NameImpl( _name );
+        AttributeType type = new AttributeTypeImpl( name, binding, true, false, null, null, null );
+        return new AttributeDescriptorImpl( type, name, 1, 1, false, null );
+    }
 
 }

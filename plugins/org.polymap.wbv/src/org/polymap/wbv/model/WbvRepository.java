@@ -33,25 +33,25 @@ import org.apache.commons.logging.LogFactory;
 
 import org.eclipse.core.runtime.NullProgressMonitor;
 
+import org.polymap.core.data.feature.recordstore.RDataStore;
 import org.polymap.core.data.feature.recordstore.catalog.RServiceExtension;
 import org.polymap.core.model2.Composite;
 import org.polymap.core.model2.Entity;
+import org.polymap.core.model2.query.Query;
 import org.polymap.core.model2.runtime.CompositeInfo;
 import org.polymap.core.model2.runtime.ConcurrentEntityModificationException;
 import org.polymap.core.model2.runtime.EntityRepository;
 import org.polymap.core.model2.runtime.ModelRuntimeException;
 import org.polymap.core.model2.runtime.UnitOfWork;
 import org.polymap.core.model2.runtime.ValueInitializer;
-import org.polymap.core.model2.store.feature.FeatureStoreAdapter;
-import org.polymap.core.runtime.SessionSingleton;
+import org.polymap.core.model2.store.recordstore.RecordStoreAdapter;
 
 /**
  * 
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public class WbvRepository
-        extends SessionSingleton {
+public class WbvRepository {
 
     private static Log log = LogFactory.getLog( WbvRepository.class );
     
@@ -61,19 +61,17 @@ public class WbvRepository
     
     private static EntityRepository         repo;
     
-    private static DataAccess               ds;
-    
     
     /**
-     * Configure and initializing the global #repo.
+     * Configure and initializing the global {@link #repo}.
      */
     public static void init() {
         try {
             log.info( "Assembling repository..." );
+            
             // find service for SERVICE_ID
             IService service = null;
             URL url = RServiceExtension.toURL( DB_NAME );
-//            ICatalog catalog = new CatalogPluginSession().getLocalCatalog();
             ICatalog catalog = CatalogPlugin.getDefault().getLocalCatalog();
             List<IResolve> canditates = catalog.find( url, new NullProgressMonitor() );
             for (IResolve resolve : canditates) {
@@ -86,15 +84,14 @@ public class WbvRepository
             }
 
             // find DataStore from service
-            ds = service.resolve( DataAccess.class, new NullProgressMonitor() );
+            DataAccess ds = service.resolve( DataAccess.class, new NullProgressMonitor() );
             if (ds == null) {
                 throw new RuntimeException( "Kein DataStore für Service: " + service );
             }
             // create repo
             repo = EntityRepository.newConfiguration()
-                    .setEntities( new Class[] {
-                            WaldBesitzer.class} )
-                    .setStore( new FeatureStoreAdapter( ds ) )
+                    .setEntities( new Class[] {Revier.class, Waldstueck.class, Waldbesitzer.class, Kontakt.class} )
+                    .setStore( new RecordStoreAdapter( ((RDataStore)ds).getStore() ) )
                     .create();
         }
         catch (RuntimeException e) {
@@ -106,27 +103,42 @@ public class WbvRepository
     }
     
     
-    /**
-     * The {@link WbvRepository} instance for the session of the calling thread. 
-     */
-    public static WbvRepository instance() {
-        if (repo == null) {
-            init();
-        }
-        return instance( WbvRepository.class );
-    };
+//    /**
+//     * The {@link WbvRepository} instance for the session of the calling thread. 
+//     */
+//    public static WbvRepository instance() {
+//        if (repo == null) {
+//            init();
+//        }
+//        return instance( WbvRepository.class );
+//    };
 
         
+    public static EntityRepository repo() {
+        return repo;
+    }
+
+
     // instance *******************************************
         
     private UnitOfWork                  uow;
     
 
     public WbvRepository() {
-        uow = repo.newUnitOfWork();
+        this.uow = repo.newUnitOfWork();
     }
 
+    
+    public WbvRepository( UnitOfWork uow ) {
+        this.uow = uow;
+    }
 
+    
+    public WbvRepository newNested() {
+        return new WbvRepository( uow.newUnitOfWork() );
+    }
+
+    
     public <T extends Entity> T entityForState( Class<T> entityClass, Object state ) {
         return uow.entityForState( entityClass, state );
     }
@@ -134,6 +146,11 @@ public class WbvRepository
 
     public <T extends Entity> T entity( Class<T> entityClass, Object id ) {
         return uow.entity( entityClass, id );
+    }
+
+
+    public <T extends Entity> Query<T> query( Class<T> entityClass ) {
+        return uow.query( entityClass );
     }
 
 
@@ -168,8 +185,8 @@ public class WbvRepository
     }
 
 
-    public DataAccess ds() {
-        return ds;
+    public UnitOfWork uow() {
+        return uow;
     }
 
 

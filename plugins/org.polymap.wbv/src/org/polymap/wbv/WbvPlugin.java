@@ -40,6 +40,12 @@ public class WbvPlugin extends AbstractUIPlugin {
 	
     private static DefaultSessionContextProvider contextProvider;
 
+    static {
+        System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.core.data.feature.recordstore", "debug" );
+        System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.core.runtime.recordstore.lucene", "debug" );
+        System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.core.model2.store.recordstore", "debug" );
+    }
+    
 	/**
      * Returns the shared instance
      */

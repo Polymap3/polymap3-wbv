@@ -1,5 +1,5 @@
 /*
- * polymap.org Copyright (C) 2014, Polymap GmbH. All rights reserved.
+ * Copyright (C) 2014, Polymap GmbH. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -19,13 +19,11 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.opengis.feature.Feature;
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.runtime.EntityRuntimeContext.EntityStatus;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.openlayers.rap.widget.OpenLayersWidget;
 import org.polymap.rhei.batik.ContextProperty;
-import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.IPanelSite;
@@ -40,11 +38,8 @@ import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.field.FormFieldEvent;
 import org.polymap.rhei.field.IFormFieldListener;
-import org.polymap.rhei.field.NotEmptyValidator;
-import org.polymap.rhei.field.StringFormField;
 import org.polymap.rhei.form.IFormEditorPageSite;
-import org.polymap.wbv.model.WaldBesitzer;
-import org.polymap.wbv.model.WbvRepository;
+import org.polymap.wbv.model.Waldbesitzer;
 
 /**
  * 
@@ -53,20 +48,14 @@ import org.polymap.wbv.model.WbvRepository;
  */
 @SuppressWarnings("serial")
 public class WaldbesitzerPanel
-        extends DefaultPanel
+        extends WbvPanel
         implements IPanel {
 
     private static Log                     log = LogFactory.getLog( WaldbesitzerPanel.class );
 
     public static final PanelIdentifier    ID  = new PanelIdentifier( "wbv", "waldbesitzer" );
 
-    private ContextProperty<WaldBesitzer>  entityCtxProperty;
-
-    private ContextProperty<WbvRepository> repoCtxProperty;
-
-    private WbvRepository                  repo;
-
-    private WaldBesitzer                   entity;
+    private ContextProperty<Waldbesitzer>  waldbesitzer;
 
     private IPanelToolkit                  toolKit;
 
@@ -74,18 +63,15 @@ public class WaldbesitzerPanel
 
     private IFormFieldListener             wbFormListener;
 
-    private WBVMapViewer                   map;
+    private WbvMapViewer                   map;
 
 
     @Override
     public boolean init( IPanelSite site, IAppContext context ) {
         super.init( site, context );
-        if (entityCtxProperty.get() != null) {
-            entity = entityCtxProperty.get();
-            log.info( "Waldbesitzer: " + entityCtxProperty.get() );
-        }
-        repo = repoCtxProperty.get();
 
+        log.debug( "repo: " + repo.get() );
+        
         // nur Anzeigen wenn direkt aufgerufen
         return false;
     }
@@ -93,9 +79,8 @@ public class WaldbesitzerPanel
 
     @Override
     public void dispose() {
-        // wenn vorher commit, dann schadet das nicht; ansonsten neue Entity
-        // verwerfen
-        repo.rollback();
+        // wenn vorher commit, dann schadet das nicht; ansonsten neue Entity verwerfen
+        repo.get().rollback();
         wbForm.removeFieldListener( wbFormListener );
     }
 
@@ -115,7 +100,7 @@ public class WaldbesitzerPanel
         IPanelSection karte = toolKit.createPanelSection( parent, null );
         karte.addConstraint( new PriorityConstraint( 9 ) );
 
-        map = new WBVMapViewer();
+        map = new WbvMapViewer();
         OpenLayersWidget widget = map.createContents( karte.getBody() );
         widget.setLayoutData( new ConstraintData( new MinWidthConstraint( 400, 1 ),
                 new MinHeightConstraint( 400, 1 ) ) );
@@ -123,7 +108,7 @@ public class WaldbesitzerPanel
         IPanelSection action = toolKit.createPanelSection( parent, null );
         action.addConstraint( new PriorityConstraint( 10 ) );
         createActions( action );
-        addDeleteAction( action );
+//        addDeleteAction( action );
     }
 
 
@@ -136,7 +121,7 @@ public class WaldbesitzerPanel
             public void widgetSelected( SelectionEvent ev ) {
                 try {
                     wbForm.submit();
-                    repo.commit();
+                    repo.get().commit();
                     getContext().closePanel( getSite().getPath() );
                 }
                 catch (Exception e) {
@@ -162,32 +147,33 @@ public class WaldbesitzerPanel
     }
 
 
-    protected void addDeleteAction( IPanelSection section ) {
-        if (entityMayBeDeleted( entity )) {
-            final String formatString = (entity.vorname.get() != null && entity.name.get() != null)
-                    ? "'%s %s' Löschen"
-                    : "Löschen";
-            final String btnText = String.format( formatString, entity.vorname.get(),
-                    entity.name.get() );
-            final Button submitBtn = toolKit.createButton( section.getBody(), btnText, SWT.PUSH );
-
-            submitBtn.addSelectionListener( new SelectionAdapter() {
-
-                @Override
-                public void widgetSelected( SelectionEvent eb ) {
-                    try {
-                        repo.removeEntity( entity );
-                        repo.commit();
-                        getContext().closePanel( getSite().getPath() );
-                    }
-                    catch (Exception e) {
-                        BatikApplication.handleError(
-                                "Das Löschen des Waldbesitzers ist fehlgeschlagen.", e );
-                    }
-                };
-            } );
-        }
-    }
+//    protected void addDeleteAction( IPanelSection section ) {
+//        Waldbesitzer entity = waldbesitzer.get();
+//        if (entityMayBeDeleted( entity )) {
+//            final String formatString = (entity.vorname.get() != null && entity.name.get() != null)
+//                    ? "'%s %s' Löschen"
+//                    : "Löschen";
+//            final String btnText = String.format( formatString, entity.vorname.get(),
+//                    entity.name.get() );
+//            final Button submitBtn = toolKit.createButton( section.getBody(), btnText, SWT.PUSH );
+//
+//            submitBtn.addSelectionListener( new SelectionAdapter() {
+//
+//                @Override
+//                public void widgetSelected( SelectionEvent eb ) {
+//                    try {
+//                        repo.removeEntity( entity );
+//                        repo.commit();
+//                        getContext().closePanel( getSite().getPath() );
+//                    }
+//                    catch (Exception e) {
+//                        BatikApplication.handleError(
+//                                "Das Löschen des Waldbesitzers ist fehlgeschlagen.", e );
+//                    }
+//                };
+//            } );
+//        }
+//    }
 
 
     @Override
@@ -205,17 +191,17 @@ public class WaldbesitzerPanel
         @Override
         public void createFormContent( IFormEditorPageSite site ) {
             site.getPageBody().setLayout(
-                    ColumnLayoutFactory.defaults().spacing( 5 ).margins( 10, 10 ).columns( 1, 1 )
-                            .create() );
-            Feature feature = (Feature)entity.state();
+                    ColumnLayoutFactory.defaults().spacing( 5 ).margins( 10, 10 ).columns( 1, 1 ).create() );
+            
+            Waldbesitzer entity = waldbesitzer.get();
 
             // einfach, mit defaults
-            createField( feature.getProperty( entity.vorname.getInfo().getName() ) ).create();
+            createField( new PropertyAdapter( entity.klasse ) ).create();
 
-            // name
-            createField( feature.getProperty( entity.name.getInfo().getName() ) )
-                    .setLabel( "Nachname" ).setField( new StringFormField() )
-                    .setValidator( new NotEmptyValidator() ).create();
+//            // name
+//            createField( feature.getProperty( entity.name.getInfo().getName() ) )
+//                    .setLabel( "Nachname" ).setField( new StringFormField() )
+//                    .setValidator( new NotEmptyValidator() ).create();
         }
 
     }
