@@ -30,38 +30,39 @@ import org.polymap.core.model2.store.feature.SRS;
 @SRS("EPSG:4326")
 public class Waldbesitzer
         extends Entity {
-    
-    public enum Klasse {
+
+    public enum Waldeigentumsart {
+        /** Staatswald (Land Sachsen, Bund) */
+        Staat,
         /** Kommunen, Kirchen, Vereine */
         Körperschaft,
+        /** Kirchen */
+        Kirche,
         /** Privates Eigentum (Einzelpersonen, Unternehmen) */
-        Privat,
-        /** Staatswald (Land Sachsen, Bund) */
-        Staatswald
+        Privat
     }
-    
-    public Property<Klasse>             klasse;
-    
+
+    public Property<Waldeigentumsart>  eigentumsArt;
+
     /**
      * Alle Ansprechpartner, inklusive des {@link #besitzer()}s auf Index 0.
      */
     @MinOccurs(1)
-    public CollectionProperty<Kontakt>  ansprechpartner;
-    
-    
+    public CollectionProperty<Kontakt> ansprechpartner;
+
+
     public Kontakt besitzer() {
         return ansprechpartner.iterator().next();
     }
-    
-    
+
+
     /**
-     * Andere Seite der {@link Waldstueck#waldbesitzer} Assoziation.  
+     * Andere Seite der {@link Waldstueck#waldbesitzer} Assoziation.
      */
     public Query<Waldstueck> waldstuecke() {
         Waldstueck wanted = template( Waldstueck.class, context.getRepository() );
-        return context.getUnitOfWork()
-                .query( Waldstueck.class )
-                .where( is( wanted.waldbesitzer, this ) );    
+        return context.getUnitOfWork().query( Waldstueck.class )
+                .where( is( wanted.waldbesitzer, this ) );
     }
-    
+
 }

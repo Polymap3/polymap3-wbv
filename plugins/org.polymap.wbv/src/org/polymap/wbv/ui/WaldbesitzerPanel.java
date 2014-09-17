@@ -51,19 +51,19 @@ public class WaldbesitzerPanel
         extends WbvPanel
         implements IPanel {
 
-    private static Log                     log = LogFactory.getLog( WaldbesitzerPanel.class );
+    private static Log                    log = LogFactory.getLog( WaldbesitzerPanel.class );
 
-    public static final PanelIdentifier    ID  = new PanelIdentifier( "wbv", "waldbesitzer" );
+    public static final PanelIdentifier   ID  = new PanelIdentifier( "wbv", "waldbesitzer" );
 
-    private ContextProperty<Waldbesitzer>  waldbesitzer;
+    private ContextProperty<Waldbesitzer> waldbesitzer;
 
-    private IPanelToolkit                  toolKit;
+    private IPanelToolkit                 toolKit;
 
-    private WaldbesitzerForm               wbForm;
+    private WaldbesitzerForm              wbForm;
 
-    private IFormFieldListener             wbFormListener;
+    private IFormFieldListener            wbFormListener;
 
-    private WbvMapViewer                   map;
+    private WbvMapViewer                  map;
 
 
     @Override
@@ -71,7 +71,7 @@ public class WaldbesitzerPanel
         super.init( site, context );
 
         log.debug( "repo: " + repo.get() );
-        
+
         // nur Anzeigen wenn direkt aufgerufen
         return false;
     }
@@ -79,7 +79,8 @@ public class WaldbesitzerPanel
 
     @Override
     public void dispose() {
-        // wenn vorher commit, dann schadet das nicht; ansonsten neue Entity verwerfen
+        // wenn vorher commit, dann schadet das nicht; ansonsten neue Entity
+        // verwerfen
         repo.get().rollback();
         wbForm.removeFieldListener( wbFormListener );
     }
@@ -108,7 +109,7 @@ public class WaldbesitzerPanel
         IPanelSection action = toolKit.createPanelSection( parent, null );
         action.addConstraint( new PriorityConstraint( 10 ) );
         createActions( action );
-//        addDeleteAction( action );
+        // addDeleteAction( action );
     }
 
 
@@ -147,34 +148,35 @@ public class WaldbesitzerPanel
     }
 
 
-//    protected void addDeleteAction( IPanelSection section ) {
-//        Waldbesitzer entity = waldbesitzer.get();
-//        if (entityMayBeDeleted( entity )) {
-//            final String formatString = (entity.vorname.get() != null && entity.name.get() != null)
-//                    ? "'%s %s' Löschen"
-//                    : "Löschen";
-//            final String btnText = String.format( formatString, entity.vorname.get(),
-//                    entity.name.get() );
-//            final Button submitBtn = toolKit.createButton( section.getBody(), btnText, SWT.PUSH );
-//
-//            submitBtn.addSelectionListener( new SelectionAdapter() {
-//
-//                @Override
-//                public void widgetSelected( SelectionEvent eb ) {
-//                    try {
-//                        repo.removeEntity( entity );
-//                        repo.commit();
-//                        getContext().closePanel( getSite().getPath() );
-//                    }
-//                    catch (Exception e) {
-//                        BatikApplication.handleError(
-//                                "Das Löschen des Waldbesitzers ist fehlgeschlagen.", e );
-//                    }
-//                };
-//            } );
-//        }
-//    }
-
+    // protected void addDeleteAction( IPanelSection section ) {
+    // Waldbesitzer entity = waldbesitzer.get();
+    // if (entityMayBeDeleted( entity )) {
+    // final String formatString = (entity.vorname.get() != null && entity.name.get()
+    // != null)
+    // ? "'%s %s' Löschen"
+    // : "Löschen";
+    // final String btnText = String.format( formatString, entity.vorname.get(),
+    // entity.name.get() );
+    // final Button submitBtn = toolKit.createButton( section.getBody(), btnText,
+    // SWT.PUSH );
+    //
+    // submitBtn.addSelectionListener( new SelectionAdapter() {
+    //
+    // @Override
+    // public void widgetSelected( SelectionEvent eb ) {
+    // try {
+    // repo.removeEntity( entity );
+    // repo.commit();
+    // getContext().closePanel( getSite().getPath() );
+    // }
+    // catch (Exception e) {
+    // BatikApplication.handleError(
+    // "Das Löschen des Waldbesitzers ist fehlgeschlagen.", e );
+    // }
+    // };
+    // } );
+    // }
+    // }
 
     @Override
     public PanelIdentifier id() {
@@ -191,17 +193,18 @@ public class WaldbesitzerPanel
         @Override
         public void createFormContent( IFormEditorPageSite site ) {
             site.getPageBody().setLayout(
-                    ColumnLayoutFactory.defaults().spacing( 5 ).margins( 10, 10 ).columns( 1, 1 ).create() );
-            
+                    ColumnLayoutFactory.defaults().spacing( 5 ).margins( 10, 10 ).columns( 1, 1 )
+                            .create() );
+
             Waldbesitzer entity = waldbesitzer.get();
 
             // einfach, mit defaults
-            createField( new PropertyAdapter( entity.klasse ) ).create();
+            createField( new PropertyAdapter( entity.eigentumsArt ) ).create();
 
-//            // name
-//            createField( feature.getProperty( entity.name.getInfo().getName() ) )
-//                    .setLabel( "Nachname" ).setField( new StringFormField() )
-//                    .setValidator( new NotEmptyValidator() ).create();
+            // // name
+            // createField( feature.getProperty( entity.name.getInfo().getName() ) )
+            // .setLabel( "Nachname" ).setField( new StringFormField() )
+            // .setValidator( new NotEmptyValidator() ).create();
         }
 
     }
