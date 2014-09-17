@@ -23,24 +23,43 @@ import org.polymap.core.model2.store.feature.SRS;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 @SRS("EPSG:4326")
+/*
+ * See: http://polymap.org/wbv/ticket/4
+ */
 public class Baumart
         extends Entity {
 
-    public enum Haerte {
-        Hartholf, Weichholz;
+    public enum Kategorie {
+        Nadel, Laub;
     }
-    
-    public enum Blatt {
-        Laub, Nadel;
+
+
+    /**
+     * Die Gruppe lässt sich aus der Gruppe laut Waldfeststellung ableiten. z.B.: SN
+     * steht für "Sonstige Nadelbaumarten"
+     */
+    public enum Gruppe_lt_Waldfeststellung {
+        FI, KI, LÄ, SN, EI, BU, SH, BI, SW;
     }
-    
+
     @Queryable
-    public Property<String>         name;
-    
+    /** Kennung (Kürzel mit drei Buchstaben, z.B.: "ELA" für "Europäische Lärche") */
+    public Property<String>    kennung;
+
     @Queryable
-    public Property<Haerte>         haerte;
-    
+    /** Nr (Ganzzahl im Intervall 0-99) */
+    public Property<Integer>   nr;
+
     @Queryable
-    public Property<Blatt>          blatt;
-    
+    /** Name deutsch (z.B.: "Europäische Lärche") */
+    public Property<String>    nameDeutsch;
+
+    @Queryable
+    /** Name lateinisch (z.B.: "Larix decidua Mill.") */
+    public Property<String>    nameLateinisch;
+
+    @Queryable
+    /** Kategorie (Nadelbaumarten, Laubbaumarten) */
+    public Property<Kategorie> kategorie;
+
 }
