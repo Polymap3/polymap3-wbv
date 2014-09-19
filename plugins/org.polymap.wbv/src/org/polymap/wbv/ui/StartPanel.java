@@ -99,51 +99,42 @@ public class StartPanel
         getContext().propagate( viewer );
         FormDataFactory.filled().height( 300 ).width( 420 ).applyTo( viewer.getTable() );
         viewer.addSelectionChangedListener( new ISelectionChangedListener() {
-
             @Override
             public void selectionChanged( SelectionChangedEvent ev ) {
                 selected.set( viewer.getSelected().get( 0 ) );
                 getContext().openPanel( WaldbesitzerPanel.ID );
             }
-        } );
+        });
 
         Button createBtn = tk.createButton( parent, "Waldbesitzer anlegen...", SWT.PUSH );
         createBtn.addSelectionListener( new SelectionAdapter() {
-
             @Override
             public void widgetSelected( SelectionEvent e ) {
-                Waldbesitzer entity = repo.get().createEntity( Waldbesitzer.class, null,
-                        new ValueInitializer<Waldbesitzer>() {
-
+                Waldbesitzer entity = repo.get().createEntity( Waldbesitzer.class, null, new ValueInitializer<Waldbesitzer>() {
+                    @Override
+                    public Waldbesitzer initialize( Waldbesitzer prototype ) throws Exception {
+                        prototype.eigentumsArt.set( Waldeigentumsart.Privat );
+                        prototype.ansprechpartner.createElement( new ValueInitializer<Kontakt>() {
                             @Override
-                            public Waldbesitzer initialize( Waldbesitzer prototype )
-                                    throws Exception {
-                                prototype.eigentumsArt.set( Waldeigentumsart.Privat );
-                                prototype.ansprechpartner
-                                        .createElement( new ValueInitializer<Kontakt>() {
-
-                                            @Override
-                                            public Kontakt initialize( Kontakt kontakt )
-                                                    throws Exception {
-                                                kontakt.name.set( "Beispiel" );
-                                                return kontakt;
-                                            }
-                                        } );
-                                return prototype;
+                            public Kontakt initialize( Kontakt kontakt ) throws Exception {
+                                kontakt.name.set( "Beispiel" );
+                                return kontakt;
                             }
-                        } );
+                        });
+                        return prototype;
+                    }
+                } );
                 selected.set( entity );
                 getContext().openPanel( WaldbesitzerPanel.ID );
             }
-        } );
+        });
 
         // map
         IPanelSection karte = tk.createPanelSection( parent, null );
         karte.addConstraint( new PriorityConstraint( 5 ) );
         map = new WbvMapViewer();
         OpenLayersWidget widget = map.createContents( karte.getBody() );
-        widget.setLayoutData( new ConstraintData( new MinWidthConstraint( 400, 1 ),
-                new MinHeightConstraint( 400, 1 ) ) );
+        widget.setLayoutData( new ConstraintData( new MinWidthConstraint( 400, 1 ), new MinHeightConstraint( 400, 1 ) ) );
 
     }
 
