@@ -31,6 +31,10 @@
             class="org.polymap.wbv.ui.WaldbesitzerPanel"
             id="org.polymap.wbv.WaldbesitzerPanel">
       </panel>
+      <panel
+            class="org.polymap.wbv.ui.AdminPanel"
+            id="org.polymap.wbv.AdminPanel">
+      </panel>
    </extension>
 
 </plugin>

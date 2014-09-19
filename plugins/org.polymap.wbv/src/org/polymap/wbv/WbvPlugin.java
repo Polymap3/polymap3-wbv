@@ -14,7 +14,14 @@
  */
 package org.polymap.wbv;
 
+import java.net.URL;
+
 import org.osgi.framework.BundleContext;
+
+import org.eclipse.swt.graphics.Image;
+
+import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.resource.ImageRegistry;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
@@ -23,6 +30,8 @@ import org.polymap.core.runtime.Polymap;
 import org.polymap.core.runtime.SessionContext;
 import org.polymap.core.security.SecurityUtils;
 import org.polymap.core.security.UserPrincipal;
+
+import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 
 import org.polymap.wbv.model.WbvRepository;
 
@@ -34,9 +43,11 @@ import org.polymap.wbv.model.WbvRepository;
  */
 public class WbvPlugin extends AbstractUIPlugin {
 
-	public static final String PLUGIN_ID = "org.polymap.wbv"; //$NON-NLS-1$
+	public static final String             PLUGIN_ID = "org.polymap.wbv"; //$NON-NLS-1$
 
-	private static WbvPlugin       instance;
+	public static final MinWidthConstraint MIN_COLUMN_WIDTH = new MinWidthConstraint( 420, 1 );
+
+	private static WbvPlugin               instance;
 	
     private static DefaultSessionContextProvider contextProvider;
 
@@ -49,7 +60,7 @@ public class WbvPlugin extends AbstractUIPlugin {
 	/**
      * Returns the shared instance
      */
-    public static WbvPlugin getDefault() {
+    public static WbvPlugin instance() {
     	return instance;
     }
 
@@ -82,6 +93,19 @@ public class WbvPlugin extends AbstractUIPlugin {
 		instance = null;
 		super.stop( context );
 	}
+
+
+	public Image imageForName( String resName ) {
+        ImageRegistry images = getImageRegistry();
+        Image image = images.get( resName );
+        if (image == null || image.isDisposed()) {
+            URL res = getBundle().getResource( resName );
+            assert res != null : "Image resource not found: " + resName;
+            images.put( resName, ImageDescriptor.createFromURL( res ) );
+            image = images.get( resName );
+        }
+        return image;
+    }
 
 	
     /**

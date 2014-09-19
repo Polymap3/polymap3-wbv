@@ -14,6 +14,8 @@
  */
 package org.polymap.wbv.ui;
 
+import org.polymap.core.security.UserPrincipal;
+
 import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.IAppContext;
@@ -23,7 +25,7 @@ import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.wbv.model.WbvRepository;
 
 /**
- * Basisklasse für andere Panels. Es wird ein nested Repository pro Panel
+ * Basisklasse für andere Panels. Es wird ein "nested" Repository pro Panel
  * initialisiert. Über {@link #repo} ist dieses Repository erreichbar. Panels können
  * und sollten ihre Änderungen mit einem Commit abschliessen.
  * 
@@ -34,6 +36,8 @@ public abstract class WbvPanel
         implements IPanel {
 
     protected ContextProperty<WbvRepository>    repo;
+    
+    protected ContextProperty<UserPrincipal>    user;
     
     protected WbvRepository                     parentRepo;
 

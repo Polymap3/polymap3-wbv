@@ -14,17 +14,22 @@ package org.polymap.wbv.ui;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+
 import org.polymap.core.model2.runtime.ValueInitializer;
+import org.polymap.core.runtime.IMessages;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
-import org.polymap.openlayers.rap.widget.OpenLayersWidget;
+
 import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanel;
@@ -36,6 +41,12 @@ import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.MinHeightConstraint;
 import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
+import org.polymap.rhei.um.ui.LoginPanel;
+import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
+
+import org.polymap.openlayers.rap.widget.OpenLayersWidget;
+import org.polymap.wbv.Messages;
+import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
@@ -54,6 +65,8 @@ public class StartPanel
 
     public static final PanelIdentifier   ID  = new PanelIdentifier( "start" );
 
+    private static final IMessages        i18n = Messages.forPrefix( "StartPanel" );
+    
     private ContextProperty<Waldbesitzer> selected;
 
     private WbvMapViewer                  map;
@@ -72,22 +85,54 @@ public class StartPanel
         return false;
     }
 
-
+    
     @Override
     public void createContents( Composite parent ) {
-        getSite().setTitle( "Start" );
+        getSite().setTitle( "Login" );
+        createLoginContents( parent );
+    }
+    
+    
+    protected void createLoginContents( final Composite parent ) {
+        // welcome
         IPanelToolkit tk = getSite().toolkit();
+        IPanelSection welcome = tk.createPanelSection( parent, "Anmeldung" );
+        welcome.addConstraint( new PriorityConstraint( 10 ) );
+        tk.createFlowText( welcome.getBody(), "Willkommen ..." );
 
+        // login
+        IPanelSection section = tk.createPanelSection( parent, null );
+        section.addConstraint( new PriorityConstraint( 0 ), WbvPlugin.MIN_COLUMN_WIDTH );
+
+        LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), user ) {
+            @Override
+            protected boolean login( String name, String passwd ) {
+                if (super.login( name, passwd )) {
+                    getSite().setTitle( "Start" );
+                    getSite().setIcon( WbvPlugin.instance().imageForName( "icons/house.png" ) ); //$NON-NLS-1$
+
+                    for (Control child : parent.getChildren()) {
+                        child.dispose();
+                    }
+                    createMainContents( parent );
+                    parent.layout( true );
+                    return true;
+                }
+                return false;
+            }
+        };
+        loginForm.setShowRegisterLink( false );
+        loginForm.setShowStoreCheck( true );
+        loginForm.setShowLostLink( true );
+        loginForm.createContents( section );
+    }
+    
+    
+    protected void createMainContents( Composite parent ) {
+        IPanelToolkit tk = getSite().toolkit();
         IPanelSection welcome = tk.createPanelSection( parent, "Suche" );
         welcome.addConstraint( new PriorityConstraint( 10 ) );
         tk.createText( welcome.getBody(), "Volltext...", SWT.BORDER );
-
-        // FormContainer searchForm = new FormContainer() {
-        // public void createFormContent( IFormEditorPageSite site ) {
-        // BaseFormEditorPage delegate = new
-        // WaldbesitzerPageProvider.BaseFormEditorPage( feature, fs );
-        // }
-        // };
 
         // results table
         IPanelSection tableSection = tk.createPanelSection( parent, null );
