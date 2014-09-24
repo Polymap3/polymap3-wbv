@@ -50,7 +50,6 @@ import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
-import org.polymap.wbv.model.WbvRepository;
 
 /**
  * 
@@ -78,8 +77,7 @@ public class StartPanel
 
         // nur als start panel darstellen
         if (site.getPath().size() == 1) {
-            // init root UnitOfWork
-            repo.set( new WbvRepository() );
+            newUnitOfWork();
             return true;
         }
         return false;

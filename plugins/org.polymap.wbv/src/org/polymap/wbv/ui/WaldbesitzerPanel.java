@@ -70,6 +70,7 @@ public class WaldbesitzerPanel
     public boolean init( IPanelSite site, IAppContext context ) {
         super.init( site, context );
 
+        newUnitOfWork();
         log.debug( "repo: " + repo.get() );
 
         // nur Anzeigen wenn direkt aufgerufen
@@ -83,6 +84,7 @@ public class WaldbesitzerPanel
         // verwerfen
         repo.get().rollback();
         wbForm.removeFieldListener( wbFormListener );
+        super.dispose();
     }
 
 

@@ -44,7 +44,9 @@ import org.polymap.core.model2.runtime.EntityRepository;
 import org.polymap.core.model2.runtime.ModelRuntimeException;
 import org.polymap.core.model2.runtime.UnitOfWork;
 import org.polymap.core.model2.runtime.ValueInitializer;
+import org.polymap.core.model2.store.OptimisticLocking;
 import org.polymap.core.model2.store.recordstore.RecordStoreAdapter;
+import org.polymap.core.runtime.recordstore.IRecordStore;
 
 /**
  * 
@@ -89,9 +91,10 @@ public class WbvRepository {
                 throw new RuntimeException( "Kein DataStore für Service: " + service );
             }
             // create repo
+            IRecordStore store = ((RDataStore)ds).getStore();
             repo = EntityRepository.newConfiguration()
                     .setEntities( new Class[] {Revier.class, Waldstueck.class, Waldbesitzer.class, Kontakt.class} )
-                    .setStore( new RecordStoreAdapter( ((RDataStore)ds).getStore() ) )
+                    .setStore( new OptimisticLocking( new RecordStoreAdapter( store ) ) )
                     .create();
         }
         catch (RuntimeException e) {
@@ -182,6 +185,11 @@ public class WbvRepository {
 
     public void rollback() throws ModelRuntimeException {
         uow.rollback();
+    }
+
+
+    public void close() {
+        uow.close();
     }
 
 

@@ -15,3 +15,6 @@ Require-Bundle: org.eclipse.core.runtime,
  org.polymap.openlayers.rap.widget;bundle-version="1.0.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: lib/jackcess-2.0.4.jar,
+ lib/SuperCSV-1.52.jar,
+ .

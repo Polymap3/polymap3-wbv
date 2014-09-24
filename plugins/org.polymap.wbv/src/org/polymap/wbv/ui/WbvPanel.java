@@ -18,16 +18,13 @@ import org.polymap.core.security.UserPrincipal;
 
 import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.rhei.batik.DefaultPanel;
-import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanel;
-import org.polymap.rhei.batik.IPanelSite;
-
 import org.polymap.wbv.model.WbvRepository;
 
 /**
- * Basisklasse für andere Panels. Es wird ein "nested" Repository pro Panel
- * initialisiert. Über {@link #repo} ist dieses Repository erreichbar. Panels können
- * und sollten ihre Änderungen mit einem Commit abschliessen.
+ * Basisklasse für andere Panels. Es kann ein "nested" Repository pro Panel
+ * initialisiert werden. Über {@link #repo} ist dieses Repository erreichbar. Panels
+ * können und sollten dann ihre Änderungen mit einem Commit abschliessen.
  * 
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
@@ -42,20 +39,37 @@ public abstract class WbvPanel
     protected WbvRepository                     parentRepo;
 
     
-    @Override
-    public boolean init( IPanelSite site, IAppContext context ) {
-        super.init( site, context );
+//    @Override
+//    public boolean init( IPanelSite site, IAppContext context ) {
+//        return super.init( site, context );
+//    }
+    
+
+    protected void newUnitOfWork() {
+        assert parentRepo == null : "newUnitOfWork() can by called only once per Panel!";
         parentRepo = repo.get();
-        if (parentRepo != null) {
-            repo.set( parentRepo.newNested() );
-        }
-        return false;
+        repo.set( parentRepo != null
+             ? parentRepo.newNested()
+             : new WbvRepository() );
+    }
+
+    
+    protected void closeUnitOfWork() {
+        assert parentRepo != null : "Call newUnitOfWork() before closeUnitOfWork()!";
+        repo.get().close();
+        
+        parentRepo = repo.get();
+        repo.set( parentRepo != null
+             ? parentRepo.newNested()
+             : new WbvRepository() );
     }
 
     
     @Override
     public void dispose() {
-        repo.set( parentRepo );
+        if (parentRepo != null) {
+            repo.set( parentRepo );
+        }
     }
     
 }
