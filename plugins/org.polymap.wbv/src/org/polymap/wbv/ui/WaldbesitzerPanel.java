@@ -12,21 +12,30 @@
  */
 package org.polymap.wbv.ui;
 
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.runtime.EntityRuntimeContext.EntityStatus;
+import org.polymap.core.model2.runtime.ValueInitializer;
+import org.polymap.core.runtime.event.EventFilter;
+import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.ui.ColumnLayoutFactory;
-import org.polymap.openlayers.rap.widget.OpenLayersWidget;
+
 import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.IPanelSite;
+import org.polymap.rhei.batik.PanelChangeEvent;
+import org.polymap.rhei.batik.PanelChangeEvent.TYPE;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.app.BatikApplication;
 import org.polymap.rhei.batik.app.FormContainer;
@@ -39,14 +48,19 @@ import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.field.FormFieldEvent;
 import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.form.IFormEditorPageSite;
+
+import org.polymap.openlayers.rap.widget.OpenLayersWidget;
+import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer;
+import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
 
 /**
- * 
+ * Dieses Panel zeigt einen {@link Waldbesitzer} und erlaubt es dessen Properties zu
+ * verändern. Die Entity wird als {@link ContextProperty} übergeben. Ist dieses bei
+ * {@link TYPE#ACTIVATED Aktivierung} null, dann wird eine neue Entity erzeugt.
  * 
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-@SuppressWarnings("serial")
 public class WaldbesitzerPanel
         extends WbvPanel
         implements IPanel {
@@ -70,9 +84,12 @@ public class WaldbesitzerPanel
     public boolean init( IPanelSite site, IAppContext context ) {
         super.init( site, context );
 
-        newUnitOfWork();
-        log.debug( "repo: " + repo.get() );
-
+        getContext().addListener( this, new EventFilter<PanelChangeEvent>() {
+            public boolean apply( PanelChangeEvent input ) {
+                return input.getPanel() == WaldbesitzerPanel.this && input.getType() == TYPE.ACTIVATING;
+            }
+        });
+        
         // nur Anzeigen wenn direkt aufgerufen
         return false;
     }
@@ -80,14 +97,36 @@ public class WaldbesitzerPanel
 
     @Override
     public void dispose() {
-        // wenn vorher commit, dann schadet das nicht; ansonsten neue Entity
-        // verwerfen
-        repo.get().rollback();
+        // wenn vorher commit, dann schadet das nicht; ansonsten neue Entity verwerfen
+        closeUnitOfWork( false );
         wbForm.removeFieldListener( wbFormListener );
         super.dispose();
     }
 
+    
+    @EventHandler
+    public void activating( PanelChangeEvent ev ) {
+        newUnitOfWork();
+        
+        if (waldbesitzer.get() == null) {
+            waldbesitzer.set( uow().createEntity( Waldbesitzer.class, null, new ValueInitializer<Waldbesitzer>() {
+                @Override
+                public Waldbesitzer initialize( Waldbesitzer prototype ) throws Exception {
+                    prototype.eigentumsArt.set( Waldeigentumsart.Privat );
+                    prototype.kontakte.createElement( new ValueInitializer<Kontakt>() {
+                        @Override
+                        public Kontakt initialize( Kontakt kontakt ) throws Exception {
+                            kontakt.name.set( "Beispiel" );
+                            return kontakt;
+                        }
+                    });
+                    return prototype;
+                }
+            }));
+        }
+    }
 
+    
     @Override
     public void createContents( Composite parent ) {
         getSite().setTitle( "Waldbesitzer" );
@@ -116,25 +155,23 @@ public class WaldbesitzerPanel
 
 
     protected void createActions( IPanelSection section ) {
+        // submitBtn
         final Button submitBtn = toolKit.createButton( section.getBody(), "Fertig", SWT.PUSH );
         submitBtn.setEnabled( false );
         submitBtn.addSelectionListener( new SelectionAdapter() {
-
             @Override
             public void widgetSelected( SelectionEvent ev ) {
                 try {
                     wbForm.submit();
-                    repo.get().commit();
+                    uow().commit();
                     getContext().closePanel( getSite().getPath() );
                 }
                 catch (Exception e) {
-                    BatikApplication.handleError(
-                            "Änderungen konnten nicht korrekt gespeichert werden.", e );
+                    BatikApplication.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );
                 }
             }
         } );
         wbForm.addFieldListener( wbFormListener = new IFormFieldListener() {
-
             @Override
             public void fieldChange( FormFieldEvent ev ) {
                 if (ev.getEventCode() == IFormFieldListener.VALUE_CHANGE && !submitBtn.isDisposed()) {
@@ -198,7 +235,8 @@ public class WaldbesitzerPanel
                     ColumnLayoutFactory.defaults().spacing( 5 ).margins( 10, 10 ).columns( 1, 1 )
                             .create() );
 
-            Waldbesitzer entity = waldbesitzer.get();
+            Waldbesitzer entity = waldbesitzer.getOrWait( 10, TimeUnit.SECONDS );
+            assert entity != null;
 
             // einfach, mit defaults
             createField( new PropertyAdapter( entity.eigentumsArt ) ).create();

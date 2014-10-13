@@ -12,25 +12,35 @@
  */
 package org.polymap.wbv.model;
 
-import org.polymap.core.model2.Entity;
+import org.polymap.core.model2.Composite;
+import org.polymap.core.model2.Defaults;
 import org.polymap.core.model2.Property;
-import org.polymap.core.model2.store.feature.SRS;
+
+import org.polymap.wbv.mdb.ImportColumn;
 
 /**
  * 
  * 
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-@SRS("EPSG:4326")
 public class Adresse
-        extends Entity {
+        extends Composite {
 
+    @Defaults
+    @ImportColumn("EWBS_Ort")
     public Property<String> ort;
 
+    @Defaults
+    @ImportColumn("EWBS_Ortsteil")
+    public Property<String> ortsteil;
+
+    /** Strasse, inklusive Hausnummer. */
+    @Defaults
+    @ImportColumn("EWBS_Straße")
     public Property<String> strasse;
 
-    public Property<String> hnr;
-
+    @Defaults
+    @ImportColumn("EWBS_PLZ")
     public Property<String> plz;
 
 }

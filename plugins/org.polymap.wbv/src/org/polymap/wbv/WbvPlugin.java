@@ -54,7 +54,7 @@ public class WbvPlugin extends AbstractUIPlugin {
     static {
         System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.core.data.feature.recordstore", "debug" );
         System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.core.runtime.recordstore.lucene", "debug" );
-        System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.core.model2.store.recordstore", "debug" );
+        System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.wbv", "debug" );
     }
     
 	/**
@@ -81,7 +81,8 @@ public class WbvPlugin extends AbstractUIPlugin {
 		    contextProvider.mapContext( "wbv_init", true );
             Polymap.instance().addPrincipal( new AdminPrincipal() );
 
-            WbvRepository.init();
+            // init the global instance
+            WbvRepository.instance.get();
 	    }
 		finally {
             contextProvider.unmapContext();

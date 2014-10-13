@@ -20,15 +20,17 @@ import java.lang.annotation.Target;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.RetentionPolicy;
 
+import org.polymap.core.model2.Entity;
+
 /**
- * The name of the column to import an entity {@link Property} from.
+ * The name of the table to import an {@link Entity} from.
  *  
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 @Retention( RetentionPolicy.RUNTIME )
-@Target( { ElementType.FIELD } )
+@Target( { ElementType.TYPE } )
 @Documented
-public @interface ImportColumn {
+public @interface ImportTable {
 
     /**
      * The property name to be fired.

@@ -23,7 +23,6 @@ import java.beans.PropertyChangeEvent;
 import org.geotools.feature.NameImpl;
 import org.geotools.feature.type.AttributeDescriptorImpl;
 import org.geotools.feature.type.AttributeTypeImpl;
-import org.opengis.feature.Feature;
 import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.apache.commons.lang.time.FastDateFormat;
@@ -39,15 +38,15 @@ import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.polymap.core.data.ui.featuretable.DefaultFeatureTableColumn;
 import org.polymap.core.data.ui.featuretable.FeatureTableViewer;
 import org.polymap.core.data.ui.featuretable.IFeatureTableElement;
-import org.polymap.core.data.ui.featuretable.SimpleFeatureTableElement;
 import org.polymap.core.model2.query.Query;
+import org.polymap.core.model2.query.ResultSet;
+import org.polymap.core.model2.runtime.UnitOfWork;
 import org.polymap.core.runtime.event.Event;
 import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
 
 import org.polymap.wbv.model.Waldbesitzer;
-import org.polymap.wbv.model.WbvRepository;
 import org.polymap.wbv.ui.CompositesFeatureContentProvider.FeatureTableElement;
 
 /**
@@ -64,19 +63,22 @@ public class WaldbesitzerTableViewer
 
     private Query<Waldbesitzer>         query;
 
-    private WbvRepository               repo;
+    private UnitOfWork                  uow;
 
 
-    public WaldbesitzerTableViewer( WbvRepository repo, Composite parent, Query<Waldbesitzer> query, int style ) {
+    public WaldbesitzerTableViewer( UnitOfWork uow, Composite parent, Query<Waldbesitzer> query, int style ) {
         super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | SWT.FULL_SELECTION | */SWT.NONE );
-        this.repo = repo;
+        this.uow = uow;
         this.query = query;
         try {
             addColumn( new NameColumn() );
 
             // suppress deferred loading to fix "empty table" issue
             // setContent( fs.getFeatures( this.baseFilter ) );
-            setContent( new CompositesFeatureContentProvider( query.execute() ) );
+            ResultSet<Waldbesitzer> rs = query.execute();
+            log.debug( "Size:" + rs.size() );
+            setContent( new CompositesFeatureContentProvider( rs ) );
+            setInput( rs );
 
             /* Register for property change events */
             EventManager.instance().subscribe( this, new EventFilter<PropertyChangeEvent>() {
@@ -100,17 +102,14 @@ public class WaldbesitzerTableViewer
 
 
     public List<Waldbesitzer> getSelected() {
-        return copyOf( transform( asList( getSelectedElements() ),
-                new Function<IFeatureTableElement,Waldbesitzer>() {
-
-                    @Override
-                    public Waldbesitzer apply( IFeatureTableElement input ) {
-                        Feature feature = ((SimpleFeatureTableElement)input).feature();
-                        return repo.entityForState( Waldbesitzer.class, feature );
-                    }
-                } ) );
+        return copyOf( transform( asList( getSelectedElements() ), new Function<IFeatureTableElement,Waldbesitzer>() {
+            public Waldbesitzer apply( IFeatureTableElement input ) {
+                return (Waldbesitzer)((FeatureTableElement)input).getComposite();
+            }
+        }));
     }
 
+    
     /**
      *
      */

@@ -12,18 +12,25 @@
  */
 package org.polymap.wbv.model;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
+
 import javax.annotation.Nullable;
 
 import com.google.common.base.Joiner;
 
+import org.polymap.core.model2.Defaults;
 import org.polymap.core.model2.Property;
 import org.polymap.core.model2.Queryable;
+
+import org.polymap.wbv.mdb.ImportColumn;
+import org.polymap.wbv.mdb.ImportTable;
 
 /**
  * 
  * 
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
+@ImportTable("Waldbesitzer_Adresse")
 public class Kontakt
         extends Adresse {
 
@@ -35,45 +42,58 @@ public class Kontakt
      * Der Familienname einer natürlichen Person. Freitext für Namen einschließlich
      * Adelstitel 'Wagner', 'von Lüttichau', usw. )
      */
-    @Nullable
+    @Defaults
     @Queryable
+    @ImportColumn("EWBS_Name")
     public Property<String> name;
 
     /**
-     * Die Anrede inklusive Titel: "Herr", "Frau", "Frau Dr." (defaults:
-     * {@link Anrede}).
+     * Die Anrede inklusive Titel: "Herrn", "Frau", "Frau Dr." (defaults: {@link Anrede}).
      */
-    @Nullable
-    @Queryable
+    @Defaults
+    @ImportColumn("EWBS_Anrede")
     public Property<String> anrede;
+
+    @Defaults
+    @ImportColumn("EWBS_Briefanrede")
+    public Property<String> briefanrede;
 
     /**
      * Der Vorname bei einer natürlichen Person.
      */
-    @Nullable
+    @Defaults
     @Queryable
+    @ImportColumn("EWBS_Vorname")
     public Property<String> vorname;
 
-    @Nullable
+    @Defaults
     @Queryable
     public Property<String> organisation;
 
-    @Nullable
-    public Property<String> telefon;
+    @Defaults
+    @ImportColumn("EWBS_Telefon1")
+    public Property<String> telefon1;
 
-    /** Mobilfunknummer */
-    @Nullable
-    public Property<String> mobil;
+    @Defaults
+    @ImportColumn("EWBS_Telefon2")
+    public Property<String> telefon2;
 
-    @Nullable
+    @Defaults
+    @ImportColumn("EWBS_Fax")
     public Property<String> fax;
 
-    @Nullable
+    @Defaults
+    @ImportColumn("EWBS_EMail")
     public Property<String> email;
 
     /** Zusätzliche Bemerkungen zu diesem Kontakt. */
-    @Nullable
+    @Defaults
     public Property<String> bemerkung;
+
+    /** Aus WKV-Daten, Bedeutung ist unklar. */
+    @Nullable
+    @ImportColumn("EWBS_BetrNr")
+    public Property<String> betrNr;
 
     
     /**
@@ -81,7 +101,7 @@ public class Kontakt
      * falls die nicht vorhanden ist: Titel+Vorname+Familienname )
      */
     public String anzeigename() {
-        return organisation.get() != null
+        return !isEmpty( organisation.get() )
                 ? organisation.get()
                 : Joiner.on( ' ' ).skipNulls().join( anrede.get(), vorname.get(), name.get() );
     }

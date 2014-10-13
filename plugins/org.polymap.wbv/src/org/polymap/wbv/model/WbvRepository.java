@@ -16,7 +16,7 @@ package org.polymap.wbv.model;
 
 import java.util.List;
 
-import java.io.IOException;
+import java.io.File;
 import java.net.URL;
 
 import net.refractions.udig.catalog.CatalogPlugin;
@@ -31,22 +31,27 @@ import org.opengis.filter.FilterFactory;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.google.common.base.Supplier;
+
 import org.eclipse.core.runtime.NullProgressMonitor;
 
 import org.polymap.core.data.feature.recordstore.RDataStore;
 import org.polymap.core.data.feature.recordstore.catalog.RServiceExtension;
 import org.polymap.core.model2.Composite;
-import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.query.Query;
 import org.polymap.core.model2.runtime.CompositeInfo;
-import org.polymap.core.model2.runtime.ConcurrentEntityModificationException;
 import org.polymap.core.model2.runtime.EntityRepository;
-import org.polymap.core.model2.runtime.ModelRuntimeException;
 import org.polymap.core.model2.runtime.UnitOfWork;
-import org.polymap.core.model2.runtime.ValueInitializer;
 import org.polymap.core.model2.store.OptimisticLocking;
 import org.polymap.core.model2.store.recordstore.RecordStoreAdapter;
+import org.polymap.core.runtime.LockedLazyInit;
+import org.polymap.core.runtime.Polymap;
 import org.polymap.core.runtime.recordstore.IRecordStore;
+
+import org.polymap.rhei.fulltext.lucene.LuceneFullTextIndex;
+import org.polymap.rhei.fulltext.model2.FulltextIndexer;
+import org.polymap.rhei.fulltext.update.UpdateableFullTextIndex;
+
+import org.polymap.wbv.WbvPlugin;
 
 /**
  * 
@@ -61,13 +66,26 @@ public class WbvRepository {
     
     public static final FilterFactory       ff = CommonFactoryFinder.getFilterFactory( null );
     
-    private static EntityRepository         repo;
+    /**
+     * The global, static instance.
+     */
+    public static Supplier<WbvRepository>   instance = new LockedLazyInit( new Supplier<WbvRepository>() {
+        @Override
+        public WbvRepository get() {
+            return new WbvRepository();
+        }
+    });
+    
+    
+    // instance *******************************************
+
+    private EntityRepository                repo;
     
     
     /**
-     * Configure and initializing the global {@link #repo}.
+     * Configure and initializing the one and only global instance.
      */
-    public static void init() {
+    private WbvRepository() {
         try {
             log.info( "Assembling repository..." );
             
@@ -92,9 +110,18 @@ public class WbvRepository {
             }
             // create repo
             IRecordStore store = ((RDataStore)ds).getStore();
+            File wbvDir = new File( Polymap.getDataDir(), WbvPlugin.PLUGIN_ID );
+            UpdateableFullTextIndex fulltextIndex = new LuceneFullTextIndex( new File( wbvDir, "fulltext" ) );
             repo = EntityRepository.newConfiguration()
-                    .setEntities( new Class[] {Revier.class, Waldstueck.class, Waldbesitzer.class, Kontakt.class} )
-                    .setStore( new OptimisticLocking( new RecordStoreAdapter( store ) ) )
+                    .setEntities( new Class[] {
+                            Revier.class, 
+                            Waldstueck.class, 
+                            Waldbesitzer.class, 
+                            Kontakt.class} )
+                    .setStore( 
+                            new OptimisticLocking(
+                            new FulltextIndexer( fulltextIndex,
+                            new RecordStoreAdapter( store ) ) ) )
                     .create();
         }
         catch (RuntimeException e) {
@@ -106,54 +133,8 @@ public class WbvRepository {
     }
     
     
-//    /**
-//     * The {@link WbvRepository} instance for the session of the calling thread. 
-//     */
-//    public static WbvRepository instance() {
-//        if (repo == null) {
-//            init();
-//        }
-//        return instance( WbvRepository.class );
-//    };
-
-        
-    public static EntityRepository repo() {
+    public EntityRepository repo() {
         return repo;
-    }
-
-
-    // instance *******************************************
-        
-    private UnitOfWork                  uow;
-    
-
-    public WbvRepository() {
-        this.uow = repo.newUnitOfWork();
-    }
-
-    
-    public WbvRepository( UnitOfWork uow ) {
-        this.uow = uow;
-    }
-
-    
-    public WbvRepository newNested() {
-        return new WbvRepository( uow.newUnitOfWork() );
-    }
-
-    
-    public <T extends Entity> T entityForState( Class<T> entityClass, Object state ) {
-        return uow.entityForState( entityClass, state );
-    }
-
-
-    public <T extends Entity> T entity( Class<T> entityClass, Object id ) {
-        return uow.entity( entityClass, id );
-    }
-
-
-    public <T extends Entity> Query<T> query( Class<T> entityClass ) {
-        return uow.query( entityClass );
     }
 
 
@@ -162,44 +143,8 @@ public class WbvRepository {
     }
 
 
-    public <T extends Entity> T createEntity( Class<T> entityClass, Object id,
-            ValueInitializer<T> initializer ) {
-        return uow.createEntity( entityClass, id, initializer );
+    public UnitOfWork newUnitOfWork() {
+        return repo.newUnitOfWork();
     }
-
-
-    public void removeEntity( Entity entity ) {
-        uow.removeEntity( entity );
-    }
-
-
-    public void prepare() throws IOException, ConcurrentEntityModificationException {
-        uow.prepare();
-    }
-
-
-    public void commit() throws ModelRuntimeException {
-        uow.commit();
-    }
-
-
-    public void rollback() throws ModelRuntimeException {
-        uow.rollback();
-    }
-
-
-    public void close() {
-        uow.close();
-    }
-
-
-    public UnitOfWork uow() {
-        return uow;
-    }
-
-
-//    public <T extends Entity> Collection<T> find( Class<T> entityClass ) {
-//        return uow.find( entityClass );
-//    }
     
 }

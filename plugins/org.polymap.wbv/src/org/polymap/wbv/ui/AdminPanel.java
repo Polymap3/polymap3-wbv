@@ -16,6 +16,7 @@ package org.polymap.wbv.ui;
 
 import java.util.List;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
@@ -27,11 +28,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 
-import org.eclipse.rwt.lifecycle.WidgetUtil;
-
 import org.polymap.core.model2.runtime.ValueInitializer;
+import org.polymap.core.operation.OperationSupport;
 import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.security.SecurityUtils;
@@ -43,13 +45,13 @@ import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.PropertyAccessEvent;
 import org.polymap.rhei.batik.app.BatikApplication;
-import org.polymap.rhei.batik.layout.desktop.DesktopToolkit;
 import org.polymap.rhei.batik.toolkit.ConstraintData;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 
 import org.polymap.wbv.WbvPlugin;
+import org.polymap.wbv.mdb.WvkImporter;
 import org.polymap.wbv.model.Baumart;
 
 /**
@@ -100,15 +102,49 @@ public class AdminPanel
     
     @Override
     public void createContents( Composite parent ) {
+        createWkvSection( parent );
         createBaumartenSection( parent );
+    }
+    
+    
+    protected void createWkvSection( Composite parent ) {
+        IPanelToolkit tk = getSite().toolkit();
+        IPanelSection section = tk.createPanelSection( parent, "WKV-Daten: Import (WKV_dat.mdb)" );
+        section.addConstraint( new PriorityConstraint( 10 ), WbvPlugin.MIN_COLUMN_WIDTH );
+//        section.getBody().setData( WidgetUtil.CUSTOM_VARIANT, DesktopToolkit.CSS_FORM  );
+
+        tk.createFlowText( section.getBody(), "Import von WKV-Daten aus einer MS-Access-Datei (WKV_dat.mdb).")
+                .setLayoutData( new ConstraintData( new PriorityConstraint( 1 ) ) );
+
+        IPanelSection formSection = tk.createPanelSection( section, null );
+        formSection.addConstraint( new PriorityConstraint( 0 ) );
+        tk.createButton( formSection.getBody(), "Import starten..." ).addSelectionListener( new SelectionAdapter() {
+            @Override
+            public void widgetSelected( SelectionEvent ev ) {
+                try {
+                    newUnitOfWork();
+
+                    WvkImporter op = new WvkImporter( uow(), new File( "/home/falko/Data/WBV" ) );
+                    OperationSupport.instance().execute( op, false, false );
+                    closeUnitOfWork( true );
+                    uow().commit();
+                }
+                catch (Exception e) {
+                    BatikApplication.handleError( "Der Import konnte nicht erfolgreich durchgeführt werden.", e );
+                }
+                finally {
+                    closeUnitOfWork( false );
+                }
+            }
+        });
     }
     
     
     protected void createBaumartenSection( Composite parent ) {
         IPanelToolkit tk = getSite().toolkit();
         IPanelSection section = tk.createPanelSection( parent, "Baumarten: Import" );
-        section.addConstraint( new PriorityConstraint( 10 ) );
-        section.getBody().setData( WidgetUtil.CUSTOM_VARIANT, DesktopToolkit.CSS_FORM  );
+        section.addConstraint( new PriorityConstraint( 0 ), WbvPlugin.MIN_COLUMN_WIDTH );
+//        section.getBody().setData( WidgetUtil.CUSTOM_VARIANT, DesktopToolkit.CSS_FORM  );
 
         tk.createFlowText( section.getBody(), "Import einer **CSV-Datei** mit Stammdaten für Baumarten." + 
                 " Der Import startet sofort nach der Auswahl der Datei. Die bisherigen Einträge werden dabei **gelöscht**!" +
@@ -128,15 +164,15 @@ public class AdminPanel
         upload.setHandler( new IUploadHandler() {
             @Override
             public void uploadStarted( String name, String contentType, int contentLength, InputStream in ) throws Exception {
-                newUnitOfWork();
-                
                 // quoteChar, delimiterChar, endOfLineSymbols
                 CsvPreference prefs = new CsvPreference( '"', ',', "\r\n" );
                 ICsvListReader csv = new CsvListReader( new InputStreamReader( in, "UTF-8" ), prefs );
                 try {
+                    newUnitOfWork();
+
                     for (List<String> l = csv.read(); l != null; l = csv.read()) {
                         final String[] line = l.toArray( new String[l.size()] );
-                        repo.get().createEntity( Baumart.class, null, new ValueInitializer<Baumart>() {
+                        uow().createEntity( Baumart.class, null, new ValueInitializer<Baumart>() {
                             @Override
                             public Baumart initialize( Baumart proto ) throws Exception {
                                 proto.kategorie.set( line[0] );
@@ -151,11 +187,14 @@ public class AdminPanel
                             }
                         });
                     }
-                    repo.get().commit();
+                    closeUnitOfWork( true );
+                    uow().commit();
                 }
                 catch (Exception e) {
-                    repo.get().rollback();
                     BatikApplication.handleError( "Die Daten konnten nicht korrekt importiert werden.", e );
+                }
+                finally {
+                    closeUnitOfWork( false );
                 }
             }
         });

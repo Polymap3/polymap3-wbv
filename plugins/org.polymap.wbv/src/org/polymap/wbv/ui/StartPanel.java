@@ -25,7 +25,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
-import org.polymap.core.model2.runtime.ValueInitializer;
 import org.polymap.core.runtime.IMessages;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
@@ -47,9 +46,7 @@ import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
 import org.polymap.openlayers.rap.widget.OpenLayersWidget;
 import org.polymap.wbv.Messages;
 import org.polymap.wbv.WbvPlugin;
-import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer;
-import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
 
 /**
  * 
@@ -77,7 +74,6 @@ public class StartPanel
 
         // nur als start panel darstellen
         if (site.getPath().size() == 1) {
-            newUnitOfWork();
             return true;
         }
         return false;
@@ -137,10 +133,12 @@ public class StartPanel
         tableSection.addConstraint( new PriorityConstraint( 0 ), new MinWidthConstraint( 500, 0 ) );
         tableSection.getBody().setLayout( FormLayoutFactory.defaults().create() );
 
-        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( repo.get(),
-                tableSection.getBody(), repo.get().query( Waldbesitzer.class ), SWT.NONE );
+        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( uow(),
+                tableSection.getBody(), uow().query( Waldbesitzer.class ), SWT.NONE );
         getContext().propagate( viewer );
         FormDataFactory.filled().height( 300 ).width( 420 ).applyTo( viewer.getTable() );
+        
+        // waldbesitzer öffnen
         viewer.addSelectionChangedListener( new ISelectionChangedListener() {
             @Override
             public void selectionChanged( SelectionChangedEvent ev ) {
@@ -149,25 +147,12 @@ public class StartPanel
             }
         });
 
+        // waldbesitzer anlegen
         Button createBtn = tk.createButton( parent, "Waldbesitzer anlegen...", SWT.PUSH );
         createBtn.addSelectionListener( new SelectionAdapter() {
             @Override
             public void widgetSelected( SelectionEvent e ) {
-                Waldbesitzer entity = repo.get().createEntity( Waldbesitzer.class, null, new ValueInitializer<Waldbesitzer>() {
-                    @Override
-                    public Waldbesitzer initialize( Waldbesitzer prototype ) throws Exception {
-                        prototype.eigentumsArt.set( Waldeigentumsart.Privat );
-                        prototype.ansprechpartner.createElement( new ValueInitializer<Kontakt>() {
-                            @Override
-                            public Kontakt initialize( Kontakt kontakt ) throws Exception {
-                                kontakt.name.set( "Beispiel" );
-                                return kontakt;
-                            }
-                        });
-                        return prototype;
-                    }
-                } );
-                selected.set( entity );
+                selected.set( null );  // 
                 getContext().openPanel( WaldbesitzerPanel.ID );
             }
         });

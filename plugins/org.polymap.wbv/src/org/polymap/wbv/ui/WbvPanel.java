@@ -14,17 +14,29 @@
  */
 package org.polymap.wbv.ui;
 
+import static com.google.common.collect.Iterables.getOnlyElement;
+import static org.polymap.rhei.batik.Panels.is;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.polymap.core.model2.runtime.UnitOfWork;
 import org.polymap.core.security.UserPrincipal;
 
 import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.rhei.batik.DefaultPanel;
+import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanel;
+import org.polymap.rhei.batik.IPanelSite;
+import org.polymap.rhei.batik.PanelPath;
+
 import org.polymap.wbv.model.WbvRepository;
 
 /**
- * Basisklasse für andere Panels. Es kann ein "nested" Repository pro Panel
- * initialisiert werden. Über {@link #repo} ist dieses Repository erreichbar. Panels
- * können und sollten dann ihre Änderungen mit einem Commit abschliessen.
+ * Basisklasse für andere Panels. Es kann eine "nested" {@link UnitOfWork} pro Panel
+ * initialisiert werden. Über {@link #uow()} ist die {@link UnitOfWork} für das Panel
+ * erreichbar. Panels können und sollten dann ihre Änderungen mit einem Commit
+ * abschliessen.
  * 
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
@@ -32,43 +44,77 @@ public abstract class WbvPanel
         extends DefaultPanel
         implements IPanel {
 
-    protected ContextProperty<WbvRepository>    repo;
+    private static Log log = LogFactory.getLog( WbvPanel.class );
+
+    private ContextProperty<UnitOfWork>         rootUow;
     
+    private UnitOfWork                          uow;
+
+    private UnitOfWork                          parentUow;
+
     protected ContextProperty<UserPrincipal>    user;
     
-    protected WbvRepository                     parentRepo;
-
     
-//    @Override
-//    public boolean init( IPanelSite site, IAppContext context ) {
-//        return super.init( site, context );
-//    }
-    
-
-    protected void newUnitOfWork() {
-        assert parentRepo == null : "newUnitOfWork() can by called only once per Panel!";
-        parentRepo = repo.get();
-        repo.set( parentRepo != null
-             ? parentRepo.newNested()
-             : new WbvRepository() );
-    }
-
-    
-    protected void closeUnitOfWork() {
-        assert parentRepo != null : "Call newUnitOfWork() before closeUnitOfWork()!";
-        repo.get().close();
-        
-        parentRepo = repo.get();
-        repo.set( parentRepo != null
-             ? parentRepo.newNested()
-             : new WbvRepository() );
-    }
-
     
     @Override
-    public void dispose() {
-        if (parentRepo != null) {
-            repo.set( parentRepo );
+    public boolean init( IPanelSite site, IAppContext context ) {
+        boolean result = super.init( site, context );
+
+        // rootUow
+        if (rootUow.get() == null) {
+            rootUow.set( WbvRepository.instance.get().newUnitOfWork() );
+        }
+        // parentUow
+        PanelPath myPath = getSite().getPath();
+        if (myPath.size() == 1) {
+            parentUow = rootUow.get();
+        }
+        else {
+            WbvPanel parentPanel = (WbvPanel)getOnlyElement( getContext().findPanels( is( myPath.removeLast( 1 ) ) ) ); 
+            parentUow = parentPanel.uow();
+        }
+        // uow
+        uow = parentUow;
+        return result;
+    }
+
+
+    /**
+     * The UnitOfWork for this panel. Call {@link #newUnitOfWork()} before first
+     * access to {@link #uow} to create a separate, nested UnitOfWork for this panel.
+     */
+    protected UnitOfWork uow() {
+        return uow;
+    }
+
+
+    /**
+     * Creates a new, nested {@link UnitOfWork} for this panel.
+     */
+    protected void newUnitOfWork() {
+        assert uow == parentUow : "newUnitOfWork() must be called only once per page.";
+        uow = parentUow.newUnitOfWork();
+        log.debug( getClass().getSimpleName() + ": new UOW: " + uow.getClass().getSimpleName() );
+    }
+
+    
+    protected void closeUnitOfWork( boolean commit ) {
+        if (uow != parentUow) {
+            log.debug( getClass().getSimpleName() + ": Closed UOW: " + uow );
+            if (commit) {
+                uow.commit();
+            }
+            uow.close();
+            uow = parentUow;
+            log.debug( getClass().getSimpleName() + ": Parent UOW: " + uow );
+        }
+        else {
+            if (commit) {
+                throw new IllegalStateException( "closeUnitOfWork(): uow == parentUow" );
+            }
+            else {
+                log.warn( "closeUnitOfWork(): uow == parentUow" );
+            }
         }
     }
     

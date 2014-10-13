@@ -25,6 +25,8 @@ import org.polymap.core.data.ui.featuretable.IFeatureContentProvider;
 import org.polymap.core.data.ui.featuretable.IFeatureTableElement;
 import org.polymap.core.model2.Composite;
 import org.polymap.core.model2.Entity;
+import org.polymap.core.model2.Property;
+import org.polymap.core.model2.query.Query;
 
 /**
  * Used to display {@link Entity} collections as result of a {@link Query}, or the
@@ -83,7 +85,7 @@ class CompositesFeatureContentProvider
 
         public Object getValue( String name ) {
             try {
-                return composite.info().getProperty( name ).getValue( composite );
+                return ((Property)composite.info().getProperty( name ).get( composite )).get();
             }
             catch (Exception e) {
                 throw new RuntimeException( e );
@@ -92,7 +94,7 @@ class CompositesFeatureContentProvider
 
         public void setValue( String name, Object value ) {
             try {
-                composite.info().getProperty( name ).setValue( composite, value );
+                ((Property)composite.info().getProperty( name ).get( composite )).set( value );
             }
             catch (Exception e) {
                 throw new RuntimeException( e );
