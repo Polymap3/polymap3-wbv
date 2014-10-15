@@ -47,9 +47,11 @@ import org.polymap.core.runtime.LockedLazyInit;
 import org.polymap.core.runtime.Polymap;
 import org.polymap.core.runtime.recordstore.IRecordStore;
 
-import org.polymap.rhei.fulltext.lucene.LuceneFullTextIndex;
+import org.polymap.rhei.fulltext.FullQueryProposalDecorator;
+import org.polymap.rhei.fulltext.FullTextIndex;
+import org.polymap.rhei.fulltext.indexing.LowerCaseTokenFilter;
 import org.polymap.rhei.fulltext.model2.FulltextIndexer;
-import org.polymap.rhei.fulltext.update.UpdateableFullTextIndex;
+import org.polymap.rhei.fulltext.store.lucene.LuceneFullTextIndex;
 
 import org.polymap.wbv.WbvPlugin;
 
@@ -80,6 +82,8 @@ public class WbvRepository {
     // instance *******************************************
 
     private EntityRepository                repo;
+
+    private LuceneFullTextIndex             fulltextIndex;
     
     
     /**
@@ -103,6 +107,11 @@ public class WbvRepository {
                 throw new RuntimeException( "Kein Service im Katalog für URL: " + url );
             }
 
+            // init fulltext
+            File wbvDir = new File( Polymap.getDataDir(), WbvPlugin.PLUGIN_ID );
+            fulltextIndex = new LuceneFullTextIndex( new File( wbvDir, "fulltext" ) );
+            fulltextIndex.addTokenFilter( new LowerCaseTokenFilter() );
+
             // find DataStore from service
             DataAccess ds = service.resolve( DataAccess.class, new NullProgressMonitor() );
             if (ds == null) {
@@ -110,8 +119,6 @@ public class WbvRepository {
             }
             // create repo
             IRecordStore store = ((RDataStore)ds).getStore();
-            File wbvDir = new File( Polymap.getDataDir(), WbvPlugin.PLUGIN_ID );
-            UpdateableFullTextIndex fulltextIndex = new LuceneFullTextIndex( new File( wbvDir, "fulltext" ) );
             repo = EntityRepository.newConfiguration()
                     .setEntities( new Class[] {
                             Revier.class, 
@@ -135,6 +142,13 @@ public class WbvRepository {
     
     public EntityRepository repo() {
         return repo;
+    }
+
+    
+    public FullTextIndex fulltextIndex() {
+        return new FullQueryProposalDecorator(
+               new LowerCaseTokenFilter( fulltextIndex ) );
+
     }
 
 

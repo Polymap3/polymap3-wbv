@@ -31,7 +31,10 @@ import org.polymap.core.runtime.SessionContext;
 import org.polymap.core.security.SecurityUtils;
 import org.polymap.core.security.UserPrincipal;
 
+import org.polymap.rhei.batik.app.BatikApplication;
 import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
+import org.polymap.rhei.fulltext.FullTextPlugin;
+import org.polymap.rhei.fulltext.FullTextPlugin.ErrorHandler;
 
 import org.polymap.wbv.model.WbvRepository;
 
@@ -77,6 +80,15 @@ public class WbvPlugin extends AbstractUIPlugin {
 		super.start( context );
 		instance = this;
 
+		// init FullText error handler
+		FullTextPlugin.instance().setErrorHandler( new ErrorHandler() {
+            @Override
+            public void handleError( String msg, Throwable e ) {
+                BatikApplication.handleError( msg, e );
+            }
+		});
+
+		//
 		try {
 		    contextProvider.mapContext( "wbv_init", true );
             Polymap.instance().addPrincipal( new AdminPrincipal() );

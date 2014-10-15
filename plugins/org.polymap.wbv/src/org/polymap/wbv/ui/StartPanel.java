@@ -25,6 +25,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
+import org.polymap.core.data.ui.featuretable.FeatureTableFilterBar;
+import org.polymap.core.model2.query.ResultSet;
 import org.polymap.core.runtime.IMessages;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
@@ -40,6 +42,9 @@ import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.MinHeightConstraint;
 import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
+import org.polymap.rhei.fulltext.FullTextIndex;
+import org.polymap.rhei.fulltext.ui.EntitySearchField;
+import org.polymap.rhei.fulltext.ui.FulltextProposal;
 import org.polymap.rhei.um.ui.LoginPanel;
 import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
 
@@ -47,6 +52,7 @@ import org.polymap.openlayers.rap.widget.OpenLayersWidget;
 import org.polymap.wbv.Messages;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Waldbesitzer;
+import org.polymap.wbv.model.WbvRepository;
 
 /**
  * 
@@ -124,20 +130,18 @@ public class StartPanel
     
     protected void createMainContents( Composite parent ) {
         IPanelToolkit tk = getSite().toolkit();
-        IPanelSection welcome = tk.createPanelSection( parent, "Suche" );
-        welcome.addConstraint( new PriorityConstraint( 10 ) );
-        tk.createText( welcome.getBody(), "Volltext...", SWT.BORDER );
+//        IPanelSection welcome = tk.createPanelSection( parent, "Suche" );
+//        welcome.addConstraint( new PriorityConstraint( 10 ) );
+//        tk.createText( welcome.getBody(), "Volltext...", SWT.BORDER );
 
         // results table
-        IPanelSection tableSection = tk.createPanelSection( parent, null );
-        tableSection.addConstraint( new PriorityConstraint( 0 ), new MinWidthConstraint( 500, 0 ) );
-        tableSection.getBody().setLayout( FormLayoutFactory.defaults().create() );
+        IPanelSection tableSection = tk.createPanelSection( parent, "Waldbesitzer" );
+        tableSection.addConstraint( new PriorityConstraint( 10 ), WbvPlugin.MIN_COLUMN_WIDTH );
+        tableSection.getBody().setLayout( FormLayoutFactory.defaults().spacing( 5 ).create() );
 
-        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( uow(),
-                tableSection.getBody(), uow().query( Waldbesitzer.class ), SWT.NONE );
+        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( uow(), 
+                tableSection.getBody(), ResultSet.EMPTY, SWT.NONE );
         getContext().propagate( viewer );
-        FormDataFactory.filled().height( 300 ).width( 420 ).applyTo( viewer.getTable() );
-        
         // waldbesitzer öffnen
         viewer.addSelectionChangedListener( new ISelectionChangedListener() {
             @Override
@@ -148,15 +152,36 @@ public class StartPanel
         });
 
         // waldbesitzer anlegen
-        Button createBtn = tk.createButton( parent, "Waldbesitzer anlegen...", SWT.PUSH );
+        Button createBtn = tk.createButton( tableSection.getBody(), "Neu", SWT.PUSH );
+        createBtn.setToolTipText( "Einen neuen Waldbesitzer anlegen" );
         createBtn.addSelectionListener( new SelectionAdapter() {
             @Override
             public void widgetSelected( SelectionEvent e ) {
-                selected.set( null );  // 
+                selected.set( null );
                 getContext().openPanel( WaldbesitzerPanel.ID );
             }
         });
 
+        // filterBar
+        FeatureTableFilterBar filterBar = new FeatureTableFilterBar( viewer, tableSection.getBody() );
+
+        // searchField
+        FullTextIndex fulltext = WbvRepository.instance.get().fulltextIndex();
+        EntitySearchField search = new EntitySearchField<Waldbesitzer>( tableSection.getBody(), fulltext, uow(), Waldbesitzer.class ) {
+            @Override
+            protected void doRefresh() {
+                log.info( "Results: " + results.size() );
+                viewer.setInput( results );
+            }
+        };
+        new FulltextProposal( fulltext, search.getText() );
+        
+        // layout
+        createBtn.setLayoutData( FormDataFactory.filled().clearRight().clearBottom().create() );
+        filterBar.getControl().setLayoutData( FormDataFactory.filled().bottom( viewer.getTable() ).left( createBtn ).right( 50 ).create() );
+        search.getControl().setLayoutData( FormDataFactory.filled().height( 27 ).bottom( viewer.getTable() ).left( filterBar.getControl() ).create() );
+        FormDataFactory.filled().top( createBtn ).height( 500 ).applyTo( viewer.getTable() );
+        
         // map
         IPanelSection karte = tk.createPanelSection( parent, null );
         karte.addConstraint( new PriorityConstraint( 5 ) );

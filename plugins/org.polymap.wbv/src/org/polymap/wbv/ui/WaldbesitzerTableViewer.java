@@ -38,8 +38,6 @@ import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.polymap.core.data.ui.featuretable.DefaultFeatureTableColumn;
 import org.polymap.core.data.ui.featuretable.FeatureTableViewer;
 import org.polymap.core.data.ui.featuretable.IFeatureTableElement;
-import org.polymap.core.model2.query.Query;
-import org.polymap.core.model2.query.ResultSet;
 import org.polymap.core.model2.runtime.UnitOfWork;
 import org.polymap.core.runtime.event.Event;
 import org.polymap.core.runtime.event.EventFilter;
@@ -61,22 +59,17 @@ public class WaldbesitzerTableViewer
 
     private static final FastDateFormat df   = FastDateFormat.getInstance( "dd.MM.yyyy" );
 
-    private Query<Waldbesitzer>         query;
-
     private UnitOfWork                  uow;
 
 
-    public WaldbesitzerTableViewer( UnitOfWork uow, Composite parent, Query<Waldbesitzer> query, int style ) {
+    public WaldbesitzerTableViewer( UnitOfWork uow, Composite parent, Iterable<Waldbesitzer> rs, int style ) {
         super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | SWT.FULL_SELECTION | */SWT.NONE );
         this.uow = uow;
-        this.query = query;
         try {
             addColumn( new NameColumn() );
 
             // suppress deferred loading to fix "empty table" issue
             // setContent( fs.getFeatures( this.baseFilter ) );
-            ResultSet<Waldbesitzer> rs = query.execute();
-            log.debug( "Size:" + rs.size() );
             setContent( new CompositesFeatureContentProvider( rs ) );
             setInput( rs );
 
