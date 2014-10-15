@@ -51,6 +51,7 @@ import org.polymap.rhei.fulltext.FullQueryProposalDecorator;
 import org.polymap.rhei.fulltext.FullTextIndex;
 import org.polymap.rhei.fulltext.indexing.LowerCaseTokenFilter;
 import org.polymap.rhei.fulltext.model2.FulltextIndexer;
+import org.polymap.rhei.fulltext.model2.FulltextIndexer.TypeFilter;
 import org.polymap.rhei.fulltext.store.lucene.LuceneFullTextIndex;
 
 import org.polymap.wbv.WbvPlugin;
@@ -127,7 +128,7 @@ public class WbvRepository {
                             Kontakt.class} )
                     .setStore( 
                             new OptimisticLocking(
-                            new FulltextIndexer( fulltextIndex,
+                            new FulltextIndexer( fulltextIndex, new TypeFilter( Waldbesitzer.class ),
                             new RecordStoreAdapter( store ) ) ) )
                     .create();
         }
