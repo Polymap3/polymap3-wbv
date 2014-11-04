@@ -15,6 +15,8 @@ package org.polymap.wbv.model;
 import static org.polymap.core.model2.query.Expressions.is;
 import static org.polymap.core.model2.query.Expressions.template;
 
+import com.google.common.collect.Iterables;
+
 import org.polymap.core.model2.CollectionProperty;
 import org.polymap.core.model2.Defaults;
 import org.polymap.core.model2.Entity;
@@ -65,9 +67,12 @@ public class Waldbesitzer
     @MinOccurs(1)
     public CollectionProperty<Kontakt>  kontakte;
 
+    @Defaults
+    public Property<Integer>            besitzerIndex;
+
 
     public Kontakt besitzer() {
-        return kontakte.iterator().next();
+        return Iterables.get( kontakte, besitzerIndex.get(), null );
     }
 
 

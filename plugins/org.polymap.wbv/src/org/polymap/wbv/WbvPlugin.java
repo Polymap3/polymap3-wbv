@@ -44,9 +44,10 @@ import org.polymap.wbv.model.WbvRepository;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  * @author <a href="http://www.polymap.de">Bertram Kirsch</a>
  */
-public class WbvPlugin extends AbstractUIPlugin {
+public class WbvPlugin 
+        extends AbstractUIPlugin {
 
-	public static final String             PLUGIN_ID = "org.polymap.wbv"; //$NON-NLS-1$
+	public static final String             ID = "org.polymap.wbv"; //$NON-NLS-1$
 
 	public static final MinWidthConstraint MIN_COLUMN_WIDTH = new MinWidthConstraint( 420, 1 );
 

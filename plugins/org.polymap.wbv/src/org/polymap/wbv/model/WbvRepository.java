@@ -109,7 +109,7 @@ public class WbvRepository {
             }
 
             // init fulltext
-            File wbvDir = new File( Polymap.getDataDir(), WbvPlugin.PLUGIN_ID );
+            File wbvDir = new File( Polymap.getDataDir(), WbvPlugin.ID );
             fulltextIndex = new LuceneFullTextIndex( new File( wbvDir, "fulltext" ) );
             fulltextIndex.addTokenFilter( new LowerCaseTokenFilter() );
 

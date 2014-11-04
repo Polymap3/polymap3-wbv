@@ -34,7 +34,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
 import org.eclipse.jface.viewers.ColumnLabelProvider;
-
 import org.polymap.core.data.ui.featuretable.DefaultFeatureTableColumn;
 import org.polymap.core.data.ui.featuretable.FeatureTableViewer;
 import org.polymap.core.data.ui.featuretable.IFeatureTableElement;
@@ -44,6 +43,7 @@ import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
 
+import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.ui.CompositesFeatureContentProvider.FeatureTableElement;
 
@@ -66,7 +66,9 @@ public class WaldbesitzerTableViewer
         super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | SWT.FULL_SELECTION | */SWT.NONE );
         this.uow = uow;
         try {
-            addColumn( new NameColumn() );
+            NameColumn nameColumn = new NameColumn(); 
+            addColumn( nameColumn );
+            nameColumn.sort( SWT.UP );
 
             // suppress deferred loading to fix "empty table" issue
             // setContent( fs.getFeatures( this.baseFilter ) );
@@ -114,11 +116,14 @@ public class WaldbesitzerTableViewer
             setWeight( 2, 120 );
             setHeader( "Name" );
             setAlign( SWT.LEFT );
+//            setComparator( new ViewerComparator() {                
+//            });
             setLabelProvider( new ColumnLabelProvider() {
                 @Override
                 public String getText( Object elm ) {
                     Waldbesitzer waldbesitzer = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
-                    return waldbesitzer.besitzer().anzeigename();
+                    Kontakt besitzer = waldbesitzer.besitzer();
+                    return besitzer != null ? besitzer.anzeigename() : "(kein Besitzer festgelegt)";
                 }
 //                @Override
 //                public String getToolTipText( Object elm ) {

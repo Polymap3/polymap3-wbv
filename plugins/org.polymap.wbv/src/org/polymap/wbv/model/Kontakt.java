@@ -84,6 +84,7 @@ public class Kontakt
 
     @Defaults
     @ImportColumn("EWBS_EMail")
+//    @Label("E-Mail", "Die E-Mail-Adresse des kontaktes. Beispiel: info@example.com")
     public Property<String> email;
 
     /** Zusätzliche Bemerkungen zu diesem Kontakt. */
@@ -103,7 +104,7 @@ public class Kontakt
     public String anzeigename() {
         return !isEmpty( organisation.get() )
                 ? organisation.get()
-                : Joiner.on( ' ' ).skipNulls().join( anrede.get(), vorname.get(), name.get() );
+                : Joiner.on( ' ' ).skipNulls().join( /*anrede.get(),*/ vorname.get(), name.get() );
     }
     
 }

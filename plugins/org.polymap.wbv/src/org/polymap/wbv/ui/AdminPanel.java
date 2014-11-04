@@ -31,6 +31,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
 
 import org.polymap.core.model2.runtime.ValueInitializer;
 import org.polymap.core.operation.OperationSupport;
@@ -124,10 +126,12 @@ public class AdminPanel
                 try {
                     newUnitOfWork();
 
+                    getSite().setStatus( new Status( IStatus.ERROR, WbvPlugin.ID, "Import...") );
+                    
                     WvkImporter op = new WvkImporter( uow(), new File( "/home/falko/Data/WBV" ) );
-                    OperationSupport.instance().execute( op, false, false );
-                    closeUnitOfWork( true );
-                    uow().commit();
+                    OperationSupport.instance().execute( op, true, false );
+//                    closeUnitOfWork( true );
+//                    uow().commit();
                 }
                 catch (Exception e) {
                     BatikApplication.handleError( "Der Import konnte nicht erfolgreich durchgeführt werden.", e );

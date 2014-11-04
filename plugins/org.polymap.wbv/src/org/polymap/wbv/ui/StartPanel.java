@@ -25,6 +25,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
+import org.eclipse.core.runtime.Status;
+
 import org.polymap.core.data.ui.featuretable.FeatureTableFilterBar;
 import org.polymap.core.model2.query.ResultSet;
 import org.polymap.core.runtime.IMessages;
@@ -36,11 +38,9 @@ import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
-import org.polymap.rhei.batik.toolkit.ConstraintData;
+import org.polymap.rhei.batik.app.BatikApplication;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
-import org.polymap.rhei.batik.toolkit.MinHeightConstraint;
-import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.fulltext.FullTextIndex;
 import org.polymap.rhei.fulltext.ui.EntitySearchField;
@@ -80,6 +80,13 @@ public class StartPanel
 
         // nur als start panel darstellen
         if (site.getPath().size() == 1) {
+            
+//            // test tool
+//            site.addToolbarAction( new Action( "Test" ) {
+//                public void run() {
+//                }
+//            });
+
             return true;
         }
         return false;
@@ -98,7 +105,7 @@ public class StartPanel
         IPanelToolkit tk = getSite().toolkit();
         IPanelSection welcome = tk.createPanelSection( parent, "Anmeldung" );
         welcome.addConstraint( new PriorityConstraint( 10 ) );
-        tk.createFlowText( welcome.getBody(), "Willkommen ..." );
+        tk.createFlowText( welcome.getBody(), i18n.get( "welcomeText" ) );
 
         // login
         IPanelSection section = tk.createPanelSection( parent, null );
@@ -110,6 +117,9 @@ public class StartPanel
                 if (super.login( name, passwd )) {
                     getSite().setTitle( "Start" );
                     getSite().setIcon( WbvPlugin.instance().imageForName( "icons/house.png" ) ); //$NON-NLS-1$
+                    getSite().setStatus( new Status( Status.OK, WbvPlugin.ID, "Erfolgreich angemeldet als: <b>" + name + "</b>" ) );
+                    
+                    getContext().setUserName( username );
 
                     for (Control child : parent.getChildren()) {
                         child.dispose();
@@ -118,7 +128,10 @@ public class StartPanel
                     parent.layout( true );
                     return true;
                 }
-                return false;
+                else {
+                    getSite().setStatus( new Status( Status.ERROR, WbvPlugin.ID, "Nutzername oder Passwort nicht korrekt." ) );
+                    return false;
+                }
             }
         };
         loginForm.setShowRegisterLink( false );
@@ -130,9 +143,6 @@ public class StartPanel
     
     protected void createMainContents( Composite parent ) {
         IPanelToolkit tk = getSite().toolkit();
-//        IPanelSection welcome = tk.createPanelSection( parent, "Suche" );
-//        welcome.addConstraint( new PriorityConstraint( 10 ) );
-//        tk.createText( welcome.getBody(), "Volltext...", SWT.BORDER );
 
         // results table
         IPanelSection tableSection = tk.createPanelSection( parent, "Waldbesitzer" );
@@ -174,21 +184,24 @@ public class StartPanel
                 viewer.setInput( results );
             }
         };
+        search.getText().setText( "Im" );
         new FulltextProposal( fulltext, search.getText() );
         
         // layout
+        int displayHeight = BatikApplication.sessionDisplay().getBounds().height;
+        int tableHeight = (displayHeight - (2*65) - (2*75));  // margins, titles+icons
         createBtn.setLayoutData( FormDataFactory.filled().clearRight().clearBottom().create() );
         filterBar.getControl().setLayoutData( FormDataFactory.filled().bottom( viewer.getTable() ).left( createBtn ).right( 50 ).create() );
         search.getControl().setLayoutData( FormDataFactory.filled().height( 27 ).bottom( viewer.getTable() ).left( filterBar.getControl() ).create() );
-        FormDataFactory.filled().top( createBtn ).height( 500 ).applyTo( viewer.getTable() );
+        viewer.getTable().setLayoutData( FormDataFactory.filled().top( createBtn ).height( tableHeight ).create() );
         
         // map
         IPanelSection karte = tk.createPanelSection( parent, null );
         karte.addConstraint( new PriorityConstraint( 5 ) );
         map = new WbvMapViewer();
         OpenLayersWidget widget = map.createContents( karte.getBody() );
-        widget.setLayoutData( new ConstraintData( new MinWidthConstraint( 400, 1 ), new MinHeightConstraint( 400, 1 ) ) );
-
+        karte.getBody().setLayout( FormLayoutFactory.defaults().create() );
+        widget.setLayoutData( FormDataFactory.filled().height( 500 ).create() );
     }
 
 
