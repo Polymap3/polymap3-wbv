@@ -224,6 +224,22 @@ public class WaldbesitzerPanel
             createKontaktSection( besitzer.getBody(), kontakt, wb );
         }
 
+        // Flurstücke
+        final IPanelSection flurstuecke = tk.createPanelSection( parent, "Flurstücke" );
+        flurstuecke.addConstraint( 
+                WbvPlugin.MIN_COLUMN_WIDTH, 
+                new PriorityConstraint( 5 ) );
+        flurstuecke.getBody().setLayout( FormLayoutFactory.defaults().create() );
+        final FlurstueckTableViewer flViewer = new FlurstueckTableViewer( uow(), flurstuecke.getBody(), wb.flurstuecke );
+        flViewer.getTable().setLayoutData( FormDataFactory.filled().height( 200 ).create() );
+        flurstuecke.getBody().getDisplay().asyncExec( new Runnable() {
+            @Override
+            public void run() {
+                flViewer.setInput( wb.flurstuecke );
+                log.info( Iterables.toString( wb.flurstuecke ) );
+            }
+        } );
+
         // map
         IPanelSection karte = tk.createPanelSection( parent, null );
         karte.addConstraint( WbvPlugin.MIN_COLUMN_WIDTH, new PriorityConstraint( 0 ) );

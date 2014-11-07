@@ -125,7 +125,10 @@ public class WbvRepository {
                             Revier.class, 
                             Waldstueck.class, 
                             Waldbesitzer.class, 
-                            Kontakt.class} )
+                            Kontakt.class,
+                            Flurstueck.class,
+                            Gemeinde.class,
+                            Gemarkung.class} )
                     .setStore( 
                             new OptimisticLocking(
                             new FulltextIndexer( fulltextIndex, new TypeFilter( Waldbesitzer.class ),

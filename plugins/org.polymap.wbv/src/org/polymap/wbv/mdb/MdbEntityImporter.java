@@ -17,16 +17,24 @@ package org.polymap.wbv.mdb;
 import java.util.HashMap;
 import java.util.Map;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import com.healthmarketscience.jackcess.Database;
+import com.healthmarketscience.jackcess.Row;
+import com.healthmarketscience.jackcess.Table;
+
+import org.eclipse.core.runtime.IProgressMonitor;
 
 import org.polymap.core.model2.Composite;
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.Property;
 import org.polymap.core.model2.runtime.UnitOfWork;
 import org.polymap.core.model2.runtime.ValueInitializer;
+import org.polymap.core.runtime.SubMonitor;
 
 /**
  * Importiert Spalten aus einer Tabelle in ein {@link Composite}.
@@ -67,8 +75,28 @@ public class MdbEntityImporter<T extends Composite> {
     }
 
 
-    public T createEntity( final Map<String,Object> row ) {
-        return (T)uow.createEntity( (Class<Entity>)entityClass, null, new ValueInitializer<Entity>() {
+    public int importTable( Database db, IProgressMonitor monitor ) throws IOException {
+        SubMonitor submon = new SubMonitor( monitor, 10 );
+        Table table = db.getTable( getTableName() );
+        submon.beginTask( entityClass.getSimpleName(), table.getRowCount() );
+        int count = 0;
+        for (Row row=table.getNextRow(); row != null; row = table.getNextRow()) {
+            createEntity( row, buildId( row ) );
+            count ++;
+            submon.worked( 1 );
+        }
+        submon.done();
+        return count;
+    }
+    
+    
+    public String buildId( Row row ) {
+        throw new RuntimeException( "Override this." );
+    }
+
+
+    public T createEntity( final Map<String,Object> row, String id ) {
+        return (T)uow.createEntity( (Class<Entity>)entityClass, id, new ValueInitializer<Entity>() {
             @Override
             public Entity initialize( Entity proto ) throws Exception {
                 return (Entity)fill( (T)proto, row );
@@ -76,7 +104,7 @@ public class MdbEntityImporter<T extends Composite> {
         });
     }
     
-
+    
     public T fill( T composite, final Map<String,Object> row ) {
         for (Map.Entry<String,Object> entry : row.entrySet()) {
             Field f = fieldMap.get( entry.getKey() );

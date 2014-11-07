@@ -37,7 +37,23 @@ import org.polymap.wbv.mdb.ImportTable;
 @ImportTable("Waldbesitzer")
 public class Waldbesitzer
         extends Entity {
-
+    
+//    0|ID_WBS                         (LONG 4)                  
+//    1|WBS_Name                       (TEXT 100)                
+//    2|WBS_Vorname                    (TEXT 100)                
+//    3|WBS_Waldbesitzer               (BOOLEAN 1)               
+//    4|WBS_Pächter                    (BOOLEAN 1)               
+//    5|WBS_FBG                        (BOOLEAN 1)               
+//    6|WBS_FBG_Nr                     (LONG 4)                  
+//    7|WBS_EA                         (TEXT 6)                  
+//    8|WBS_Bemerkung                  (MEMO 0)                  
+//    9|WBS_Feld1                      (TEXT 100)                
+//   10|WBS_Feld2                      (TEXT 100)                
+//   11|WBS_ID_Alt                     (LONG 4)                  
+//   12|WBS_Papierkorb                 (BOOLEAN 1)               
+//   13|WBS_Betreuung_ständig          (BOOLEAN 1)               
+//   14|WBS_FBNr                       (LONG 4)
+   
     public enum Waldeigentumsart {
         /** Staatswald (Land Sachsen, Bund) */
         Staat,
@@ -62,8 +78,13 @@ public class Waldbesitzer
     @Defaults
     @ImportColumn("WBS_Papierkorb")
     public Property<Boolean>            gelöscht;
+    
+    public CollectionProperty<Flurstueck> flurstuecke;
 
-    /** Alle Ansprechpartner, inklusive des {@link #besitzer()}s auf Index 0. */
+    /**
+     * Alle Ansprechpartner, inklusive des {@link #besitzer()}s auf Index
+     * {@link #besitzerIndex}.
+     */
     @MinOccurs(1)
     public CollectionProperty<Kontakt>  kontakte;
 

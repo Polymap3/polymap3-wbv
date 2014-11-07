@@ -14,6 +14,8 @@
  */
 package org.polymap.wbv.mdb;
 
+import java.util.Map;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -42,6 +44,9 @@ import org.polymap.core.runtime.SubMonitor;
 import org.polymap.rhei.batik.app.BatikApplication;
 
 import org.polymap.wbv.WbvPlugin;
+import org.polymap.wbv.model.Flurstueck;
+import org.polymap.wbv.model.Gemarkung;
+import org.polymap.wbv.model.Gemeinde;
 import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
@@ -77,7 +82,7 @@ public class WvkImporter
         }
         catch (Exception e) {
             BatikApplication.handleError( "", e );
-            return new Status( IStatus.ERROR, WbvPlugin.PLUGIN_ID, "", e );
+            return new Status( IStatus.ERROR, WbvPlugin.ID, "", e );
         }
     }
 
@@ -85,7 +90,7 @@ public class WvkImporter
     public void importData( IProgressMonitor monitor ) throws Exception {
         Database db = DatabaseBuilder.open( new File( baseDir, "WVK_dat.mdb" ) );
         try {
-            monitor.beginTask( getLabel(), 3 );
+            monitor.beginTask( getLabel(), 60 );
             monitor.subTask( "Datenbank öffnen" );
             db.setLinkResolver( new LinkResolver() {
                 @Override
@@ -93,10 +98,10 @@ public class WvkImporter
                     return DatabaseBuilder.open( new File( FilenameUtils.getName( linkeeFileName ) ) );
                 }
             });
-            monitor.worked( 1 );
+            monitor.worked( 10 );
    
             // Waldbesitzer
-            SubMonitor submon = new SubMonitor( monitor, 1 );
+            SubMonitor submon = new SubMonitor( monitor, 10 );
             final MdbEntityImporter<Waldbesitzer> wbImporter = new MdbEntityImporter( uow, Waldbesitzer.class );
             Table table = db.getTable( wbImporter.getTableName() );
             submon.beginTask( "Waldbesitzer", table.getRowCount() );
@@ -125,24 +130,70 @@ public class WvkImporter
             submon.done();
             
             // Waldbesitzer_Adresse
-            submon = new SubMonitor( monitor, 1 );
-            final MdbEntityImporter<Kontakt> kontaktImporter = new MdbEntityImporter( uow, Kontakt.class );
-            table = db.getTable( kontaktImporter.getTableName() );
-            submon.beginTask( "Adressen", table.getRowCount() );
-            for (Row row=table.getNextRow(); row != null; row = table.getNextRow()) {
-                final Row finalRow = row;
-                String wbId = row.get( "ID_WBS" ).toString();
-                Waldbesitzer wb = uow.entity( Waldbesitzer.class, "Waldbesitzer."+wbId );
-                wb.kontakte.createElement( new ValueInitializer<Kontakt>() {
-                    @Override
-                    public Kontakt initialize( Kontakt proto ) throws Exception {
-                        return kontaktImporter.fill( proto, finalRow );
-                    }
-                });
-                //log.info( "   " + wb );
-                submon.worked( 1 );
-            }
-            submon.done();
+            new MdbEntityImporter<Kontakt>( uow, Kontakt.class ) {
+                @Override
+                public String buildId( Row row ) {
+                    return null;
+                }
+                @Override
+                public Kontakt createEntity( final Map row, String id ) {
+                    String wbId = row.get( "ID_WBS" ).toString();
+                    Waldbesitzer wb = uow.entity( Waldbesitzer.class, "Waldbesitzer."+wbId );
+                    return wb.kontakte.createElement( new ValueInitializer<Kontakt>() {
+                        @Override
+                        public Kontakt initialize( Kontakt proto ) throws Exception {
+                            return fill( proto, row );
+                        }
+                    });
+                }
+            }.importTable( db, monitor );
+
+            // Gemarkung
+            new MdbEntityImporter<Gemarkung>( uow, Gemarkung.class ) {
+                @Override
+                public String buildId( Row row ) {
+                    String result = "Gemarkung." + row.get( "ID_Gemarkung" );
+                    return result;
+                }
+            }.importTable( db, monitor );
+
+            // Gemeinde
+            new MdbEntityImporter<Gemeinde>( uow, Gemeinde.class ) {
+                @Override
+                public String buildId( Row row ) {
+                    return "Gemeinde." + row.get( "ID_Gemeinde" );
+                }
+            }.importTable( db, monitor );
+
+            // Flurstücke
+            new MdbEntityImporter<Flurstueck>( uow, Flurstueck.class ) {
+                @Override
+                public String buildId( Row row ) {
+                    String id = row.get( "ID_FL" ).toString();
+                    return "Flurstueck." + id;                  
+                }
+                @Override
+                public Flurstueck createEntity( final Map row, String id ) {
+                    String wbId = row.get( "ID_WBS" ).toString();
+                    Waldbesitzer wb = uow.entity( Waldbesitzer.class, "Waldbesitzer."+wbId );
+                    return wb.flurstuecke.createElement( new ValueInitializer<Flurstueck>() {
+                        @Override
+                        public Flurstueck initialize( Flurstueck proto ) throws Exception {
+                            fill( proto, row );
+                            
+                            String gemeindeId = row.get( "FL_Gemeinde" ).toString();
+                            Gemeinde gemeinde = uow.entity( Gemeinde.class, "Gemeinde."+gemeindeId );
+                            proto.gemeinde.set( gemeinde );
+
+                            String gemarkungId = row.get( "FL_Gemarkung" ).toString();
+                            Gemarkung gemarkung = uow.entity( Gemarkung.class, "Gemarkung."+gemarkungId );
+                            proto.gemarkung.set( gemarkung );
+                            return proto;
+                        }
+                    });
+                }
+            }.importTable( db, monitor );
+
             monitor.done();
         }
         finally {

@@ -33,6 +33,8 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.IJobChangeEvent;
+import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 
 import org.polymap.core.model2.runtime.ValueInitializer;
 import org.polymap.core.operation.OperationSupport;
@@ -125,19 +127,26 @@ public class AdminPanel
             public void widgetSelected( SelectionEvent ev ) {
                 try {
                     newUnitOfWork();
+                    getSite().setStatus( new Status( IStatus.ERROR, WbvPlugin.ID, "Import läuft...") );
 
-                    getSite().setStatus( new Status( IStatus.ERROR, WbvPlugin.ID, "Import...") );
-                    
                     WvkImporter op = new WvkImporter( uow(), new File( "/home/falko/Data/WBV" ) );
-                    OperationSupport.instance().execute( op, true, false );
-//                    closeUnitOfWork( true );
-//                    uow().commit();
+                    OperationSupport.instance().execute( op, true, false, new JobChangeAdapter() {
+                        @Override
+                        public void done( IJobChangeEvent jev ) {
+                            if (jev.getResult().isOK()) {
+                                closeUnitOfWork( true );
+                                uow().commit();
+                                getSite().setStatus( new Status( IStatus.OK, WbvPlugin.ID, "Import war erfolgreich." ) );
+                            }
+                            else {
+                                closeUnitOfWork( false );                                
+                                getSite().setStatus( new Status( IStatus.ERROR, WbvPlugin.ID, jev.getResult().getMessage() ) );
+                            }
+                        }
+                    });
                 }
                 catch (Exception e) {
                     BatikApplication.handleError( "Der Import konnte nicht erfolgreich durchgeführt werden.", e );
-                }
-                finally {
-                    closeUnitOfWork( false );
                 }
             }
         });
