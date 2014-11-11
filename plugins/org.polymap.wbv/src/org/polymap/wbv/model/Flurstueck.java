@@ -22,6 +22,7 @@ import org.polymap.core.model2.Association;
 import org.polymap.core.model2.Composite;
 import org.polymap.core.model2.Property;
 
+import org.polymap.wbv.mdb.ImportColumn;
 import org.polymap.wbv.mdb.ImportTable;
 
 /**
@@ -69,15 +70,27 @@ public class Flurstueck
     public Association<Gemarkung>       gemarkung;
 
     @Nullable
-    public Property<String>             flnr;
+    @ImportColumn("FL_Flstnr")
+    public Property<String>             zaehlerNenner;
     
     @Nullable
+    @ImportColumn("FL_Flae")
     public Property<Double>             flaeche;
 
     @Nullable
+    @ImportColumn("FL_davon_Wald")
     public Property<Double>             flaecheWald;
 
     @Nullable
+    @ImportColumn("FL_Bemerkung")
     public Property<String>             bemerkung;
+
+    @Nullable
+    @ImportColumn("FL_Datum_Eingabe")
+    public Property<String>             eingabe;
+
+    @Nullable
+    @ImportColumn("FL_LK")
+    public Property<String>             landkreis;
 
 }

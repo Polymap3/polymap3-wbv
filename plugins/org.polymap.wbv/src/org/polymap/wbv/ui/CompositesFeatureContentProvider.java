@@ -54,7 +54,7 @@ class CompositesFeatureContentProvider
 
 
     public Object[] getElements( Object input ) {
-        log.debug( "getElements(): input=" + input.getClass().getName() );
+        log.info( "getElements(): input=" + input.getClass().getName() );
         
         List<IFeatureTableElement> result = new ArrayList( 1024 );
         for (final Composite composite : composites) {
@@ -71,9 +71,16 @@ class CompositesFeatureContentProvider
     /**
      *
      */
-    public class FeatureTableElement
+    public static class FeatureTableElement
             implements IFeatureTableElement {
 
+        public static <T extends Composite> T entity( Object elm ) {
+            return (T)((FeatureTableElement)elm).getComposite();
+        }
+
+        
+        // instance ***************************************
+        
         private Composite       composite;
 
 

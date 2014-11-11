@@ -148,9 +148,10 @@ public class MdbInspector {
 
 
     private void printRows( Table table ) throws IOException {
+        int maxRows = table.getName().contains( "Flurstück" ) ? 300 : 5;
         int rowCount = 0;
         Map<String,Object> row = null;
-        while ((row = table.getNextRow()) != null && rowCount++ < 5) {
+        while ((row = table.getNextRow()) != null && rowCount++ < maxRows) {
             printer.printTableRow( row );
         }
     }

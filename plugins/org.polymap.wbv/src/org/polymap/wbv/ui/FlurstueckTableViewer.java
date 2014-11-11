@@ -26,11 +26,13 @@ import org.geotools.feature.type.AttributeTypeImpl;
 import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.PropertyDescriptor;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
@@ -47,6 +49,7 @@ import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
 
 import org.polymap.wbv.model.Flurstueck;
+import org.polymap.wbv.model.Gemarkung;
 import org.polymap.wbv.model.Gemeinde;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.ui.CompositesFeatureContentProvider.FeatureTableElement;
@@ -67,15 +70,84 @@ public class FlurstueckTableViewer
 
 
     public FlurstueckTableViewer( UnitOfWork uow, Composite parent, Iterable<Flurstueck> rs ) {
-        super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | SWT.FULL_SELECTION | */SWT.NONE );
+        super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | SWT.FULL_SELECTION | */SWT.FULL_SELECTION );
         this.uow = uow;
         try {
-            GemeindeColumn gemeindeColumn = new GemeindeColumn(); 
-            addColumn( gemeindeColumn );
-            gemeindeColumn.sort( SWT.UP );
+            // Gemeinde
+            addColumn( new DefaultFeatureTableColumn( createDescriptor( "Gemeinde", String.class ) )
+                .setWeight( 2, 120 )
+                .setLabelProvider( new ColumnLabelProvider() {
+                    @Override
+                    public String getText( Object elm ) {
+                        Flurstueck entity = FeatureTableElement.entity( elm );
+                        Gemeinde gemeinde = entity.gemeinde.get();
+                        return gemeinde != null ? gemeinde.name.get() : "(kein Gemeinde)";
+                    }
+                })
+                /*.setEditing( true )*/ )
+                .sort( SWT.UP );
 
-            addColumn( new GemarkungColumn() );
+            // Gemarkung
+            addColumn( new DefaultFeatureTableColumn( createDescriptor( "Gemarkung", String.class ) )
+                .setWeight( 2, 120 )
+                .setLabelProvider( new ColumnLabelProvider() {
+                    @Override
+                    public String getText( Object elm ) {
+                        Flurstueck entity = FeatureTableElement.entity( elm );
+                        Gemarkung gemarkung = entity.gemarkung.get();
+                        return gemarkung != null ? gemarkung.name.get() : "(kein Gemarkung)";
+                    }
+                }));
             
+            // Flurstücksnummer
+            addColumn( new DefaultFeatureTableColumn( createDescriptor( "Nummer", String.class ) )
+                .setWeight( 1, 60 )
+                .setLabelProvider( new ColumnLabelProvider() {
+                    @Override
+                    public String getText( Object elm ) {
+                        Flurstueck entity = FeatureTableElement.entity( elm );
+                        return StringUtils.defaultIfEmpty( entity.zaehlerNenner.get(), "-" );
+                    }
+                }));
+            
+            // Fläche
+            addColumn( new DefaultFeatureTableColumn( createDescriptor( "Fläche (ha)", Double.class ) )
+                .setWeight( 1, 60 )
+                .setLabelProvider( new ColumnLabelProvider() {
+                    @Override
+                    public String getText( Object elm ) {
+                        Flurstueck entity = FeatureTableElement.entity( elm );
+                        return Objects.firstNonNull( entity.flaeche.get(), -1d ).toString();
+                    }
+                }));
+            
+            // davon Wald
+            addColumn( new DefaultFeatureTableColumn( createDescriptor( "Wald (ha)", Double.class ) )
+                .setWeight( 1, 60 )
+                .setLabelProvider( new ColumnLabelProvider() {
+                    @Override
+                    public String getText( Object elm ) {
+                        Flurstueck entity = FeatureTableElement.entity( elm );
+                        return Objects.firstNonNull( entity.flaecheWald.get(), -1d ).toString();
+                    }
+                }));
+
+            // Bemerkung
+            addColumn( new DefaultFeatureTableColumn( createDescriptor( "Bemerkung", Double.class ) )
+                .setWeight( 2, 120 )
+                .setLabelProvider( new ColumnLabelProvider() {
+                    @Override
+                    public String getText( Object elm ) {
+                        Flurstueck entity = FeatureTableElement.entity( elm );
+                        return Objects.firstNonNull( entity.bemerkung.get(), "" ).toString();
+                    }
+                    @Override
+                    public String getToolTipText( Object elm ) {
+                        Flurstueck entity = FeatureTableElement.entity( elm );
+                        return Objects.firstNonNull( entity.bemerkung.get(), "" ).toString();
+                    }
+                }));
+
             // suppress deferred loading to fix "empty table" issue
             // setContent( fs.getFeatures( this.baseFilter ) );
             setContent( new CompositesFeatureContentProvider( rs ) );
@@ -97,7 +169,7 @@ public class FlurstueckTableViewer
     @EventHandler(display=true, delay=1000, scope=Event.Scope.JVM)
     protected void entityChanged( List<PropertyChangeEvent> ev ) {
         if (!getControl().isDisposed()) {
-            refresh();
+            refresh( true );
         }
     }
 
@@ -111,48 +183,6 @@ public class FlurstueckTableViewer
     }
 
     
-    /**
-     *
-     */
-    class GemeindeColumn
-            extends DefaultFeatureTableColumn {
-
-        public GemeindeColumn() {
-            super( createDescriptor( "Gemeinde", String.class ) );
-            setWeight( 2, 120 );
-            setLabelProvider( new ColumnLabelProvider() {
-                @Override
-                public String getText( Object elm ) {
-                    Flurstueck entity = (Flurstueck)((FeatureTableElement)elm).getComposite();
-                    Gemeinde gemeinde = entity.gemeinde.get();
-                    return gemeinde != null ? gemeinde.name.get() : "(kein Gemeinde)";
-                }
-            });
-        }
-    }
-
-
-   /**
-    *
-    */
-   class GemarkungColumn
-           extends DefaultFeatureTableColumn {
-
-       public GemarkungColumn() {
-           super( createDescriptor( "Gemarkung", String.class ) );
-           setWeight( 2, 120 );
-           setLabelProvider( new ColumnLabelProvider() {
-               @Override
-               public String getText( Object elm ) {
-                   Flurstueck entity = (Flurstueck)((FeatureTableElement)elm).getComposite();
-                   Gemeinde gemeinde = entity.gemeinde.get();
-                   return gemeinde != null ? gemeinde.name.get() : "(kein Gemarkung)";
-               }
-           });
-       }
-   }
-
-
     public static PropertyDescriptor createDescriptor( String _name, Class binding ) {
         NameImpl name = new NameImpl( _name );
         AttributeType type = new AttributeTypeImpl( name, binding, true, false, null, null, null );

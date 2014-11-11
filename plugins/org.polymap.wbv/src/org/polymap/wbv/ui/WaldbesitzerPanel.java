@@ -231,14 +231,8 @@ public class WaldbesitzerPanel
                 new PriorityConstraint( 5 ) );
         flurstuecke.getBody().setLayout( FormLayoutFactory.defaults().create() );
         final FlurstueckTableViewer flViewer = new FlurstueckTableViewer( uow(), flurstuecke.getBody(), wb.flurstuecke );
+        getContext().propagate( flViewer );
         flViewer.getTable().setLayoutData( FormDataFactory.filled().height( 200 ).create() );
-        flurstuecke.getBody().getDisplay().asyncExec( new Runnable() {
-            @Override
-            public void run() {
-                flViewer.setInput( wb.flurstuecke );
-                log.info( Iterables.toString( wb.flurstuecke ) );
-            }
-        } );
 
         // map
         IPanelSection karte = tk.createPanelSection( parent, null );
