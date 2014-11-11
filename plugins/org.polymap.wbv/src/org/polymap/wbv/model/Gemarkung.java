@@ -18,6 +18,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.Property;
+import org.polymap.core.model2.Queryable;
 
 import org.polymap.wbv.mdb.ImportColumn;
 import org.polymap.wbv.mdb.ImportTable;
@@ -37,6 +38,7 @@ public class Gemarkung
 //    0|ID_Gemarkung                   (LONG 4)                  
 //    1|Gemarkung_Name                 (TEXT 100)
     
+    @Queryable
     @ImportColumn("Gemarkung_Name")
     public Property<String>             name;
     

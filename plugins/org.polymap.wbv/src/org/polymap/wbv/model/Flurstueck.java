@@ -21,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
 import org.polymap.core.model2.Association;
 import org.polymap.core.model2.Composite;
 import org.polymap.core.model2.Property;
+import org.polymap.core.model2.Queryable;
 
 import org.polymap.wbv.mdb.ImportColumn;
 import org.polymap.wbv.mdb.ImportTable;
@@ -81,10 +82,12 @@ public class Flurstueck
     @ImportColumn("FL_davon_Wald")
     public Property<Double>             flaecheWald;
 
+    @Queryable
     @Nullable
     @ImportColumn("FL_Bemerkung")
     public Property<String>             bemerkung;
 
+    @Queryable
     @Nullable
     @ImportColumn("FL_Datum_Eingabe")
     public Property<String>             eingabe;

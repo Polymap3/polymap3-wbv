@@ -14,6 +14,8 @@
  */
 package org.polymap.wbv.model;
 
+import static com.google.common.collect.Lists.newArrayList;
+
 import java.util.List;
 
 import java.io.File;
@@ -32,7 +34,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.base.Supplier;
-
 import org.eclipse.core.runtime.NullProgressMonitor;
 
 import org.polymap.core.data.feature.recordstore.RDataStore;
@@ -112,6 +113,9 @@ public class WbvRepository {
             File wbvDir = new File( Polymap.getDataDir(), WbvPlugin.ID );
             fulltextIndex = new LuceneFullTextIndex( new File( wbvDir, "fulltext" ) );
             fulltextIndex.addTokenFilter( new LowerCaseTokenFilter() );
+            
+            WaldbesitzerFulltextTransformer wbTransformer = new WaldbesitzerFulltextTransformer();
+            wbTransformer.setHonorQueryableAnnotation( true );
 
             // find DataStore from service
             DataAccess ds = service.resolve( DataAccess.class, new NullProgressMonitor() );
@@ -131,7 +135,7 @@ public class WbvRepository {
                             Gemarkung.class} )
                     .setStore( 
                             new OptimisticLocking(
-                            new FulltextIndexer( fulltextIndex, new TypeFilter( Waldbesitzer.class ),
+                            new FulltextIndexer( fulltextIndex, new TypeFilter( Waldbesitzer.class ), newArrayList( wbTransformer ),
                             new RecordStoreAdapter( store ) ) ) )
                     .create();
         }

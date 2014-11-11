@@ -156,8 +156,10 @@ public class StartPanel
         viewer.addSelectionChangedListener( new ISelectionChangedListener() {
             @Override
             public void selectionChanged( SelectionChangedEvent ev ) {
-                selected.set( viewer.getSelected().get( 0 ) );
-                getContext().openPanel( WaldbesitzerPanel.ID );
+                if (!viewer.getSelected().isEmpty()) {
+                    selected.set( viewer.getSelected().get( 0 ) );
+                    getContext().openPanel( WaldbesitzerPanel.ID );
+                }
             }
         });
 

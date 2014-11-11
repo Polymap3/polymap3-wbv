@@ -71,14 +71,17 @@ public class Kontakt
     public Property<String> organisation;
 
     @Defaults
+    @Queryable
     @ImportColumn("EWBS_Telefon1")
     public Property<String> telefon1;
 
     @Defaults
+    @Queryable
     @ImportColumn("EWBS_Telefon2")
     public Property<String> telefon2;
 
     @Defaults
+    @Queryable
     @ImportColumn("EWBS_Fax")
     public Property<String> fax;
 
@@ -89,6 +92,7 @@ public class Kontakt
 
     /** Zusätzliche Bemerkungen zu diesem Kontakt. */
     @Defaults
+    @Queryable
     public Property<String> bemerkung;
 
     /** Aus WKV-Daten, Bedeutung ist unklar. */

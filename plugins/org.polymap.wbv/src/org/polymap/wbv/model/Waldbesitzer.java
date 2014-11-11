@@ -22,6 +22,7 @@ import org.polymap.core.model2.Defaults;
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.MinOccurs;
 import org.polymap.core.model2.Property;
+import org.polymap.core.model2.Queryable;
 import org.polymap.core.model2.query.Query;
 import org.polymap.core.model2.store.feature.SRS;
 
@@ -62,20 +63,26 @@ public class Waldbesitzer
         /** Kirchen */
         Kirche,
         /** Privates Eigentum (Einzelpersonen, Unternehmen) */
-        Privat
+        Privat,
+        /** Nach dem Import kein bekannter Wert */
+        Unbekannt
     }
 
+    @Queryable
     public Property<Waldeigentumsart>   eigentumsArt;
 
     @Defaults
+    @Queryable
     @ImportColumn("WBS_Bemerkung")
     public Property<String>             bemerkung;
 
     @Defaults
+    @Queryable
     @ImportColumn("WBS_Pächter")
     public Property<Boolean>            pächter;
 
     @Defaults
+    @Queryable
     @ImportColumn("WBS_Papierkorb")
     public Property<Boolean>            gelöscht;
     

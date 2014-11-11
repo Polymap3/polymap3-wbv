@@ -1,4 +1,5 @@
 /* 
+ * polymap.org
  * Copyright (C) 2014, Falko Bräutigam. All rights reserved.
  *
  * This is free software; you can redistribute it and/or modify it
@@ -16,30 +17,29 @@ package org.polymap.wbv.model;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.Property;
-import org.polymap.core.model2.Queryable;
+import org.polymap.core.model2.Association;
+import org.polymap.core.model2.Composite;
 
-import org.polymap.wbv.mdb.ImportColumn;
-import org.polymap.wbv.mdb.ImportTable;
+import org.polymap.rhei.fulltext.model2.EntityFeatureTransformer;
 
 /**
  * 
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-@ImportTable("ESt_Gemeinde")
-public class Gemeinde
-        extends Entity {
+public class WaldbesitzerFulltextTransformer
+        extends EntityFeatureTransformer {
 
-    private static Log log = LogFactory.getLog( Gemeinde.class );
+    private static Log log = LogFactory.getLog( WaldbesitzerFulltextTransformer.class );
+
     
-//    ESt_Gemeinde (60 Datensätze)
-//    0|ID_Gemeinde                    (LONG 4)                  
-//    1|Gemeinde_Name                  (TEXT 100)
-
-    @Queryable
-    @ImportColumn("Gemeinde_Name")
-    public Property<String>             name;
+    @Override
+    protected void visitAssociation( Association prop ) {
+        Object value = prop.get();
+        if (value instanceof Gemeinde
+                || value instanceof Gemarkung) {
+            processComposite( (Composite)value );
+        }
+    }
     
 }

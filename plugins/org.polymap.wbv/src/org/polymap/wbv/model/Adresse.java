@@ -15,6 +15,7 @@ package org.polymap.wbv.model;
 import org.polymap.core.model2.Composite;
 import org.polymap.core.model2.Defaults;
 import org.polymap.core.model2.Property;
+import org.polymap.core.model2.Queryable;
 
 import org.polymap.wbv.mdb.ImportColumn;
 
@@ -27,19 +28,23 @@ public class Adresse
         extends Composite {
 
     @Defaults
+    @Queryable
     @ImportColumn("EWBS_Ort")
     public Property<String> ort;
 
     @Defaults
+    @Queryable
     @ImportColumn("EWBS_Ortsteil")
     public Property<String> ortsteil;
 
     /** Strasse, inklusive Hausnummer. */
     @Defaults
+    @Queryable
     @ImportColumn("EWBS_Straße")
     public Property<String> strasse;
 
     @Defaults
+    @Queryable
     @ImportColumn("EWBS_PLZ")
     public Property<String> plz;
 
