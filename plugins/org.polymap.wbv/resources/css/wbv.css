@@ -1,0 +1,46 @@
+Display {
+  rwt-fontlist: 12px"Open Sans", 'Segoe UI', Corbel, Calibri, Tahoma, 'Lucida Sans Unicode';
+  /*background-image: url(resources/icons/rap/display/browser_bg.png );*/
+  font: 12px"Open Sans", Arial, sans-serif;
+}
+Composite.atlas-status {
+  font: 12px"Open Sans", Arial, sans-serif;
+}
+Label.batik-panel-section-title {
+  font: 22px/100%"Open Sans", Arial, sans-serif;
+}
+DateTime {
+  font: 12px"Open Sans", Arial, sans-serif;
+}
+Button[PUSH] {
+  box-shadow: 0px 1px 3px #808080;
+  text-shadow: 0px 1px 3px #808080;
+}
+Combo, Combo[BORDER] {
+  font: 12px"Open Sans", Arial, sans-serif;
+}
+Label, CLabel, Link, Button {
+  font: 14px"Open Sans", Arial, sans-serif;
+}
+List {
+  font: 12px"Open Sans", Arial, sans-serif;
+}
+List-Item {
+  padding: 5px 10px 5px 10px;
+  font: 12px"Open Sans", Arial, sans-serif;
+}
+Shell-Titlebar {
+  font: 12px"Open Sans", Arial, sans-serif;
+}
+Table {
+  font: 12px"Open Sans", Arial, sans-serif;
+}
+TableColumn {
+  font: 12px"Open Sans", Arial, sans-serif;
+}
+Text {
+  font: 12px"Open Sans", Arial, sans-serif;
+}
+FileUpload {
+  font: 12px"Open Sans", Arial, sans-serif;
+}

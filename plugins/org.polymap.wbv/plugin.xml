@@ -42,5 +42,12 @@
             id="org.polymap.wbv.AdminPanel">
       </panel>
    </extension>
+   <extension
+         point="org.eclipse.rap.ui.themes">
+      <themeContribution
+            file="resources/css/wbv.css"
+            themeId="org.polymap.rhei.batik.theme">
+      </themeContribution>
+   </extension>
 
 </plugin>
