@@ -17,6 +17,8 @@ import static com.google.common.collect.Iterables.transform;
 import static java.util.Arrays.asList;
 
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import java.beans.PropertyChangeEvent;
 
@@ -25,15 +27,19 @@ import org.geotools.feature.type.AttributeDescriptorImpl;
 import org.geotools.feature.type.AttributeTypeImpl;
 import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.PropertyDescriptor;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.base.Function;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+
 import org.polymap.core.data.ui.featuretable.DefaultFeatureTableColumn;
 import org.polymap.core.data.ui.featuretable.FeatureTableViewer;
 import org.polymap.core.data.ui.featuretable.IFeatureTableElement;
@@ -43,6 +49,7 @@ import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
 
+import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.ui.CompositesFeatureContentProvider.FeatureTableElement;
@@ -68,6 +75,7 @@ public class WaldbesitzerTableViewer
         try {
             NameColumn nameColumn = new NameColumn(); 
             addColumn( nameColumn );
+            addColumn( new FlurstueckColumn() );
             nameColumn.sort( SWT.UP );
 
             // suppress deferred loading to fix "empty table" issue
@@ -106,75 +114,75 @@ public class WaldbesitzerTableViewer
 
     
     /**
-     *
-     */
-    class NameColumn
-            extends DefaultFeatureTableColumn {
+    *
+    */
+   class NameColumn
+           extends DefaultFeatureTableColumn {
 
-        public NameColumn() {
-            super( createDescriptor( "name", String.class ) );
-            setWeight( 2, 120 );
-            setHeader( "Name" );
-            setAlign( SWT.LEFT );
-//            setComparator( new ViewerComparator() {                
-//            });
-            setLabelProvider( new ColumnLabelProvider() {
-                @Override
-                public String getText( Object elm ) {
-                    Waldbesitzer waldbesitzer = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
-                    Kontakt besitzer = waldbesitzer.besitzer();
-                    return besitzer != null ? besitzer.anzeigename() : "(kein Besitzer festgelegt)";
-                }
-//                @Override
-//                public String getToolTipText( Object elm ) {
-//                }
-            });
-        }
-    }
+       public NameColumn() {
+           super( createDescriptor( "name", String.class ) );
+           setWeight( 2, 120 );
+           setHeader( "Name" );
+           setAlign( SWT.LEFT );
+//           setComparator( new ViewerComparator() {                
+//           });
+           setLabelProvider( new ColumnLabelProvider() {
+               @Override
+               public String getText( Object elm ) {
+                   Waldbesitzer wb = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
+                   Kontakt besitzer = wb.besitzer();
+                   return besitzer != null ? besitzer.anzeigename() : "(kein Besitzer festgelegt)";
+               }
+               @Override
+               public String getToolTipText( Object elm ) {
+                   return getText( elm );
+               }
+           });
+       }
+   }
 
-    //
-    // /**
-    // *
-    // */
-    // class DateColumn
-    // extends DefaultFeatureTableColumn {
-    //
-    // public DateColumn() {
-    // super( createDescriptor( "created", Date.class ) );
-    // setWeight( 1, 90 );
-    // setHeader( "Angelegt" );
-    // setAlign( SWT.RIGHT );
-    // setLabelProvider( new ColumnLabelProvider() {
-    // @Override
-    // public String getText( Object elm ) {
-    // IMosaicCase mcase = new CaseFinder().apply( (IFeatureTableElement)elm );
-    // //IMosaicCaseEvent event = Iterables.getFirst( mc.getEvents(), null );
-    // return df.format( mcase.getCreated() );
-    // }
-    // });
-    // }
-    // }
-    //
-    //
-    // /**
-    // *
-    // */
-    // class NatureColumn
-    // extends DefaultFeatureTableColumn {
-    //
-    // public NatureColumn() {
-    // super( createDescriptor( "natures", String.class ) );
-    // setWeight( 1, 120 );
-    // setHeader( "Art" );
-    // setLabelProvider( new ColumnLabelProvider() {
-    // @Override
-    // public String getText( Object elm ) {
-    // IMosaicCase mc = new CaseFinder().apply( (IFeatureTableElement)elm );
-    // return Joiner.on( ", " ).join( mc.getNatures() );
-    // }
-    // });
-    // }
-    // }
+
+   /**
+    *
+    */
+   class FlurstueckColumn
+           extends DefaultFeatureTableColumn {
+
+       public FlurstueckColumn() {
+           super( createDescriptor( "flurstuecke", String.class ) );
+           setWeight( 2, 120 );
+           setHeader( "Flurstücke" );
+           setAlign( SWT.LEFT );
+           //          setComparator( new ViewerComparator() {                
+           //          });
+           setLabelProvider( new ColumnLabelProvider() {
+               @Override
+               public String getText( Object elm ) {
+                   Waldbesitzer wb = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
+                   Set<String> names = new TreeSet();
+                   for (Flurstueck flurstueck : wb.flurstuecke) {
+                       names.add( flurstueck.gemeinde.get().name.get() );    
+                   }
+                   return StringUtils.abbreviate( names.toString(), 30 );
+               }
+               @Override
+               public String getToolTipText( Object elm ) {
+                   Waldbesitzer wb = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
+                   Set<String> names = new TreeSet();
+                   for (Flurstueck flurstueck : wb.flurstuecke) {
+                       String name = flurstueck.gemeinde.get().name.get() + "/" + flurstueck.gemarkung.get().name.get();
+                       names.add( name );    
+                   }
+                   StringBuilder result = new StringBuilder( 1024 );
+                   for (String name : names) {
+                       result.append( name ).append( "\n" );
+                   }
+                   return result.toString();
+               }
+           });
+       }
+   }
+
 
     public static PropertyDescriptor createDescriptor( String _name, Class binding ) {
         NameImpl name = new NameImpl( _name );

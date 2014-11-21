@@ -323,7 +323,7 @@ public class WaldbesitzerPanel
 
             createField( body, new PropertyAdapter( entity.bemerkung ) )
                     .setField( new TextFormField() )
-                    .create().setLayoutData( new ColumnLayoutData( SWT.DEFAULT, 120 ) );
+                    .create().setLayoutData( new ColumnLayoutData( SWT.DEFAULT, 80 ) );
 
             // // name
             // createField( feature.getProperty( entity.name.getInfo().getName() ) )

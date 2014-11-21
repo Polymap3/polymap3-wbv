@@ -12,6 +12,7 @@
  */
 package org.polymap.wbv.ui;
 
+import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -28,6 +29,7 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.core.runtime.Status;
 
 import org.polymap.core.data.ui.featuretable.FeatureTableFilterBar;
+import org.polymap.core.data.util.Geometries;
 import org.polymap.core.model2.query.ResultSet;
 import org.polymap.core.runtime.IMessages;
 import org.polymap.core.ui.FormDataFactory;
@@ -39,6 +41,9 @@ import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.app.BatikApplication;
+import org.polymap.rhei.batik.map.HomeMapAction;
+import org.polymap.rhei.batik.map.MapViewer;
+import org.polymap.rhei.batik.map.ScaleMapAction;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
@@ -48,7 +53,7 @@ import org.polymap.rhei.fulltext.ui.FulltextProposal;
 import org.polymap.rhei.um.ui.LoginPanel;
 import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
 
-import org.polymap.openlayers.rap.widget.OpenLayersWidget;
+import org.polymap.openlayers.rap.widget.layers.WMSLayer;
 import org.polymap.wbv.Messages;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Waldbesitzer;
@@ -71,7 +76,7 @@ public class StartPanel
     
     private ContextProperty<Waldbesitzer> selected;
 
-    private WbvMapViewer                  map;
+    private MapViewer                     map;
 
 
     @Override
@@ -186,7 +191,9 @@ public class StartPanel
                 viewer.setInput( results );
             }
         };
+        search.setSearchOnEnter( false );
         search.getText().setText( "Im" );
+        search.setSearchOnEnter( true );
         new FulltextProposal( fulltext, search.getText() );
         
         // layout
@@ -200,10 +207,27 @@ public class StartPanel
         // map
         IPanelSection karte = tk.createPanelSection( parent, null );
         karte.addConstraint( new PriorityConstraint( 5 ) );
-        map = new WbvMapViewer();
-        OpenLayersWidget widget = map.createContents( karte.getBody() );
         karte.getBody().setLayout( FormLayoutFactory.defaults().create() );
-        widget.setLayoutData( FormDataFactory.filled().height( 500 ).create() );
+
+        try {  //4492491.287605779 : 4717565.782433721, 5559024.99376705 : 5730490.820256532
+            map = new MapViewer( getSite(), new ReferencedEnvelope( 4500000, 4700000, 5550000, 5700000, Geometries.crs( "EPSG:31468" ) ) );
+            map.createContents( karte.getBody() )
+                    .setLayoutData( FormDataFactory.filled().height( 500 ).create() );
+        }
+        catch (Exception e) {
+            throw new RuntimeException( e );
+        }
+    
+        WMSLayer osm = new WMSLayer( "OSM", "../services/WBV/", "OSM" );
+        map.addLayer( osm, true, false );
+        WMSLayer waldflaechen = new WMSLayer( "Waldflächen", "../services/WBV/", "Waldflaechen" );
+        map.addLayer( waldflaechen, false, false );
+        map.setLayerVisible( waldflaechen, true );
+
+        map.addToolbarItem( new HomeMapAction( map ) );
+        map.addToolbarItem( new ScaleMapAction( map, 1000 ) );
+        map.addToolbarItem( new ScaleMapAction( map, 5000 ) );
+        map.getMap().zoomTo( 12 );
     }
 
 
