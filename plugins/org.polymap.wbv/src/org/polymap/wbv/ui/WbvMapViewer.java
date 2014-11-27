@@ -1,56 +1,87 @@
+/*
+ * Copyright (C) 2014, Falko Bräutigam. All rights reserved.
+ * 
+ * This is free software; you can redistribute it and/or modify it under the terms of
+ * the GNU Lesser General Public License as published by the Free Software
+ * Foundation; either version 3.0 of the License, or (at your option) any later
+ * version.
+ * 
+ * This software is distributed in the hope that it will be useful, but WITHOUT ANY
+ * WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
+ */
 package org.polymap.wbv.ui;
 
-import org.eclipse.swt.SWT;
+import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.eclipse.swt.widgets.Composite;
-import org.polymap.openlayers.rap.widget.OpenLayersWidget;
-import org.polymap.openlayers.rap.widget.base_types.Bounds;
-import org.polymap.openlayers.rap.widget.base_types.OpenLayersMap;
-import org.polymap.openlayers.rap.widget.base_types.Projection;
-import org.polymap.openlayers.rap.widget.controls.LayerSwitcherControl;
-import org.polymap.openlayers.rap.widget.controls.MousePositionControl;
-import org.polymap.openlayers.rap.widget.controls.NavigationControl;
-import org.polymap.openlayers.rap.widget.controls.PanZoomBarControl;
-import org.polymap.openlayers.rap.widget.controls.ScaleControl;
-import org.polymap.openlayers.rap.widget.controls.ScaleLineControl;
+
+import org.polymap.core.data.util.Geometries;
+import org.polymap.rhei.batik.IPanelSite;
+import org.polymap.rhei.batik.map.ContextMenuControl;
+import org.polymap.rhei.batik.map.ContextMenuExtension;
+import org.polymap.rhei.batik.map.HomeMapAction;
+import org.polymap.rhei.batik.map.MapViewer;
+import org.polymap.rhei.batik.map.ScaleMapAction;
+
 import org.polymap.openlayers.rap.widget.layers.WMSLayer;
 
-public class WbvMapViewer {
+/**
+ * 
+ *
+ * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
+ */
+public class WbvMapViewer
+        extends MapViewer {
 
-    OpenLayersMap map;
+    private static Log log = LogFactory.getLog( WbvMapViewer.class );
+    
+    private ContextMenuControl      contextMenu;
 
+    
+    public WbvMapViewer( IPanelSite site ) throws Exception {
+        super( site, new ReferencedEnvelope( 4500000, 4700000, 5550000, 5700000, Geometries.crs( "EPSG:31468" ) ) );
+    }
 
-    public OpenLayersWidget createContents( Composite parent ) {
-        OpenLayersWidget mapWidget = new OpenLayersWidget( parent, SWT.MULTI | SWT.WRAP,
-                "openlayers/full/OpenLayers-2.12.1.js" );
-
-        String srs = "EPSG:4326";
-        Projection proj = new Projection( srs );
-        String units = srs.equals( "EPSG:4326" ) ? "degrees" : "m";
-        float maxResolution = srs.equals( "EPSG:4326" ) ? (360 / 256) : 500000;
-        Bounds maxExtent = new Bounds( 12.34, 50.46, 13.4, 51.21 );
-        mapWidget.createMap( proj, proj, units, maxExtent, maxResolution );
-
-        WMSLayer osm = new WMSLayer( "Terrestris OSM", "http://ows.terrestris.de/osm/service",
-                "OSM-WMS" );
-        osm.setIsBaseLayer( true );
-        map = mapWidget.getMap();
-
-        map.addLayer( osm );
-        addMapControls();
-        map.zoomToExtent( maxExtent, true );
-        map.zoomTo( 10 );
-
-        return mapWidget;
+    
+    public ContextMenuControl getContextMenu() {
+        return contextMenu;
     }
 
 
-    private void addMapControls() {
-        map.addControl( new NavigationControl() );
-        map.addControl( new LayerSwitcherControl() );
-        map.addControl( new MousePositionControl() );
-        map.addControl( new ScaleLineControl() );
-        map.addControl( new ScaleControl() );
-        map.addControl( new PanZoomBarControl() );
+    @Override
+    public Composite createContents( Composite parent ) {
+        Composite result = super.createContents( parent );
+        
+        WMSLayer osm = new WMSLayer( "OSM", "../services/WBV/", "OSM" );
+        addLayer( osm, true, false );
+        WMSLayer waldflaechen = new WMSLayer( "Waldflächen", "../services/WBV/", "Waldflaechen" );
+        addLayer( waldflaechen, false, false );
+        setLayerVisible( waldflaechen, true );
+
+        addToolbarItem( new HomeMapAction( this ) );
+        addToolbarItem( new ScaleMapAction( this, 1000 ) );
+        addToolbarItem( new ScaleMapAction( this, 5000 ) );
+        getMap().zoomTo( 12 );
+        
+        // context menu
+        contextMenu = new ContextMenuControl( this );
+        contextMenu.addProvider( ContextMenuExtension.all() );
+//        contextMenu.addProvider( new IContextMenuProvider() {
+//            @Override
+//            public IContextMenuContribution createContribution() {
+//                return new FindFeaturesMenuContribution() {
+//                    @Override
+//                    protected void onMenuOpen( FeatureStore fs, Feature feature, ILayer layer ) {
+//                        log.info( "Feature: " + feature );
+//                    }
+//                };            
+//            }
+//        });
+//        //map.addMapControl( contextMenu );
+        return result;
     }
 
 }

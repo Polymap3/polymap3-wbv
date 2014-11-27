@@ -12,7 +12,9 @@
  */
 package org.polymap.wbv.ui;
 
-import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.data.FeatureStore;
+import org.opengis.feature.Feature;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -22,15 +24,19 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Menu;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.ActionContributionItem;
+import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
 import org.eclipse.core.runtime.Status;
 
 import org.polymap.core.data.ui.featuretable.FeatureTableFilterBar;
-import org.polymap.core.data.util.Geometries;
 import org.polymap.core.model2.query.ResultSet;
+import org.polymap.core.project.ILayer;
 import org.polymap.core.runtime.IMessages;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
@@ -41,9 +47,10 @@ import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.app.BatikApplication;
-import org.polymap.rhei.batik.map.HomeMapAction;
-import org.polymap.rhei.batik.map.MapViewer;
-import org.polymap.rhei.batik.map.ScaleMapAction;
+import org.polymap.rhei.batik.map.ContextMenuSite;
+import org.polymap.rhei.batik.map.FindFeaturesMenuContribution;
+import org.polymap.rhei.batik.map.IContextMenuContribution;
+import org.polymap.rhei.batik.map.IContextMenuProvider;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
@@ -53,7 +60,6 @@ import org.polymap.rhei.fulltext.ui.FulltextProposal;
 import org.polymap.rhei.um.ui.LoginPanel;
 import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
 
-import org.polymap.openlayers.rap.widget.layers.WMSLayer;
 import org.polymap.wbv.Messages;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Waldbesitzer;
@@ -76,7 +82,7 @@ public class StartPanel
     
     private ContextProperty<Waldbesitzer> selected;
 
-    private MapViewer                     map;
+    private WbvMapViewer                  map;
 
 
     @Override
@@ -209,8 +215,8 @@ public class StartPanel
         karte.addConstraint( new PriorityConstraint( 5 ) );
         karte.getBody().setLayout( FormLayoutFactory.defaults().create() );
 
-        try {  //4492491.287605779 : 4717565.782433721, 5559024.99376705 : 5730490.820256532
-            map = new MapViewer( getSite(), new ReferencedEnvelope( 4500000, 4700000, 5550000, 5700000, Geometries.crs( "EPSG:31468" ) ) );
+        try {
+            map = new WbvMapViewer( getSite() );
             map.createContents( karte.getBody() )
                     .setLayoutData( FormDataFactory.filled().height( 500 ).create() );
         }
@@ -218,16 +224,19 @@ public class StartPanel
             throw new RuntimeException( e );
         }
     
-        WMSLayer osm = new WMSLayer( "OSM", "../services/WBV/", "OSM" );
-        map.addLayer( osm, true, false );
-        WMSLayer waldflaechen = new WMSLayer( "Waldflächen", "../services/WBV/", "Waldflaechen" );
-        map.addLayer( waldflaechen, false, false );
-        map.setLayerVisible( waldflaechen, true );
-
-        map.addToolbarItem( new HomeMapAction( map ) );
-        map.addToolbarItem( new ScaleMapAction( map, 1000 ) );
-        map.addToolbarItem( new ScaleMapAction( map, 5000 ) );
-        map.getMap().zoomTo( 12 );
+        // context menu
+        map.getContextMenu().addProvider( new WaldflaechenMenu() );
+        map.getContextMenu().addProvider( new IContextMenuProvider() {
+            @Override
+            public IContextMenuContribution createContribution() {
+                return new FindFeaturesMenuContribution() {
+                    @Override
+                    protected void onMenuOpen( FeatureStore fs, Feature feature, ILayer layer ) {
+                        log.info( "Feature: " + feature );
+                    }
+                };            
+            }
+        });
     }
 
 
@@ -236,4 +245,34 @@ public class StartPanel
         return ID;
     }
 
+    
+    class WaldflaechenMenu
+            extends ContributionItem
+            implements IContextMenuContribution, IContextMenuProvider {
+
+        @Override
+        public boolean init( ContextMenuSite site ) {
+            return true;
+        }
+
+        @Override
+        public void fill( Menu menu, int index ) {
+            Action action = new Action( "Test", Action.AS_PUSH_BUTTON ) {
+                public void run() {
+                }            
+            };
+            new ActionContributionItem( action ).fill( menu, index );
+        }
+
+        @Override
+        public String getMenuGroup() {
+            return GROUP_HIGH;
+        }
+
+        public IContextMenuContribution createContribution() {
+            return this;
+        }
+
+    }
+    
 }
