@@ -23,9 +23,11 @@ import org.eclipse.jface.viewers.Viewer;
 
 import org.polymap.core.data.ui.featuretable.IFeatureContentProvider;
 import org.polymap.core.data.ui.featuretable.IFeatureTableElement;
+import org.polymap.core.model2.Association;
 import org.polymap.core.model2.Composite;
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.Property;
+import org.polymap.core.model2.PropertyBase;
 import org.polymap.core.model2.query.Query;
 import org.polymap.core.model2.runtime.PropertyInfo;
 
@@ -92,25 +94,43 @@ class CompositesFeatureContentProvider
             return composite;
         }
 
+        @Override
         public Object getValue( String name ) {
             try {
                 PropertyInfo propInfo = composite.info().getProperty( name );
-                return propInfo != null ? ((Property)propInfo.get( composite )).get() : null;
+                if (propInfo == null) {
+                    return null;
+                }
+                PropertyBase prop = propInfo.get( composite );
+                if (prop instanceof Property) {
+                    return ((Property)prop).get();
+                }
+                else if (prop instanceof Association) {
+                    // XXX sorting???
+                    return null;
+                }
+                else {
+                    return null;
+                }
             }
             catch (Exception e) {
                 throw new RuntimeException( e );
             }
         }
 
+        @Override
         public void setValue( String name, Object value ) {
             try {
-                ((Property)composite.info().getProperty( name ).get( composite )).set( value );
+                PropertyInfo propInfo = composite.info().getProperty( name );
+                Property prop = (Property)propInfo.get( composite );
+                prop.set( value );
             }
             catch (Exception e) {
                 throw new RuntimeException( e );
             }
         }
 
+        @Override
         public String fid() {
             if (composite instanceof Entity) {
                 return (String)((Entity)composite).id();

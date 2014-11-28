@@ -74,7 +74,8 @@ public class FlurstueckTableViewer
         this.uow = uow;
         try {
             // Gemeinde
-            addColumn( new DefaultFeatureTableColumn( createDescriptor( "Gemeinde", String.class ) )
+            String propName = Flurstueck.TYPE.gemeinde.getInfo().getName();
+            addColumn( new DefaultFeatureTableColumn( createDescriptor( propName, String.class ) )
                 .setWeight( 2, 120 )
                 .setLabelProvider( new ColumnLabelProvider() {
                     @Override
@@ -88,7 +89,8 @@ public class FlurstueckTableViewer
                 .sort( SWT.UP );
 
             // Gemarkung
-            addColumn( new DefaultFeatureTableColumn( createDescriptor( "Gemarkung", String.class ) )
+            propName = Flurstueck.TYPE.gemarkung.getInfo().getName();
+            addColumn( new DefaultFeatureTableColumn( createDescriptor( propName, String.class ) )
                 .setWeight( 2, 120 )
                 .setLabelProvider( new ColumnLabelProvider() {
                     @Override
@@ -100,19 +102,24 @@ public class FlurstueckTableViewer
                 }));
             
             // Flurstücksnummer
-            addColumn( new DefaultFeatureTableColumn( createDescriptor( "Nummer", String.class ) )
+            propName = Flurstueck.TYPE.zaehlerNenner.getInfo().getName();
+            addColumn( new DefaultFeatureTableColumn( createDescriptor( propName, String.class ) )
                 .setWeight( 1, 60 )
+                .setHeader( "Nummer" )
                 .setLabelProvider( new ColumnLabelProvider() {
                     @Override
                     public String getText( Object elm ) {
                         Flurstueck entity = FeatureTableElement.entity( elm );
                         return StringUtils.defaultIfEmpty( entity.zaehlerNenner.get(), "-" );
                     }
-                }));
+                })
+                .setEditing( true ));
             
             // Fläche
-            addColumn( new DefaultFeatureTableColumn( createDescriptor( "Fläche (ha)", Double.class ) )
+            propName = Flurstueck.TYPE.flaeche.getInfo().getName();
+            addColumn( new DefaultFeatureTableColumn( createDescriptor( propName, Double.class ) )
                 .setWeight( 1, 60 )
+                .setHeader( "Fläche\n(in ha)" )
                 .setLabelProvider( new ColumnLabelProvider() {
                     @Override
                     public String getText( Object elm ) {
@@ -122,7 +129,7 @@ public class FlurstueckTableViewer
                 }));
             
             // davon Wald
-            addColumn( new DefaultFeatureTableColumn( createDescriptor( "Wald (ha)", Double.class ) )
+            addColumn( new DefaultFeatureTableColumn( createDescriptor( "Wald\n(in ha)", Double.class ) )
                 .setWeight( 1, 60 )
                 .setLabelProvider( new ColumnLabelProvider() {
                     @Override
@@ -133,7 +140,8 @@ public class FlurstueckTableViewer
                 }));
 
             // Bemerkung
-            addColumn( new DefaultFeatureTableColumn( createDescriptor( "Bemerkung", Double.class ) )
+            propName = Flurstueck.TYPE.bemerkung.getInfo().getName();
+            addColumn( new DefaultFeatureTableColumn( createDescriptor( propName, String.class ) )
                 .setWeight( 2, 120 )
                 .setLabelProvider( new ColumnLabelProvider() {
                     @Override

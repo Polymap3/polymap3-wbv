@@ -120,7 +120,7 @@ public class WaldbesitzerTableViewer
            extends DefaultFeatureTableColumn {
 
        public NameColumn() {
-           super( createDescriptor( "name", String.class ) );
+           super( createDescriptor( "besitzer", String.class ) );
            setWeight( 2, 120 );
            setHeader( "Name" );
            setAlign( SWT.LEFT );

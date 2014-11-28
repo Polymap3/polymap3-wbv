@@ -39,6 +39,8 @@ import org.polymap.wbv.mdb.ImportTable;
 public class Waldbesitzer
         extends Entity {
     
+    public static Waldbesitzer          TYPE;
+    
 //    0|ID_WBS                         (LONG 4)                  
 //    1|WBS_Name                       (TEXT 100)                
 //    2|WBS_Vorname                    (TEXT 100)                

@@ -286,7 +286,7 @@ public class WaldbesitzerPanel
         kForms.add( form );
         
         // removeBtn
-        Button removeBtn = tk.createButton( (Composite)section.getClient(), "X", SWT.PUSH );
+        Button removeBtn = tk.createButton( (Composite)section.getClient(), "-", SWT.PUSH );
         removeBtn.setToolTipText( "Diesen Kontakt löschen" );
         removeBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( 0 ).create() );
         removeBtn.addSelectionListener( new SelectionAdapter() {
@@ -300,7 +300,7 @@ public class WaldbesitzerPanel
         });
 
         // addBtn
-        Button addBtn = tk.createButton( (Composite)section.getClient(), "A", SWT.PUSH );
+        Button addBtn = tk.createButton( (Composite)section.getClient(), "+", SWT.PUSH );
         addBtn.setToolTipText( "Einen neuen Kontakt hinzufügen" );
         addBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( removeBtn ).create() );
         addBtn.addSelectionListener( new SelectionAdapter() {

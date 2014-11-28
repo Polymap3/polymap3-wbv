@@ -37,6 +37,8 @@ public class Flurstueck
 
     private static Log log = LogFactory.getLog( Flurstueck.class );
     
+    public static Flurstueck            TYPE;
+    
 //    FL_Flurstück (18076 Datensätze)
 //    0|ID_WBS                         (LONG 4)                  
 //    1|ID_FL                          (LONG 4)                  
