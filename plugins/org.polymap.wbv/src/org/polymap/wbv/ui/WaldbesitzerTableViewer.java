@@ -34,7 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.base.Function;
-
+import com.google.common.base.Joiner;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
@@ -163,7 +163,7 @@ public class WaldbesitzerTableViewer
                    for (Flurstueck flurstueck : wb.flurstuecke) {
                        names.add( flurstueck.gemeinde.get().name.get() );    
                    }
-                   return StringUtils.abbreviate( names.toString(), 30 );
+                   return StringUtils.abbreviate( Joiner.on( ", " ).join( names ), 30 );
                }
                @Override
                public String getToolTipText( Object elm ) {

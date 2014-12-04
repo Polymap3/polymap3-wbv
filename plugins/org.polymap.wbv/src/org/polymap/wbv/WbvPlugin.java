@@ -15,6 +15,8 @@
 package org.polymap.wbv;
 
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 import org.osgi.framework.BundleContext;
 
@@ -50,6 +52,9 @@ public class WbvPlugin
 	public static final String             ID = "org.polymap.wbv"; //$NON-NLS-1$
 
 	public static final MinWidthConstraint MIN_COLUMN_WIDTH = new MinWidthConstraint( 420, 1 );
+	
+	/** "dd.MM.yyyy" - one gloabel instance, not thread safe! */
+	public static final DateFormat         df = new SimpleDateFormat( "dd.MM.yyyy" );
 
 	private static WbvPlugin               instance;
 	

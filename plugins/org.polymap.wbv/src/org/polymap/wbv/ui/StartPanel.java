@@ -80,6 +80,7 @@ public class StartPanel
 
     private static final IMessages        i18n = Messages.forPrefix( "StartPanel" );
     
+    /** Der selektierte {@link Waldbesitzer}. */
     private ContextProperty<Waldbesitzer> selected;
 
     private WbvMapViewer                  map;

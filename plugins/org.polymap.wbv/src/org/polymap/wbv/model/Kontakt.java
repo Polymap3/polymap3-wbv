@@ -51,6 +51,7 @@ public class Kontakt
      * Die Anrede inklusive Titel: "Herrn", "Frau", "Frau Dr." (defaults: {@link Anrede}).
      */
     @Defaults
+    @Queryable
     @ImportColumn("EWBS_Anrede")
     public Property<String> anrede;
 

@@ -13,6 +13,8 @@
  */
 package org.polymap.wbv.model;
 
+import java.util.Date;
+
 import javax.annotation.Nullable;
 
 import org.apache.commons.logging.Log;
@@ -62,6 +64,7 @@ public class Flurstueck
 //   19|FL_GEMAFLUR                    (TEXT 200)
     
     //@ImportColumn("FL_Gemeinde")
+    @Nullable
     public Association<Gemeinde>        gemeinde;
     
     /**
@@ -92,7 +95,7 @@ public class Flurstueck
     @Queryable
     @Nullable
     @ImportColumn("FL_Datum_Eingabe")
-    public Property<String>             eingabe;
+    public Property<Date>               eingabe;
 
     @Nullable
     @ImportColumn("FL_LK")

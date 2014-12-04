@@ -51,7 +51,6 @@ import org.polymap.core.runtime.event.EventManager;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
 import org.polymap.wbv.model.Gemeinde;
-import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.ui.CompositesFeatureContentProvider.FeatureTableElement;
 
 /**
@@ -70,7 +69,7 @@ public class FlurstueckTableViewer
 
 
     public FlurstueckTableViewer( UnitOfWork uow, Composite parent, Iterable<Flurstueck> rs ) {
-        super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | SWT.FULL_SELECTION | */SWT.FULL_SELECTION );
+        super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | */SWT.FULL_SELECTION );
         this.uow = uow;
         try {
             // Gemeinde
@@ -124,9 +123,10 @@ public class FlurstueckTableViewer
                     @Override
                     public String getText( Object elm ) {
                         Flurstueck entity = FeatureTableElement.entity( elm );
-                        return Objects.firstNonNull( entity.flaeche.get(), -1d ).toString();
+                        return Objects.firstNonNull( entity.flaeche.get(), 0d ).toString();
                     }
-                }));
+                })
+                .setEditing( true ));
             
             // davon Wald
             addColumn( new DefaultFeatureTableColumn( createDescriptor( "Wald\n(in ha)", Double.class ) )
@@ -135,9 +135,10 @@ public class FlurstueckTableViewer
                     @Override
                     public String getText( Object elm ) {
                         Flurstueck entity = FeatureTableElement.entity( elm );
-                        return Objects.firstNonNull( entity.flaecheWald.get(), -1d ).toString();
+                        return Objects.firstNonNull( entity.flaecheWald.get(), 0d ).toString();
                     }
-                }));
+                })
+                .setEditing( true ));
 
             // Bemerkung
             propName = Flurstueck.TYPE.bemerkung.getInfo().getName();
@@ -154,7 +155,8 @@ public class FlurstueckTableViewer
                         Flurstueck entity = FeatureTableElement.entity( elm );
                         return Objects.firstNonNull( entity.bemerkung.get(), "" ).toString();
                     }
-                }));
+                })
+                .setEditing( true ));
 
             // suppress deferred loading to fix "empty table" issue
             // setContent( fs.getFeatures( this.baseFilter ) );
@@ -182,10 +184,10 @@ public class FlurstueckTableViewer
     }
 
 
-    public List<Waldbesitzer> getSelected() {
-        return copyOf( transform( asList( getSelectedElements() ), new Function<IFeatureTableElement,Waldbesitzer>() {
-            public Waldbesitzer apply( IFeatureTableElement input ) {
-                return (Waldbesitzer)((FeatureTableElement)input).getComposite();
+    public List<Flurstueck> getSelected() {
+        return copyOf( transform( asList( getSelectedElements() ), new Function<IFeatureTableElement,Flurstueck>() {
+            public Flurstueck apply( IFeatureTableElement input ) {
+                return (Flurstueck)((FeatureTableElement)input).getComposite();
             }
         }));
     }

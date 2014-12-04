@@ -16,7 +16,8 @@ package org.polymap.wbv.ui;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static org.polymap.rhei.batik.Panels.is;
-
+import static org.polymap.wbv.ui.WbvPanel.Completion.COMMIT;
+import static org.polymap.wbv.ui.WbvPanel.Completion.STORE;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -46,6 +47,15 @@ public abstract class WbvPanel
 
     private static Log log = LogFactory.getLog( WbvPanel.class );
 
+    public static enum Completion {
+        /** Commit the locally started UnitOfWork -> modifications are not send to store. */
+        COMMIT,
+        /** Commit all UnitOfWorks down to the root -> modificatiosn are persistently stored. */
+        STORE,
+        /** Revert my UnitOfWork. */
+        CANCEL
+    }
+    
     private ContextProperty<UnitOfWork>         rootUow;
     
     private UnitOfWork                          uow;
@@ -90,6 +100,10 @@ public abstract class WbvPanel
 
     /**
      * Creates a new, nested {@link UnitOfWork} for this panel.
+     * <p/>
+     * Care must be taken when working with {@link ContextProperty} variables.
+     * Entities have to be re-fetched from the local/nested UnitOfWork to make sure
+     * that their state is properly handled by the local UnitOfWork.
      */
     protected void newUnitOfWork() {
         assert uow == parentUow : "newUnitOfWork() must be called only once per page.";
@@ -98,22 +112,27 @@ public abstract class WbvPanel
     }
 
     
-    protected void closeUnitOfWork( boolean commit ) {
-        if (uow != parentUow) {
-            log.debug( getClass().getSimpleName() + ": Closed UOW: " + uow );
-            if (commit) {
-                uow.commit();
-            }
+    protected void closeUnitOfWork( Completion completion ) {
+        if (completion == COMMIT) {
+            assert uow != parentUow : "No UnitOfWork started locally for this panel.";
+            uow.commit();
             uow.close();
             uow = parentUow;
-            log.debug( getClass().getSimpleName() + ": Parent UOW: " + uow );
         }
-        else {
-            if (commit) {
-                throw new IllegalStateException( "closeUnitOfWork(): uow == parentUow" );
+        else if (completion == STORE) {
+            assert parentUow == rootUow.get();
+            if (uow != parentUow) {
+                closeUnitOfWork( COMMIT );
+            }
+            parentUow.commit();
+        }
+        else if (completion == Completion.CANCEL) {
+            if (uow != parentUow) {
+                uow.close();
+                uow = parentUow;
             }
             else {
-                log.warn( "closeUnitOfWork(): uow == parentUow" );
+                log.warn( "No UnitOfWork this panel currently." );
             }
         }
     }

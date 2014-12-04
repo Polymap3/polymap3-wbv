@@ -15,6 +15,9 @@ package org.polymap.wbv.model;
 import static org.polymap.core.model2.query.Expressions.is;
 import static org.polymap.core.model2.query.Expressions.template;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.google.common.collect.Iterables;
 
 import org.polymap.core.model2.CollectionProperty;
@@ -67,7 +70,15 @@ public class Waldbesitzer
         /** Privates Eigentum (Einzelpersonen, Unternehmen) */
         Privat,
         /** Nach dem Import kein bekannter Wert */
-        Unbekannt
+        Unbekannt;
+        
+        public static Map<String,Waldeigentumsart> map() {
+            Map<String,Waldeigentumsart> result = new HashMap();
+            for (Waldeigentumsart elm : Waldeigentumsart.values()) {
+                result.put( elm.name(), elm );
+            }
+            return result;
+        }
     }
 
     @Queryable

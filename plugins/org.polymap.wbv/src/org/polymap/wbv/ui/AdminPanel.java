@@ -134,12 +134,11 @@ public class AdminPanel
                         @Override
                         public void done( IJobChangeEvent jev ) {
                             if (jev.getResult().isOK()) {
-                                closeUnitOfWork( true );
-                                uow().commit();
+                                closeUnitOfWork( Completion.STORE );
                                 getSite().setStatus( new Status( IStatus.OK, WbvPlugin.ID, "Import war erfolgreich." ) );
                             }
                             else {
-                                closeUnitOfWork( false );                                
+                                closeUnitOfWork( Completion.CANCEL );                                
                                 getSite().setStatus( new Status( IStatus.ERROR, WbvPlugin.ID, jev.getResult().getMessage() ) );
                             }
                         }
@@ -200,14 +199,13 @@ public class AdminPanel
                             }
                         });
                     }
-                    closeUnitOfWork( true );
-                    uow().commit();
+                    closeUnitOfWork( Completion.STORE );
                 }
                 catch (Exception e) {
                     BatikApplication.handleError( "Die Daten konnten nicht korrekt importiert werden.", e );
                 }
                 finally {
-                    closeUnitOfWork( false );
+                    closeUnitOfWork( Completion.CANCEL );
                 }
             }
         });
