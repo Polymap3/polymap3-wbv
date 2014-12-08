@@ -1,5 +1,5 @@
 Display {
-  rwt-fontlist: 12px"Open Sans", 'Segoe UI', Corbel, Calibri, Tahoma, 'Lucida Sans Unicode';
+  rwt-fontlist: 12px"Open Sans", Arial, sans-serif;
   /*background-image: url(resources/icons/rap/display/browser_bg.png );*/
   font: 12px"Open Sans", Arial, sans-serif;
 }
@@ -12,15 +12,17 @@ Label.batik-panel-section-title {
 DateTime {
   font: 12px"Open Sans", Arial, sans-serif;
 }
-Button[PUSH] {
+/*Button[PUSH] {
   box-shadow: 0px 1px 3px #808080;
-  text-shadow: 0px 1px 3px #808080;
-}
+}*/
 Combo, Combo[BORDER] {
   font: 12px"Open Sans", Arial, sans-serif;
 }
-Label, CLabel, Link, Button {
+Button {
   font: 14px"Open Sans", Arial, sans-serif;
+}
+Label, CLabel, Link {
+  font: 12px"Open Sans", Arial, sans-serif;
 }
 List {
   font: 12px"Open Sans", Arial, sans-serif;
@@ -30,7 +32,7 @@ List-Item {
   font: 12px"Open Sans", Arial, sans-serif;
 }
 Shell-Titlebar {
-  font: 12px"Open Sans", Arial, sans-serif;
+  font: 13px"Open Sans", Arial, sans-serif;
 }
 Table {
   font: 12px"Open Sans", Arial, sans-serif;

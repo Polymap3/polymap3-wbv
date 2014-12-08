@@ -17,6 +17,7 @@ import static org.eclipse.ui.forms.widgets.ExpandableComposite.TWISTIE;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.geotools.data.FeatureStore;
 import org.opengis.feature.Feature;
 
@@ -66,8 +67,6 @@ import org.polymap.rhei.batik.map.IContextMenuContribution;
 import org.polymap.rhei.batik.map.IContextMenuProvider;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
-import org.polymap.rhei.batik.toolkit.NeighborhoodConstraint;
-import org.polymap.rhei.batik.toolkit.NeighborhoodConstraint.Neighborhood;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.field.FormFieldEvent;
 import org.polymap.rhei.field.IFormFieldListener;
@@ -139,14 +138,6 @@ public class WaldbesitzerPanel
         submitAction.setEnabled( false );
         submitAction.setDescription( IPanelSite.SUBMIT );
         site.addToolbarAction( submitAction );
-
-        // test tool
-        Action testTool = new Action( "Test" ) {
-            public void run() {
-            }
-        };
-        testTool.setEnabled( false );
-        site.addToolbarAction( testTool );
 
         //
         getContext().addListener( this, new EventFilter<PanelChangeEvent>() {
@@ -225,7 +216,7 @@ public class WaldbesitzerPanel
 
         // Basisdaten
         IPanelSection basis = tk.createPanelSection( parent, "Basisdaten" );
-        basis.addConstraint( WbvPlugin.MIN_COLUMN_WIDTH, new PriorityConstraint( 10 ) );
+        basis.addConstraint( WbvPlugin.MIN_COLUMN_WIDTH, new PriorityConstraint( 100 ) );
         
         (wbForm = new WaldbesitzerForm()).createContents( basis );
         wbForm.addFieldListener( wbFormListener = new EnableSubmitFormFieldListener( wbForm ) );
@@ -234,8 +225,8 @@ public class WaldbesitzerPanel
         final IPanelSection besitzer = tk.createPanelSection( parent, "Kontakt" );
         besitzer.addConstraint( 
                 WbvPlugin.MIN_COLUMN_WIDTH, 
-                new PriorityConstraint( 10 ), 
-                new NeighborhoodConstraint( basis.getControl(), Neighborhood.BOTTOM, 100 ) );
+                new PriorityConstraint( 1 ) );
+                //new NeighborhoodConstraint( basis.getControl(), Neighborhood.BOTTOM, 1 ) );
         besitzer.getBody().setLayout( ColumnLayoutFactory.defaults().spacing( 10 ).columns( 1, 1 ).create() );
         
         for (final Kontakt kontakt : wb.kontakte) {
@@ -246,26 +237,26 @@ public class WaldbesitzerPanel
         final IPanelSection flurstuecke = tk.createPanelSection( parent, "Flurstücke" );
         flurstuecke.addConstraint( 
                 WbvPlugin.MIN_COLUMN_WIDTH, 
-                new PriorityConstraint( 5 ) );
+                new PriorityConstraint( 0 ) );
         flurstuecke.getBody().setLayout( FormLayoutFactory.defaults().create() );
         createFlurstueckSection( flurstuecke.getBody() );
 
         // map
         IPanelSection karte = tk.createPanelSection( parent, null );
-        karte.addConstraint( WbvPlugin.MIN_COLUMN_WIDTH, new PriorityConstraint( 0 ) );
-        karte.getBody().setLayout( FormLayoutFactory.defaults().create() );
+        karte.addConstraint( WbvPlugin.MIN_COLUMN_WIDTH, new PriorityConstraint( 10 ) );
+        karte.getBody().setLayout( ColumnLayoutFactory.defaults().columns( 1, 1 ).create() );
 
         try {
             map = new WbvMapViewer( getSite() );
             map.createContents( karte.getBody() )
-                    .setLayoutData( FormDataFactory.filled().height( 500 ).create() );
+                    .setLayoutData( new ColumnLayoutData( SWT.DEFAULT, 500 ) );
         }
         catch (Exception e) {
             throw new RuntimeException( e );
         }
     
         // context menu
-//        map.getContextMenu().addProvider( new WaldflaechenMenu() );
+        //map.getContextMenu().addProvider( new WaldflaechenMenu() );
         map.getContextMenu().addProvider( new IContextMenuProvider() {
             @Override
             public IContextMenuContribution createContribution() {
