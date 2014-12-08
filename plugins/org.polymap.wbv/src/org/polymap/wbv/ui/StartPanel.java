@@ -197,7 +197,8 @@ public class StartPanel
         EntitySearchField search = new EntitySearchField<Waldbesitzer>( tableSection.getBody(), fulltext, uow(), Waldbesitzer.class ) {
             @Override
             protected void doRefresh() {
-                log.info( "Results: " + results.size() );
+                // SelectionEvent nach refresh() verhindern
+                viewer.clearSelection();
                 viewer.setInput( results );
             }
         };

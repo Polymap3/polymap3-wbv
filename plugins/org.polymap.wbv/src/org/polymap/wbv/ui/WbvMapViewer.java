@@ -59,7 +59,7 @@ public class WbvMapViewer
         addLayer( osm, true, false );
         
         WMSLayer waldflaechen = new WMSLayer( "Waldflächen", "../services/WBV/", "Waldflaechen" );
-        addLayer( waldflaechen, true, false );
+        addLayer( waldflaechen, false, false );
         setLayerVisible( waldflaechen, true );
 
         addToolbarItem( new HomeMapAction( this ) );

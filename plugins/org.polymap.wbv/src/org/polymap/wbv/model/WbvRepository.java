@@ -31,6 +31,7 @@ import org.opengis.filter.FilterFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lucene.search.BooleanQuery;
 
 import com.google.common.base.Supplier;
 
@@ -109,6 +110,10 @@ public class WbvRepository {
                 throw new RuntimeException( "Kein Service im Katalog für URL: " + url );
             }
 
+            //
+            BooleanQuery.setMaxClauseCount( 4 * 1024 );
+            log.info( "Maximale Anzahl Lucene-Klauseln erhöht auf: " + BooleanQuery.getMaxClauseCount() );
+            
             // init fulltext
             File wbvDir = new File( Polymap.getDataDir(), WbvPlugin.ID );
             fulltextIndex = new LuceneFullTextIndex( new File( wbvDir, "fulltext" ) );
