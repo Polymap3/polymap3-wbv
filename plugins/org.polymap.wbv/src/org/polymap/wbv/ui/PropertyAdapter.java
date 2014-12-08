@@ -17,11 +17,15 @@ package org.polymap.wbv.ui;
 import java.util.Map;
 
 import org.geotools.feature.NameImpl;
+import org.geotools.feature.type.AttributeDescriptorImpl;
 import org.geotools.feature.type.AttributeTypeImpl;
 import org.opengis.feature.Property;
+import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.feature.type.PropertyType;
+
+import org.polymap.core.model2.runtime.PropertyInfo;
 
 /**
  * 
@@ -31,6 +35,23 @@ import org.opengis.feature.type.PropertyType;
 class PropertyAdapter
         implements Property {
 
+    public static PropertyDescriptor descriptorFor( org.polymap.core.model2.Property prop ) {
+        PropertyInfo info = prop.getInfo();
+        NameImpl name = new NameImpl( info.getName() );
+        AttributeType type = new AttributeTypeImpl( name, info.getType(), true, false, null, null, null );
+        return new AttributeDescriptorImpl( type, name, 1, 1, false, null );
+    }
+
+
+    public static PropertyDescriptor descriptorFor( String _name, Class binding ) {
+        NameImpl name = new NameImpl( _name );
+        AttributeType type = new AttributeTypeImpl( name, binding, true, false, null, null, null );
+        return new AttributeDescriptorImpl( type, name, 1, 1, false, null );
+    }
+
+    
+    // instance *******************************************
+    
     private org.polymap.core.model2.Property    delegate;
     
 

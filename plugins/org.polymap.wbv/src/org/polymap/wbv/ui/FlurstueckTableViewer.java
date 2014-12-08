@@ -15,31 +15,23 @@ package org.polymap.wbv.ui;
 import static com.google.common.collect.ImmutableList.copyOf;
 import static com.google.common.collect.Iterables.transform;
 import static java.util.Arrays.asList;
+import static org.polymap.wbv.ui.PropertyAdapter.descriptorFor;
 
 import java.util.List;
+import java.util.Locale;
 
 import java.beans.PropertyChangeEvent;
 
-import org.geotools.feature.NameImpl;
-import org.geotools.feature.type.AttributeDescriptorImpl;
-import org.geotools.feature.type.AttributeTypeImpl;
-import org.opengis.feature.type.AttributeType;
-import org.opengis.feature.type.PropertyDescriptor;
-
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 
-import org.polymap.core.data.ui.featuretable.DefaultFeatureTableColumn;
 import org.polymap.core.data.ui.featuretable.FeatureTableViewer;
 import org.polymap.core.data.ui.featuretable.IFeatureTableElement;
 import org.polymap.core.model2.runtime.UnitOfWork;
@@ -47,6 +39,12 @@ import org.polymap.core.runtime.event.Event;
 import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
+
+import org.polymap.rhei.field.NotEmptyValidator;
+import org.polymap.rhei.field.NumberValidator;
+import org.polymap.rhei.field.PicklistFormField;
+import org.polymap.rhei.field.StringFormField;
+import org.polymap.rhei.table.FormFeatureTableColumn;
 
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
@@ -66,7 +64,7 @@ public class FlurstueckTableViewer
     private static final FastDateFormat df   = FastDateFormat.getInstance( "dd.MM.yyyy" );
 
     private UnitOfWork                  uow;
-
+    
 
     public FlurstueckTableViewer( UnitOfWork uow, Composite parent, Iterable<Flurstueck> rs ) {
         super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | */SWT.FULL_SELECTION );
@@ -74,7 +72,7 @@ public class FlurstueckTableViewer
         try {
             // Gemeinde
             String propName = Flurstueck.TYPE.gemeinde.getInfo().getName();
-            addColumn( new DefaultFeatureTableColumn( createDescriptor( propName, String.class ) )
+            addColumn( new FormFeatureTableColumn( descriptorFor( propName, String.class ) )
                 .setWeight( 2, 120 )
                 .setLabelProvider( new ColumnLabelProvider() {
                     @Override
@@ -84,12 +82,12 @@ public class FlurstueckTableViewer
                         return gemeinde != null ? gemeinde.name.get() : "(kein Gemeinde)";
                     }
                 })
-                /*.setEditing( true )*/ )
-                .sort( SWT.UP );
+                .setEditing( new PicklistFormField( Gemeinde.all( uow ) ), null )
+                ); //.sort( SWT.UP ) );
 
             // Gemarkung
             propName = Flurstueck.TYPE.gemarkung.getInfo().getName();
-            addColumn( new DefaultFeatureTableColumn( createDescriptor( propName, String.class ) )
+            addColumn( new FormFeatureTableColumn( descriptorFor( propName, String.class ) )
                 .setWeight( 2, 120 )
                 .setLabelProvider( new ColumnLabelProvider() {
                     @Override
@@ -101,62 +99,39 @@ public class FlurstueckTableViewer
                 }));
             
             // Flurstücksnummer
-            propName = Flurstueck.TYPE.zaehlerNenner.getInfo().getName();
-            addColumn( new DefaultFeatureTableColumn( createDescriptor( propName, String.class ) )
+            addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.zaehlerNenner ) )
                 .setWeight( 1, 60 )
                 .setHeader( "Nummer" )
-                .setLabelProvider( new ColumnLabelProvider() {
-                    @Override
-                    public String getText( Object elm ) {
-                        Flurstueck entity = FeatureTableElement.entity( elm );
-                        return StringUtils.defaultIfEmpty( entity.zaehlerNenner.get(), "-" );
-                    }
-                })
-                .setEditing( true ));
+                .setEditing( new StringFormField(), new NotEmptyValidator() ) );
             
             // Fläche
-            propName = Flurstueck.TYPE.flaeche.getInfo().getName();
-            addColumn( new DefaultFeatureTableColumn( createDescriptor( propName, Double.class ) )
+            addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.flaeche ) )
                 .setWeight( 1, 60 )
                 .setHeader( "Fläche\n(in ha)" )
-                .setLabelProvider( new ColumnLabelProvider() {
-                    @Override
-                    public String getText( Object elm ) {
-                        Flurstueck entity = FeatureTableElement.entity( elm );
-                        return Objects.firstNonNull( entity.flaeche.get(), 0d ).toString();
-                    }
-                })
-                .setEditing( true ));
+                .setEditing( new StringFormField(), new NumberValidator( Double.class, Locale.GERMANY ) ) );
             
             // davon Wald
-            addColumn( new DefaultFeatureTableColumn( createDescriptor( "Wald\n(in ha)", Double.class ) )
+            addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.flaecheWald ) )
                 .setWeight( 1, 60 )
-                .setLabelProvider( new ColumnLabelProvider() {
-                    @Override
-                    public String getText( Object elm ) {
-                        Flurstueck entity = FeatureTableElement.entity( elm );
-                        return Objects.firstNonNull( entity.flaecheWald.get(), 0d ).toString();
-                    }
-                })
-                .setEditing( true ));
+                .setHeader( "Wald\n(in ha)" )
+                .setEditing( new StringFormField(), new NumberValidator( Double.class, Locale.GERMANY ) ) );
 
             // Bemerkung
-            propName = Flurstueck.TYPE.bemerkung.getInfo().getName();
-            addColumn( new DefaultFeatureTableColumn( createDescriptor( propName, String.class ) )
+            addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.bemerkung ) )
                 .setWeight( 2, 120 )
-                .setLabelProvider( new ColumnLabelProvider() {
-                    @Override
-                    public String getText( Object elm ) {
-                        Flurstueck entity = FeatureTableElement.entity( elm );
-                        return Objects.firstNonNull( entity.bemerkung.get(), "" ).toString();
-                    }
-                    @Override
-                    public String getToolTipText( Object elm ) {
-                        Flurstueck entity = FeatureTableElement.entity( elm );
-                        return Objects.firstNonNull( entity.bemerkung.get(), "" ).toString();
-                    }
-                })
-                .setEditing( true ));
+//                .setLabelProvider( new ColumnLabelProvider() {
+//                    @Override
+//                    public String getText( Object elm ) {
+//                        Flurstueck entity = FeatureTableElement.entity( elm );
+//                        return Objects.firstNonNull( entity.bemerkung.get(), "" ).toString();
+//                    }
+//                    @Override
+//                    public String getToolTipText( Object elm ) {
+//                        Flurstueck entity = FeatureTableElement.entity( elm );
+//                        return Objects.firstNonNull( entity.bemerkung.get(), "" ).toString();
+//                    }
+//                })
+                .setEditing( new StringFormField(), null ) );
 
             // suppress deferred loading to fix "empty table" issue
             // setContent( fs.getFeatures( this.baseFilter ) );
@@ -190,13 +165,6 @@ public class FlurstueckTableViewer
                 return (Flurstueck)((FeatureTableElement)input).getComposite();
             }
         }));
-    }
-
-    
-    public static PropertyDescriptor createDescriptor( String _name, Class binding ) {
-        NameImpl name = new NameImpl( _name );
-        AttributeType type = new AttributeTypeImpl( name, binding, true, false, null, null, null );
-        return new AttributeDescriptorImpl( type, name, 1, 1, false, null );
     }
 
 }

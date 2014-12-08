@@ -32,12 +32,15 @@ import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
+import org.eclipse.ui.forms.widgets.ColumnLayoutData;
+
 import org.eclipse.core.runtime.Status;
 
 import org.polymap.core.data.ui.featuretable.FeatureTableFilterBar;
 import org.polymap.core.model2.query.ResultSet;
 import org.polymap.core.project.ILayer;
 import org.polymap.core.runtime.IMessages;
+import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
 
@@ -205,7 +208,7 @@ public class StartPanel
         
         // layout
         int displayHeight = BatikApplication.sessionDisplay().getBounds().height;
-        int tableHeight = (displayHeight - (2*65) - (2*75));  // margins, titles+icons
+        int tableHeight = (displayHeight - (2*50) - 75 - 70);  // margins, searchbar, toolbar+banner 
         createBtn.setLayoutData( FormDataFactory.filled().clearRight().clearBottom().create() );
         filterBar.getControl().setLayoutData( FormDataFactory.filled().bottom( viewer.getTable() ).left( createBtn ).right( 50 ).create() );
         search.getControl().setLayoutData( FormDataFactory.filled().height( 27 ).bottom( viewer.getTable() ).left( filterBar.getControl() ).create() );
@@ -214,12 +217,13 @@ public class StartPanel
         // map
         IPanelSection karte = tk.createPanelSection( parent, null );
         karte.addConstraint( new PriorityConstraint( 5 ) );
-        karte.getBody().setLayout( FormLayoutFactory.defaults().create() );
+        karte.getBody().setLayout( ColumnLayoutFactory.defaults().columns( 1, 1 ).create() );
 
         try {
             map = new WbvMapViewer( getSite() );
             map.createContents( karte.getBody() )
-                    .setLayoutData( FormDataFactory.filled().height( 500 ).create() );
+                    .setLayoutData( new ColumnLayoutData( SWT.DEFAULT, tableHeight + 35 ) );
+                    //.setLayoutData( FormDataFactory.filled().height( tableHeight + 35 ).create() );
         }
         catch (Exception e) {
             throw new RuntimeException( e );

@@ -135,8 +135,12 @@ class CompositesFeatureContentProvider
             if (composite instanceof Entity) {
                 return (String)((Entity)composite).id();
             }
+            else if (composite instanceof Composite) {
+                log.warn( "Using hashCode as fid for Composite: " + composite.getClass().getSimpleName() );
+                return String.valueOf( composite.hashCode() );
+            }
             else {
-                throw new RuntimeException( "Don't know how to build fid out of: " + composite );
+                throw new RuntimeException( "Don't know how to build fid out of type: " + composite.getClass() );
             }
         }
 

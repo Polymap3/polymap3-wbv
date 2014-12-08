@@ -17,7 +17,6 @@ package org.polymap.wbv.model;
 import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.List;
-
 import java.io.File;
 import java.net.URL;
 
@@ -34,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.base.Supplier;
+
 import org.eclipse.core.runtime.NullProgressMonitor;
 
 import org.polymap.core.data.feature.recordstore.RDataStore;
@@ -168,5 +168,5 @@ public class WbvRepository {
     public UnitOfWork newUnitOfWork() {
         return repo.newUnitOfWork();
     }
-    
+
 }
