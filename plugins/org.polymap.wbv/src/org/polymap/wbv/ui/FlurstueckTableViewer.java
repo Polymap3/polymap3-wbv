@@ -73,7 +73,7 @@ public class FlurstueckTableViewer
             // Gemeinde
             String propName = Flurstueck.TYPE.gemeinde.getInfo().getName();
             addColumn( new FormFeatureTableColumn( descriptorFor( propName, String.class ) )
-                .setWeight( 2, 120 )
+                .setWeight( 1, 80 )
                 .setLabelProvider( new ColumnLabelProvider() {
                     @Override
                     public String getText( Object elm ) {
@@ -88,7 +88,7 @@ public class FlurstueckTableViewer
             // Gemarkung
             propName = Flurstueck.TYPE.gemarkung.getInfo().getName();
             addColumn( new FormFeatureTableColumn( descriptorFor( propName, String.class ) )
-                .setWeight( 2, 120 )
+                .setWeight( 1, 80 )
                 .setLabelProvider( new ColumnLabelProvider() {
                     @Override
                     public String getText( Object elm ) {
@@ -96,25 +96,30 @@ public class FlurstueckTableViewer
                         Gemarkung gemarkung = entity.gemarkung.get();
                         return gemarkung != null ? gemarkung.name.get() : "(kein Gemarkung)";
                     }
-                }));
+                })
+                .setEditing( new PicklistFormField( Gemarkung.all( uow ) ), null ) );
             
             // Flurstücksnummer
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.zaehlerNenner ) )
                 .setWeight( 1, 60 )
                 .setHeader( "Nummer" )
+                .setLabelProvider( new NotEmptyValidator() )
                 .setEditing( new StringFormField(), new NotEmptyValidator() ) );
             
             // Fläche
+            NumberValidator flaecheValidator = new NumberValidator( Double.class, Locale.GERMANY, 10, 4, 1, 4 );
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.flaeche ) )
                 .setWeight( 1, 60 )
                 .setHeader( "Fläche\n(in ha)" )
-                .setEditing( new StringFormField(), new NumberValidator( Double.class, Locale.GERMANY ) ) );
+                .setLabelProvider( flaecheValidator )
+                .setEditing( new StringFormField(), flaecheValidator ) );
             
             // davon Wald
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.flaecheWald ) )
                 .setWeight( 1, 60 )
                 .setHeader( "Wald\n(in ha)" )
-                .setEditing( new StringFormField(), new NumberValidator( Double.class, Locale.GERMANY ) ) );
+                .setLabelProvider( flaecheValidator )
+                .setEditing( new StringFormField(), flaecheValidator ) );
 
             // Bemerkung
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.bemerkung ) )

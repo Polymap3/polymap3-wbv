@@ -222,7 +222,7 @@ public class WaldbesitzerPanel
         wbForm.addFieldListener( wbFormListener = new EnableSubmitFormFieldListener( wbForm ) );
 
         // Kontakte
-        final IPanelSection besitzer = tk.createPanelSection( parent, "Kontakt" );
+        final IPanelSection besitzer = tk.createPanelSection( parent, "Besitzer/Kontakte" );
         besitzer.addConstraint( 
                 WbvPlugin.MIN_COLUMN_WIDTH, 
                 new PriorityConstraint( 1 ) );
@@ -435,7 +435,7 @@ public class WaldbesitzerPanel
                     statusAdapter.updateStatusOf( this, Status.OK_STATUS );                        
                 }
                 else if (!form.isValid()) {
-                    statusAdapter.updateStatusOf( this, new Status( IStatus.ERROR, WbvPlugin.ID, "Nicht alle Eingaben sind korrekt." ) );
+                    statusAdapter.updateStatusOf( this, new Status( IStatus.ERROR, WbvPlugin.ID, "Eine oder mehrere Eingaben sind fehlerhaft." ) );
                     //getSite().setStatus( Status.OK_STATUS );
                 }
                 else {

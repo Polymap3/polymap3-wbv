@@ -13,12 +13,17 @@
  */
 package org.polymap.wbv.model;
 
+import java.util.Map;
+import java.util.TreeMap;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.polymap.core.model2.Entity;
 import org.polymap.core.model2.Property;
 import org.polymap.core.model2.Queryable;
+import org.polymap.core.model2.runtime.ModelRuntimeException;
+import org.polymap.core.model2.runtime.UnitOfWork;
 
 import org.polymap.wbv.mdb.ImportColumn;
 import org.polymap.wbv.mdb.ImportTable;
@@ -33,6 +38,21 @@ public class Gemarkung
         extends Entity {
 
     private static Log log = LogFactory.getLog( Gemarkung.class );
+    
+    public static Map<String,Gemarkung> all( UnitOfWork uow ) {
+        Map<String,Gemarkung> result = new TreeMap();
+        for (Gemarkung gemarkung : uow.query( Gemarkung.class ).execute()) {
+            try {
+                result.put( gemarkung.name.get(), gemarkung );
+            }
+            catch (ModelRuntimeException e) {
+                log.warn( "Gemarkung ohne Namen: " + gemarkung );
+            }
+        }
+        return result;
+    }
+
+    // instance *******************************************
     
 //    ESt_Gemarkung (433 Datensätze)
 //    0|ID_Gemarkung                   (LONG 4)                  

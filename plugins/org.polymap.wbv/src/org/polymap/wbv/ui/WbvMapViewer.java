@@ -55,10 +55,10 @@ public class WbvMapViewer
     public Composite createContents( Composite parent ) {
         Composite result = super.createContents( parent );
         
-        WMSLayer osm = new WMSLayer( "OSM", "../services/WBV/", "OSM" );
+        WMSLayer osm = new WMSLayer( "OSM", "services/WBV/", "OSM" );
         addLayer( osm, true, false );
         
-        WMSLayer waldflaechen = new WMSLayer( "Waldflächen", "../services/WBV/", "Waldflaechen" );
+        WMSLayer waldflaechen = new WMSLayer( "Waldflächen", "services/WBV/", "Waldflaechen" );
         addLayer( waldflaechen, false, false );
         setLayerVisible( waldflaechen, true );
 

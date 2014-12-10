@@ -122,8 +122,16 @@ class CompositesFeatureContentProvider
         public void setValue( String name, Object value ) {
             try {
                 PropertyInfo propInfo = composite.info().getProperty( name );
-                Property prop = (Property)propInfo.get( composite );
-                prop.set( value );
+                PropertyBase prop = propInfo.get( composite );
+                if (prop instanceof Property) {
+                    ((Property)prop).set( value );
+                }
+                else if (prop instanceof Association) {
+                    ((Association)prop).set( (Entity)value );
+                }
+                else {
+                    throw new RuntimeException( "Unknown Property type: " + prop );
+                }
             }
             catch (Exception e) {
                 throw new RuntimeException( e );
