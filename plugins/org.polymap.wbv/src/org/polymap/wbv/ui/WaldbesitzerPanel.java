@@ -12,8 +12,7 @@
  */
 package org.polymap.wbv.ui;
 
-import static org.eclipse.ui.forms.widgets.ExpandableComposite.TWISTIE;
-
+import static org.eclipse.ui.forms.widgets.ExpandableComposite.TREE_NODE;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -215,7 +214,7 @@ public class WaldbesitzerPanel
         tk = getSite().toolkit();
 
         // Basisdaten
-        IPanelSection basis = tk.createPanelSection( parent, "Basisdaten" );
+        IPanelSection basis = tk.createPanelSection( parent, "Basisdaten", IPanelSection.EXPANDABLE );
         basis.addConstraint( WbvPlugin.MIN_COLUMN_WIDTH, new PriorityConstraint( 100 ) );
         
         (wbForm = new WaldbesitzerForm()).createContents( basis );
@@ -329,7 +328,7 @@ public class WaldbesitzerPanel
     
     
     protected void createKontaktSection( final Composite parent, final Kontakt kontakt ) {
-        final Section section = tk.createSection( parent, kontakt.anzeigename(), TWISTIE | Section.SHORT_TITLE_BAR | Section.FOCUS_TITLE );
+        final Section section = tk.createSection( parent, kontakt.anzeigename(), TREE_NODE | Section.SHORT_TITLE_BAR | Section.FOCUS_TITLE );
         //section.setFont( JFaceResources.getFontRegistry().getBold( JFaceResources.DEFAULT_FONT ) );
         ((Composite)section.getClient()).setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
 
