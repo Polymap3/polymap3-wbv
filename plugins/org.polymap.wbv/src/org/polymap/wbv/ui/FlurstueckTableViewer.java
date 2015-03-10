@@ -48,7 +48,6 @@ import org.polymap.rhei.table.FormFeatureTableColumn;
 
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
-import org.polymap.wbv.model.Gemeinde;
 import org.polymap.wbv.ui.CompositesFeatureContentProvider.FeatureTableElement;
 
 /**
@@ -70,34 +69,23 @@ public class FlurstueckTableViewer
         super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | */SWT.FULL_SELECTION );
         this.uow = uow;
         try {
-            // Gemeinde
-            String propName = Flurstueck.TYPE.gemeinde.getInfo().getName();
-            addColumn( new FormFeatureTableColumn( descriptorFor( propName, String.class ) )
-                .setWeight( 1, 80 )
-                .setLabelProvider( new ColumnLabelProvider() {
-                    @Override
-                    public String getText( Object elm ) {
-                        Flurstueck entity = FeatureTableElement.entity( elm );
-                        Gemeinde gemeinde = entity.gemeinde.get();
-                        return gemeinde != null ? gemeinde.name.get() : "(kein Gemeinde)";
-                    }
-                })
-                .setEditing( new PicklistFormField( Gemeinde.all( uow ) ), null )
-                ); //.sort( SWT.UP ) );
-
             // Gemarkung
-            propName = Flurstueck.TYPE.gemarkung.getInfo().getName();
+            String propName = Flurstueck.TYPE.gemarkung.getInfo().getName();
             addColumn( new FormFeatureTableColumn( descriptorFor( propName, String.class ) )
-                .setWeight( 1, 80 )
+                .setWeight( 3, 80 )
                 .setLabelProvider( new ColumnLabelProvider() {
                     @Override
                     public String getText( Object elm ) {
                         Flurstueck entity = FeatureTableElement.entity( elm );
-                        Gemarkung gemarkung = entity.gemarkung.get();
-                        return gemarkung != null ? gemarkung.name.get() : "(kein Gemarkung)";
+                        Gemarkung gmk = entity.gemarkung.get();
+                        return gmk != null ? gmk.label() : "(kein Gemarkung)";
+                    }
+                    @Override
+                    public String getToolTipText( Object elm ) {
+                        return getText( elm );
                     }
                 })
-                .setEditing( new PicklistFormField( Gemarkung.all( uow ) ), null ) );
+                .setEditing( new PicklistFormField( Gemarkung.all.get() ), null ) );
             
             // Flurstücksnummer
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.zaehlerNenner ) )

@@ -52,7 +52,7 @@ public class MdbInspector {
 
     private File                baseDir;
     
-    private String              fileNames[] = { "WVK_dat.mdb"/*, "WVK_steu.mdb"/*, "SN_Stamm.mdb"*/ };
+    private String              fileNames[] = { "WVK_dat.mdb"/*, "WVK_steu.mdb", "SN_Stamm.mdb"*/ };
     
     private Database            db;
 

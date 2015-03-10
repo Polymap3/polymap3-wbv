@@ -63,6 +63,7 @@ public class WbvPlugin
     static {
         System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.core.data.feature.recordstore", "debug" );
         System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.core.runtime.recordstore.lucene", "debug" );
+        System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.core.model2.store.recordstore", "debug" );
         System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.wbv", "debug" );
     }
     

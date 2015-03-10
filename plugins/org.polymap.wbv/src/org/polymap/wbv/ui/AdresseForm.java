@@ -72,7 +72,7 @@ public class AdresseForm
 
         createField( city, new PropertyAdapter( adresse.ort ) )
                 .setLabel( IFormFieldLabel.NO_LABEL )
-                .setValidator( validator( null ) )
+                .setValidator( null /*validator( null )*/ )
                 .create();
     }
 

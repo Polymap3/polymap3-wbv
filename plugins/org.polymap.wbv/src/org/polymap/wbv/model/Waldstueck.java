@@ -37,9 +37,6 @@ public class Waldstueck
     public Association<Waldbesitzer>            waldbesitzer;
     
     @Queryable
-    public Association<Revier>                  revier;
-    
-    @Queryable
     public CollectionProperty<BaumartEintrag>   baumarten;
     
     /**

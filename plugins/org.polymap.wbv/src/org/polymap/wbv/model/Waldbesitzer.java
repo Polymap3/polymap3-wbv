@@ -116,7 +116,6 @@ public class Waldbesitzer
         return Iterables.get( kontakte, besitzerIndex.get(), null );
     }
 
-
     /**
      * Andere Seite der {@link Waldstueck#waldbesitzer} Assoziation.
      */

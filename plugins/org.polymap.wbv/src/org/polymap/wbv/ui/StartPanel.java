@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014, Falko Bräutigam. All rights reserved.
+ * Copyright (C) 2014-2015, Falko Bräutigam. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -11,6 +11,9 @@
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
 package org.polymap.wbv.ui;
+
+import static org.polymap.core.model2.query.Expressions.anyOf;
+import java.util.List;
 
 import org.geotools.data.FeatureStore;
 import org.opengis.feature.Feature;
@@ -37,6 +40,7 @@ import org.eclipse.ui.forms.widgets.ColumnLayoutData;
 import org.eclipse.core.runtime.Status;
 
 import org.polymap.core.data.ui.featuretable.FeatureTableFilterBar;
+import org.polymap.core.model2.query.Expressions;
 import org.polymap.core.model2.query.ResultSet;
 import org.polymap.core.project.ILayer;
 import org.polymap.core.runtime.IMessages;
@@ -57,6 +61,9 @@ import org.polymap.rhei.batik.map.IContextMenuProvider;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
+import org.polymap.rhei.field.PicklistFormField;
+import org.polymap.rhei.field.PlainValuePropertyAdapter;
+import org.polymap.rhei.form.IFormEditorPageSite;
 import org.polymap.rhei.fulltext.FullTextIndex;
 import org.polymap.rhei.fulltext.ui.EntitySearchField;
 import org.polymap.rhei.fulltext.ui.FulltextProposal;
@@ -65,6 +72,9 @@ import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
 
 import org.polymap.wbv.Messages;
 import org.polymap.wbv.WbvPlugin;
+import org.polymap.wbv.model.Flurstueck;
+import org.polymap.wbv.model.Gemarkung;
+import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.WbvRepository;
 
@@ -82,6 +92,9 @@ public class StartPanel
     public static final PanelIdentifier   ID  = new PanelIdentifier( "start" );
 
     private static final IMessages        i18n = Messages.forPrefix( "StartPanel" );
+
+    /** */
+    private ContextProperty<Revier>       revier;
     
     /** Der selektierte {@link Waldbesitzer}. */
     private ContextProperty<Waldbesitzer> selected;
@@ -128,6 +141,17 @@ public class StartPanel
 
         LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), user ) {
             @Override
+            public void createFormContent( IFormEditorPageSite site ) {
+                super.createFormContent( site );
+                Revier frauenstein = Revier.all.get().get( "Frauenstein" );
+                new FormFieldBuilder( site.getPageBody(), new PlainValuePropertyAdapter( "revier", frauenstein ) )
+                        .setField( new PicklistFormField( Revier.all.get() ) )
+                        .setLabel( "Forstrevier*" ).setToolTipText( "Das Revier, für welches Waldbesitzer bearbeitet werden sollen" )
+                        .create();
+
+                //getSite().toolkit().createButton( site.getPageBody(), "Forstreviert", SWT.CHECK );
+            }
+            @Override
             protected boolean login( String name, String passwd ) {
                 if (super.login( name, passwd )) {
                     getSite().setTitle( "Start" );
@@ -135,6 +159,10 @@ public class StartPanel
                     getSite().setStatus( new Status( Status.OK, WbvPlugin.ID, "Erfolgreich angemeldet als: <b>" + name + "</b>" ) );
                     
                     getContext().setUserName( username );
+                    
+                    // Revier
+                    Revier r = formSite.getFieldValue( "revier" );
+                    revier.set( r );
 
                     for (Control child : parent.getChildren()) {
                         child.dispose();
@@ -197,9 +225,19 @@ public class StartPanel
         EntitySearchField search = new EntitySearchField<Waldbesitzer>( tableSection.getBody(), fulltext, uow(), Waldbesitzer.class ) {
             @Override
             protected void doRefresh() {
+                if (revier.get() != null) {
+                    Waldbesitzer wb = Expressions.template( Waldbesitzer.class, WbvRepository.instance.get().repo() );
+                    Flurstueck fl = Expressions.template( Flurstueck.class, WbvRepository.instance.get().repo() );
+                    
+                    List<Gemarkung> gemarkungen = revier.get().gemarkungen;
+                    Gemarkung[] revierGemarkungen = gemarkungen.toArray( new Gemarkung[gemarkungen.size()] );
+                    query.and( 
+                            anyOf( wb.flurstuecke, 
+                                    Expressions.isAnyOf( fl.gemarkung, revierGemarkungen ) ) );
+                }
                 // SelectionEvent nach refresh() verhindern
                 viewer.clearSelection();
-                viewer.setInput( results );
+                viewer.setInput( query.execute() );
             }
         };
         search.setSearchOnEnter( false );

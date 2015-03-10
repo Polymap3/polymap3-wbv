@@ -50,6 +50,7 @@ import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
 
 import org.polymap.wbv.model.Flurstueck;
+import org.polymap.wbv.model.Gemarkung;
 import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.ui.CompositesFeatureContentProvider.FeatureTableElement;
@@ -69,7 +70,8 @@ public class WaldbesitzerTableViewer
     private UnitOfWork                  uow;
 
 
-    public WaldbesitzerTableViewer( UnitOfWork uow, Composite parent, Iterable<Waldbesitzer> rs, int style ) {
+    public WaldbesitzerTableViewer( UnitOfWork uow, Composite parent,
+            Iterable<Waldbesitzer> rs, int style ) {
         super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | SWT.FULL_SELECTION | */SWT.NONE );
         this.uow = uow;
         try {
@@ -161,7 +163,7 @@ public class WaldbesitzerTableViewer
                    Waldbesitzer wb = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
                    Set<String> names = new TreeSet();
                    for (Flurstueck flurstueck : wb.flurstuecke) {
-                       names.add( flurstueck.gemeinde.get().name.get() );    
+                       names.add( flurstueck.gemarkung.get().gemeinde.get() );    
                    }
                    return StringUtils.abbreviate( Joiner.on( ", " ).join( names ), 30 );
                }
@@ -170,7 +172,8 @@ public class WaldbesitzerTableViewer
                    Waldbesitzer wb = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
                    Set<String> names = new TreeSet();
                    for (Flurstueck flurstueck : wb.flurstuecke) {
-                       String name = flurstueck.gemeinde.get().name.get() + "/" + flurstueck.gemarkung.get().name.get();
+                       Gemarkung gemarkung = flurstueck.gemarkung.get();
+                       String name = gemarkung.gemeinde.get() + "/" + gemarkung.gemarkung.get();
                        names.add( name );    
                    }
                    StringBuilder result = new StringBuilder( 1024 );

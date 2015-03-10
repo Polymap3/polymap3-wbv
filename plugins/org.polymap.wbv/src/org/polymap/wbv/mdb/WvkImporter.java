@@ -46,7 +46,6 @@ import org.polymap.rhei.batik.app.BatikApplication;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
-import org.polymap.wbv.model.Gemeinde;
 import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
@@ -62,15 +61,14 @@ public class WvkImporter
 
     private static Log log = LogFactory.getLog( WvkImporter.class );
     
-    private File            baseDir;
+    public static final File    BASEDIR = new File( "/home/falko/Data/WBV" );
 
-    private UnitOfWork      uow;
+    private UnitOfWork          uow;
 
     
-    public WvkImporter( UnitOfWork uow, File baseDir ) {
+    public WvkImporter( UnitOfWork uow ) {
         super( "WVK-Daten importieren" );
         this.uow = uow;
-        this.baseDir = baseDir;
     }
     
     
@@ -88,7 +86,7 @@ public class WvkImporter
 
 
     public void importData( IProgressMonitor monitor ) throws Exception {
-        Database db = DatabaseBuilder.open( new File( baseDir, "WVK_dat.mdb" ) );
+        Database db = DatabaseBuilder.open( new File( BASEDIR, "WVK_dat.mdb" ) );
         try {
             monitor.beginTask( getLabel(), 60 );
             monitor.subTask( "Datenbank öffnen" );
@@ -151,23 +149,9 @@ public class WvkImporter
                 }
             }.importTable( db, monitor );
 
-            // Gemarkung
-            new MdbEntityImporter<Gemarkung>( uow, Gemarkung.class ) {
-                @Override
-                public String buildId( Row row ) {
-                    String result = "Gemarkung." + row.get( "ID_Gemarkung" );
-                    return result;
-                }
-            }.importTable( db, monitor );
 
-            // Gemeinde
-            new MdbEntityImporter<Gemeinde>( uow, Gemeinde.class ) {
-                @Override
-                public String buildId( Row row ) {
-                    return "Gemeinde." + row.get( "ID_Gemeinde" );
-                }
-            }.importTable( db, monitor );
-
+            final MdbGemarkungen gmkHelper = new MdbGemarkungen();
+            
             // Flurstücke
             new MdbEntityImporter<Flurstueck>( uow, Flurstueck.class ) {
                 @Override
@@ -185,11 +169,15 @@ public class WvkImporter
                             fill( proto, row );
                             
                             String gemeindeId = row.get( "FL_Gemeinde" ).toString();
-                            Gemeinde gemeinde = uow.entity( Gemeinde.class, "Gemeinde."+gemeindeId );
-                            proto.gemeinde.set( gemeinde );
-
                             String gemarkungId = row.get( "FL_Gemarkung" ).toString();
-                            Gemarkung gemarkung = uow.entity( Gemarkung.class, "Gemarkung."+gemarkungId );
+
+                            String gmkschl = gmkHelper.gmkschl( gemeindeId, gemarkungId );
+                            if (gmkschl == null) {
+                                log.warn( "Keine Gemarkung für: " + gemeindeId + " / " + gemarkungId );
+                                return proto;
+                            }
+                            
+                            Gemarkung gemarkung = uow.entity( Gemarkung.class, gmkschl );
                             proto.gemarkung.set( gemarkung );
                             return proto;
                         }

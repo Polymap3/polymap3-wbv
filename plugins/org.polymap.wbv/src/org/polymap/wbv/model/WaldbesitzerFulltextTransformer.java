@@ -36,8 +36,7 @@ public class WaldbesitzerFulltextTransformer
     @Override
     protected void visitAssociation( Association prop ) {
         Object value = prop.get();
-        if (value instanceof Gemeinde
-                || value instanceof Gemarkung) {
+        if (value instanceof Gemarkung) {
             processComposite( (Composite)value );
         }
     }
