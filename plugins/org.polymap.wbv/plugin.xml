@@ -18,13 +18,13 @@
             servletName="wbv"
             themeId="org.polymap.rhei.batik.theme"
             title="WBV">
-         <additionalHeaders>
-            <!--link
+         <!--additionalHeaders>
+            <link
                   href="http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700"
                   rel="stylesheet"
                   type="text/css">
-            </link-->
-         </additionalHeaders>
+            <link>
+         </additionalHeaders-->
       </branding>
    </extension>
    <extension
