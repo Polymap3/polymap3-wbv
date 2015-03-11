@@ -63,10 +63,6 @@ public class Flurstueck
 //   18|FL_LK                          (TEXT 200)                
 //   19|FL_GEMAFLUR                    (TEXT 200)
     
-//    //@ImportColumn("FL_Gemeinde")
-//    @Nullable
-//    public Association<Gemeinde>        gemeinde;
-    
     /**
      * Im Import leider Flurstücke ohne Gemarkung, deshalb {@link Nullable}. Id ist
      * Gemarkungsschlüssel.

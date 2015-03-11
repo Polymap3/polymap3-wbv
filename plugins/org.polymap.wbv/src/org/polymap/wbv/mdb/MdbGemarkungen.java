@@ -55,8 +55,6 @@ public class MdbGemarkungen {
 
     // instance *******************************************
 
-    private String              fileName = "WVK_dat.mdb";
-    
     private Database            db;
 
     private Map<String,String>  gmks = new HashMap();
@@ -71,7 +69,7 @@ public class MdbGemarkungen {
     
 
     public MdbGemarkungen() throws IOException {
-        db = DatabaseBuilder.open( new File( WvkImporter.BASEDIR, fileName ) );
+        db = DatabaseBuilder.open( new File( WvkImporter.BASEDIR, "WVK_dat.mdb" ) );
         db.setLinkResolver( new LinkResolver() {
             @Override
             public Database resolveLinkedDatabase( Database linkerDb, String linkeeFileName ) throws IOException {
@@ -95,28 +93,36 @@ public class MdbGemarkungen {
             log( id, " - ", gmds.get( id ) );
         }
         
-        // neue Gemarkungen aus CSV
-        InputStream in = new FileInputStream( new File( "/home/falko/Data/WBV/Gemarkungen.csv") );
         CsvPreference prefs = new CsvPreference( '"', ',', "\r\n" ); // quoteChar, delimiterChar, endOfLineSymbols
-        ICsvListReader csv = new CsvListReader( new InputStreamReader( in, "UTF-8" ), prefs );
+        
+        // neue Gemarkungen aus CSV
+        File f = new File( WvkImporter.BASEDIR, "Gemarkungen_Forstreviere.csv" );
+        if (f.exists()) {
+            InputStream in = new FileInputStream( f );
+            ICsvListReader csv = new CsvListReader( new InputStreamReader( in, "UTF-8" ), prefs );
 
-        for (List<String> l = csv.read(); l != null; l = csv.read()) {
-            final String[] line = l.toArray( new String[l.size()] );
-            String id = line[0];
-            if (!StringUtils.isNumeric( id )) {
-                System.err.println( "Skipping header line: " + Arrays.toString( line ) );
-                continue;
+            for (List<String> l = csv.read(); l != null; l = csv.read()) {
+                final String[] line = l.toArray( new String[l.size()] );
+                String id = line[0];
+                if (!StringUtils.isNumeric( id )) {
+                    System.err.println( "Skipping header line: " + Arrays.toString( line ) );
+                    continue;
+                }
+                String gmkSchl = line[0];
+                String gemarkung = line[1];
+                String gemeinde = line[2];
+                String key = gemeinde + "/" + gemarkung;
+                neueGmks.put( key, gmkSchl );
             }
-            String gmkSchl = line[0];
-            String gemarkung = line[1];
-            String gemeinde = line[2];
-            String key = gemeinde + "/" + gemarkung;
-            neueGmks.put( key, gmkSchl );
+        }
+        else {
+            System.err.println( "Keine Gemarkungen_Forstreviere.csv! Import Modus?" );
+            neueGmks = null;
         }
         
         // Mapping
-        in = new FileInputStream( new File( "/home/falko/Data/WBV/Gemarkungen-wkv.csv") );
-        csv = new CsvListReader( new InputStreamReader( in, "UTF-8" ), prefs );
+        FileInputStream in = new FileInputStream( new File( WvkImporter.BASEDIR, "Gemarkungen-wkv.csv" ) );
+        CsvListReader csv = new CsvListReader( new InputStreamReader( in, "UTF-8" ), prefs );
 
         for (List<String> l = csv.read(); l != null; l = csv.read()) {
             final String[] line = l.toArray( new String[l.size()] );

@@ -61,7 +61,7 @@ public class WvkImporter
 
     private static Log log = LogFactory.getLog( WvkImporter.class );
     
-    public static final File    BASEDIR = new File( "/home/falko/Data/WBV" );
+    public static final File    BASEDIR = new File( "." );  // lokales Dir beim Start (workspace)
 
     private UnitOfWork          uow;
 

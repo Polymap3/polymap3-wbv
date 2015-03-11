@@ -242,8 +242,15 @@ public class AdminPanel
                 ICsvListReader csv = new CsvListReader( new InputStreamReader( in, "UTF-8" ), prefs );
                 try {
                     newUnitOfWork();
+                    
+                    // aktuelle Gemarkung Entities löschen
+                    for (Gemarkung gmk : uow().query( Gemarkung.class ).execute()) {
+                        uow().removeEntity( gmk );
+                    }
 
-                    for (List<String> l = csv.read(); l != null; l = csv.read()) {
+                    // neue importieren
+                    int count = 0;
+                    for (List<String> l = csv.read(); l != null; l = csv.read(), count++) {
                         final String[] line = l.toArray( new String[l.size()] );
                         String id = line[0];
                         if (!StringUtils.isNumeric( id )) {
@@ -256,13 +263,15 @@ public class AdminPanel
                                 proto.gemarkung.set( line[1] );
                                 proto.gemeinde.set( line[2] );
                                 proto.revier.set( line[3] );
-                                log.info( proto );
+                                log.debug( proto );
                                 return proto;
                             }
                         });
                         Revier.all.clear();
                     }
+                    log.info( "IMPORT: CSV lines: " + count + ", now in store: " + uow().query( Gemarkung.class ).execute().size() );
                     closeUnitOfWork( Completion.STORE );
+                    log.info( "IMPORT: now in store: " + uow().query( Gemarkung.class ).execute().size() );
                 }
                 catch (Exception e) {
                     BatikApplication.handleError( "Die Daten konnten nicht korrekt importiert werden.", e );

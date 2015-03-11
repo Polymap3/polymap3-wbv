@@ -13,6 +13,7 @@
 package org.polymap.wbv.ui;
 
 import static org.polymap.core.model2.query.Expressions.anyOf;
+
 import java.util.List;
 
 import org.geotools.data.FeatureStore;
@@ -28,6 +29,10 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
+
+import org.eclipse.rwt.RWT;
+import org.eclipse.rwt.service.ISettingStore;
+import org.eclipse.rwt.service.SettingStoreException;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
@@ -140,16 +145,16 @@ public class StartPanel
         section.addConstraint( new PriorityConstraint( 0 ), WbvPlugin.MIN_COLUMN_WIDTH );
 
         LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), user ) {
+            ISettingStore       settings = RWT.getSettingStore();
             @Override
             public void createFormContent( IFormEditorPageSite site ) {
-                super.createFormContent( site );
-                Revier frauenstein = Revier.all.get().get( "Frauenstein" );
-                new FormFieldBuilder( site.getPageBody(), new PlainValuePropertyAdapter( "revier", frauenstein ) )
+                String cookieRevier = settings.getAttribute( WbvPlugin.ID + ".revier" );
+                Revier preSelected = cookieRevier != null ? Revier.all.get().get( cookieRevier ) : null;
+                new FormFieldBuilder( site.getPageBody(), new PlainValuePropertyAdapter( "revier", preSelected ) )
                         .setField( new PicklistFormField( Revier.all.get() ) )
-                        .setLabel( "Forstrevier*" ).setToolTipText( "Das Revier, für welches Waldbesitzer bearbeitet werden sollen" )
+                        .setLabel( i18n.get( "revier" ) ).setToolTipText( i18n.get( "revierTip" ) )
                         .create();
-
-                //getSite().toolkit().createButton( site.getPageBody(), "Forstreviert", SWT.CHECK );
+                super.createFormContent( site );
             }
             @Override
             protected boolean login( String name, String passwd ) {
@@ -163,6 +168,14 @@ public class StartPanel
                     // Revier
                     Revier r = formSite.getFieldValue( "revier" );
                     revier.set( r );
+                    try {
+                        if (r != null) {
+                            settings.setAttribute( WbvPlugin.ID + ".revier", r.name );
+                        }
+                    }
+                    catch (SettingStoreException e) {
+                        log.warn( "", e );
+                    }
 
                     for (Control child : parent.getChildren()) {
                         child.dispose();
