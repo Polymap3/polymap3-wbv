@@ -17,9 +17,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.geotools.data.FeatureStore;
-import org.opengis.feature.Feature;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,7 +40,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
 import org.polymap.core.model2.runtime.ValueInitializer;
-import org.polymap.core.project.ILayer;
 import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.ui.ColumnLayoutFactory;
@@ -61,9 +57,6 @@ import org.polymap.rhei.batik.app.BatikApplication;
 import org.polymap.rhei.batik.app.Enableable;
 import org.polymap.rhei.batik.app.FormContainer;
 import org.polymap.rhei.batik.app.SubmitStatusManager;
-import org.polymap.rhei.batik.map.FindFeaturesMenuContribution;
-import org.polymap.rhei.batik.map.IContextMenuContribution;
-import org.polymap.rhei.batik.map.IContextMenuProvider;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
@@ -240,33 +233,33 @@ public class WaldbesitzerPanel
         flurstuecke.getBody().setLayout( FormLayoutFactory.defaults().create() );
         createFlurstueckSection( flurstuecke.getBody() );
 
-        // map
-        IPanelSection karte = tk.createPanelSection( parent, null );
-        karte.addConstraint( WbvPlugin.MIN_COLUMN_WIDTH, new PriorityConstraint( 10 ) );
-        karte.getBody().setLayout( ColumnLayoutFactory.defaults().columns( 1, 1 ).create() );
-
-        try {
-            map = new WbvMapViewer( getSite() );
-            map.createContents( karte.getBody() )
-                    .setLayoutData( new ColumnLayoutData( SWT.DEFAULT, 500 ) );
-        }
-        catch (Exception e) {
-            throw new RuntimeException( e );
-        }
-    
-        // context menu
-        //map.getContextMenu().addProvider( new WaldflaechenMenu() );
-        map.getContextMenu().addProvider( new IContextMenuProvider() {
-            @Override
-            public IContextMenuContribution createContribution() {
-                return new FindFeaturesMenuContribution() {
-                    @Override
-                    protected void onMenuOpen( FeatureStore fs, Feature feature, ILayer layer ) {
-                        log.info( "Feature: " + feature );
-                    }
-                };            
-            }
-        });
+//        // map
+//        IPanelSection karte = tk.createPanelSection( parent, null );
+//        karte.addConstraint( WbvPlugin.MIN_COLUMN_WIDTH, new PriorityConstraint( 10 ) );
+//        karte.getBody().setLayout( ColumnLayoutFactory.defaults().columns( 1, 1 ).create() );
+//
+//        try {
+//            map = new WbvMapViewer( getSite() );
+//            map.createContents( karte.getBody() )
+//                    .setLayoutData( new ColumnLayoutData( SWT.DEFAULT, 500 ) );
+//        }
+//        catch (Exception e) {
+//            throw new RuntimeException( e );
+//        }
+//    
+//        // context menu
+//        //map.getContextMenu().addProvider( new WaldflaechenMenu() );
+//        map.getContextMenu().addProvider( new IContextMenuProvider() {
+//            @Override
+//            public IContextMenuContribution createContribution() {
+//                return new FindFeaturesMenuContribution() {
+//                    @Override
+//                    protected void onMenuOpen( FeatureStore fs, Feature feature, ILayer layer ) {
+//                        log.info( "Feature: " + feature );
+//                    }
+//                };            
+//            }
+//        });
     }
 
     

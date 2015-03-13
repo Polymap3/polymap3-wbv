@@ -13,11 +13,9 @@
 package org.polymap.wbv.ui;
 
 import static org.polymap.core.model2.query.Expressions.anyOf;
+import static org.polymap.core.model2.query.Expressions.isAnyOf;
 
 import java.util.List;
-
-import org.geotools.data.FeatureStore;
-import org.opengis.feature.Feature;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,16 +38,12 @@ import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
-import org.eclipse.ui.forms.widgets.ColumnLayoutData;
-
 import org.eclipse.core.runtime.Status;
 
 import org.polymap.core.data.ui.featuretable.FeatureTableFilterBar;
 import org.polymap.core.model2.query.Expressions;
 import org.polymap.core.model2.query.ResultSet;
-import org.polymap.core.project.ILayer;
 import org.polymap.core.runtime.IMessages;
-import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
 
@@ -60,7 +54,6 @@ import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.app.BatikApplication;
 import org.polymap.rhei.batik.map.ContextMenuSite;
-import org.polymap.rhei.batik.map.FindFeaturesMenuContribution;
 import org.polymap.rhei.batik.map.IContextMenuContribution;
 import org.polymap.rhei.batik.map.IContextMenuProvider;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
@@ -244,9 +237,8 @@ public class StartPanel
                     
                     List<Gemarkung> gemarkungen = revier.get().gemarkungen;
                     Gemarkung[] revierGemarkungen = gemarkungen.toArray( new Gemarkung[gemarkungen.size()] );
-                    query.and( 
-                            anyOf( wb.flurstuecke, 
-                                    Expressions.isAnyOf( fl.gemarkung, revierGemarkungen ) ) );
+                    query.andWhere( anyOf( wb.flurstuecke, 
+                                    isAnyOf( fl.gemarkung, revierGemarkungen ) ) );
                 }
                 // SelectionEvent nach refresh() verhindern
                 viewer.clearSelection();
@@ -255,6 +247,7 @@ public class StartPanel
         };
         search.setSearchOnEnter( false );
         search.getText().setText( "Im" );
+        search.getText().setFocus();
         search.setSearchOnEnter( true );
         new FulltextProposal( fulltext, search.getText() );
         
@@ -266,34 +259,34 @@ public class StartPanel
         search.getControl().setLayoutData( FormDataFactory.filled().height( 27 ).bottom( viewer.getTable() ).left( filterBar.getControl() ).create() );
         viewer.getTable().setLayoutData( FormDataFactory.filled().top( createBtn ).height( tableHeight ).create() );
         
-        // map
-        IPanelSection karte = tk.createPanelSection( parent, null );
-        karte.addConstraint( new PriorityConstraint( 5 ) );
-        karte.getBody().setLayout( ColumnLayoutFactory.defaults().columns( 1, 1 ).create() );
-
-        try {
-            map = new WbvMapViewer( getSite() );
-            map.createContents( karte.getBody() )
-                    .setLayoutData( new ColumnLayoutData( SWT.DEFAULT, tableHeight + 35 ) );
-                    //.setLayoutData( FormDataFactory.filled().height( tableHeight + 35 ).create() );
-        }
-        catch (Exception e) {
-            throw new RuntimeException( e );
-        }
-    
-        // context menu
-        map.getContextMenu().addProvider( new WaldflaechenMenu() );
-        map.getContextMenu().addProvider( new IContextMenuProvider() {
-            @Override
-            public IContextMenuContribution createContribution() {
-                return new FindFeaturesMenuContribution() {
-                    @Override
-                    protected void onMenuOpen( FeatureStore fs, Feature feature, ILayer layer ) {
-                        log.info( "Feature: " + feature );
-                    }
-                };            
-            }
-        });
+//        // map
+//        IPanelSection karte = tk.createPanelSection( parent, null );
+//        karte.addConstraint( new PriorityConstraint( 5 ) );
+//        karte.getBody().setLayout( ColumnLayoutFactory.defaults().columns( 1, 1 ).create() );
+//
+//        try {
+//            map = new WbvMapViewer( getSite() );
+//            map.createContents( karte.getBody() )
+//                    .setLayoutData( new ColumnLayoutData( SWT.DEFAULT, tableHeight + 35 ) );
+//                    //.setLayoutData( FormDataFactory.filled().height( tableHeight + 35 ).create() );
+//        }
+//        catch (Exception e) {
+//            throw new RuntimeException( e );
+//        }
+//    
+//        // context menu
+//        map.getContextMenu().addProvider( new WaldflaechenMenu() );
+//        map.getContextMenu().addProvider( new IContextMenuProvider() {
+//            @Override
+//            public IContextMenuContribution createContribution() {
+//                return new FindFeaturesMenuContribution() {
+//                    @Override
+//                    protected void onMenuOpen( FeatureStore fs, Feature feature, ILayer layer ) {
+//                        log.info( "Feature: " + feature );
+//                    }
+//                };            
+//            }
+//        });
     }
 
 

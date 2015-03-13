@@ -77,8 +77,9 @@ public class WaldbesitzerTableViewer
         try {
             NameColumn nameColumn = new NameColumn(); 
             addColumn( nameColumn );
+            addColumn( new EigentumColumn() );
             addColumn( new FlurstueckColumn() );
-            nameColumn.sort( SWT.UP );
+            nameColumn.sort( SWT.DOWN );
 
             // suppress deferred loading to fix "empty table" issue
             // setContent( fs.getFeatures( this.baseFilter ) );
@@ -126,14 +127,42 @@ public class WaldbesitzerTableViewer
            setWeight( 2, 120 );
            setHeader( "Name" );
            setAlign( SWT.LEFT );
-//           setComparator( new ViewerComparator() {                
-//           });
+           //           setComparator( new ViewerComparator() {                
+           //           });
            setLabelProvider( new ColumnLabelProvider() {
                @Override
                public String getText( Object elm ) {
                    Waldbesitzer wb = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
                    Kontakt besitzer = wb.besitzer();
                    return besitzer != null ? besitzer.anzeigename() : "(kein Besitzer festgelegt)";
+               }
+               @Override
+               public String getToolTipText( Object elm ) {
+                   return getText( elm );
+               }
+           });
+       }
+   }
+
+
+   /**
+    *
+    */
+   class EigentumColumn
+           extends DefaultFeatureTableColumn {
+
+       public EigentumColumn() {
+           super( createDescriptor( "eigentum", String.class ) );
+           setWeight( 2, 120 );
+           setHeader( "Eigentum" );
+           setAlign( SWT.LEFT );
+           //           setComparator( new ViewerComparator() {                
+           //           });
+           setLabelProvider( new ColumnLabelProvider() {
+               @Override
+               public String getText( Object elm ) {
+                   Waldbesitzer wb = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
+                   return wb.eigentumsArt.get().label();
                }
                @Override
                public String getToolTipText( Object elm ) {
