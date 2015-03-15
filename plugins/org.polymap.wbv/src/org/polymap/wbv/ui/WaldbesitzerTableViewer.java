@@ -75,11 +75,9 @@ public class WaldbesitzerTableViewer
         super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | SWT.FULL_SELECTION | */SWT.NONE );
         this.uow = uow;
         try {
-            NameColumn nameColumn = new NameColumn(); 
-            addColumn( nameColumn );
+            addColumn( new NameColumn() ).sort( SWT.DOWN );
             addColumn( new EigentumColumn() );
             addColumn( new FlurstueckColumn() );
-            nameColumn.sort( SWT.DOWN );
 
             // suppress deferred loading to fix "empty table" issue
             // setContent( fs.getFeatures( this.baseFilter ) );
@@ -192,7 +190,8 @@ public class WaldbesitzerTableViewer
                    Waldbesitzer wb = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
                    Set<String> names = new TreeSet();
                    for (Flurstueck flurstueck : wb.flurstuecke) {
-                       names.add( flurstueck.gemarkung.get().gemeinde.get() );    
+                       Gemarkung gemarkung = flurstueck.gemarkung.get();
+                       names.add( gemarkung != null ? gemarkung.gemeinde.get() : "" );    
                    }
                    return StringUtils.abbreviate( Joiner.on( ", " ).join( names ), 30 );
                }
@@ -202,7 +201,9 @@ public class WaldbesitzerTableViewer
                    Set<String> names = new TreeSet();
                    for (Flurstueck flurstueck : wb.flurstuecke) {
                        Gemarkung gemarkung = flurstueck.gemarkung.get();
-                       String name = gemarkung.gemeinde.get() + "/" + gemarkung.gemarkung.get();
+                       String name = gemarkung != null
+                               ? gemarkung.gemeinde.get() + "/" + gemarkung.gemarkung.get()
+                               : "";
                        names.add( name );    
                    }
                    StringBuilder result = new StringBuilder( 1024 );

@@ -13,6 +13,7 @@
 package org.polymap.wbv.model;
 
 import org.polymap.core.model2.Composite;
+import org.polymap.core.model2.DefaultValue;
 import org.polymap.core.model2.Defaults;
 import org.polymap.core.model2.Property;
 import org.polymap.core.model2.Queryable;
@@ -29,13 +30,17 @@ public class Adresse
 
     @Defaults
     @Queryable
-    @ImportColumn("EWBS_Ort")
+    @ImportColumn("EWBS_ORT")
     public Property<String> ort;
 
     @Defaults
     @Queryable
     @ImportColumn("EWBS_Ortsteil")
     public Property<String> ortsteil;
+
+    @Queryable
+    @DefaultValue("BRD")
+    public Property<String> land;
 
     /** Strasse, inklusive Hausnummer. */
     @Defaults

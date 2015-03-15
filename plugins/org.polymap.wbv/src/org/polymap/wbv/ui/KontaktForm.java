@@ -14,6 +14,9 @@
  */
 package org.polymap.wbv.ui;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -27,10 +30,11 @@ import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.app.FormContainer;
 import org.polymap.rhei.field.EMailAddressValidator;
 import org.polymap.rhei.field.IFormFieldLabel;
-import org.polymap.rhei.field.IFormFieldValidator;
+import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.form.IFormEditorPageSite;
+
 import org.polymap.wbv.model.Kontakt;
 
 /**
@@ -49,10 +53,19 @@ public class KontaktForm
     
     private Composite               body;
 
+    private Set<IFormFieldListener> listeners = new HashSet();
+
     
     public KontaktForm( Kontakt kontakt, IPanelSite panelSite ) {
         this.kontakt = kontakt;
         this.panelSite = panelSite;
+    }
+
+
+    @Override
+    public void addFieldListener( IFormFieldListener l ) {
+        super.addFieldListener( l );
+        listeners.add( l );
     }
 
 
@@ -99,10 +112,5 @@ public class KontaktForm
         // Adresse
         new AdresseForm( kontakt, panelSite ).createContents( this );
     }
-
     
-    protected IFormFieldValidator validator( String propName ) {
-        return new NotEmptyValidator();
-    }
-
 }

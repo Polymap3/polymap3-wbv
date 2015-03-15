@@ -17,10 +17,9 @@ import static com.google.common.collect.Iterables.transform;
 import static java.util.Arrays.asList;
 import static org.polymap.wbv.ui.PropertyAdapter.descriptorFor;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-
-import java.beans.PropertyChangeEvent;
 
 import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.commons.logging.Log;
@@ -35,11 +34,6 @@ import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.polymap.core.data.ui.featuretable.FeatureTableViewer;
 import org.polymap.core.data.ui.featuretable.IFeatureTableElement;
 import org.polymap.core.model2.runtime.UnitOfWork;
-import org.polymap.core.runtime.event.Event;
-import org.polymap.core.runtime.event.EventFilter;
-import org.polymap.core.runtime.event.EventHandler;
-import org.polymap.core.runtime.event.EventManager;
-
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.NumberValidator;
 import org.polymap.rhei.field.PicklistFormField;
@@ -71,9 +65,10 @@ public class FlurstueckTableViewer
         try {
             // Gemarkung
             String propName = Flurstueck.TYPE.gemarkung.getInfo().getName();
+            final ColumnLabelProvider lp[] = new ColumnLabelProvider[1];
             addColumn( new FormFeatureTableColumn( descriptorFor( propName, String.class ) )
                 .setWeight( 3, 80 )
-                .setLabelProvider( new ColumnLabelProvider() {
+                .setLabelProvider( lp[0] = new ColumnLabelProvider() {
                     @Override
                     public String getText( Object elm ) {
                         Flurstueck entity = FeatureTableElement.entity( elm );
@@ -85,13 +80,26 @@ public class FlurstueckTableViewer
                         return getText( elm );
                     }
                 })
-                .setEditing( new PicklistFormField( Gemarkung.all.get() ), null ) );
+                .setEditing( new PicklistFormField( Gemarkung.all.get() ), null )
+                .setSortable( new Comparator<IFeatureTableElement>() {
+                    public int compare( IFeatureTableElement e1, IFeatureTableElement e2 ) {
+                        String l1 = lp[0].getText( e1 );
+                        String l2 = lp[0].getText( e2 );
+                        return l1.compareTo( l2 );
+                    }
+                }))
+                .sort( SWT.DOWN );
             
             // Flurstücksnummer
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.zaehlerNenner ) )
                 .setWeight( 1, 60 )
                 .setHeader( "Nummer" )
-                .setLabelProvider( new NotEmptyValidator() )
+                .setLabelProvider( new NotEmptyValidator() {
+                    public Object transform2Field( Object modelValue ) throws Exception {
+                        log.info( "Column: " + modelValue );
+                        return super.transform2Field( modelValue );
+                    }
+                })
                 .setEditing( new StringFormField(), new NotEmptyValidator() ) );
             
             // Fläche
@@ -100,14 +108,16 @@ public class FlurstueckTableViewer
                 .setWeight( 1, 60 )
                 .setHeader( "Fläche\n(in ha)" )
                 .setLabelProvider( flaecheValidator )
-                .setEditing( new StringFormField(), flaecheValidator ) );
+                .setEditing( new StringFormField(), flaecheValidator )
+                .setSortable( false ) );  // standard comparator: ClassCastException wenn null
             
             // davon Wald
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.flaecheWald ) )
                 .setWeight( 1, 60 )
                 .setHeader( "Wald\n(in ha)" )
                 .setLabelProvider( flaecheValidator )
-                .setEditing( new StringFormField(), flaecheValidator ) );
+                .setEditing( new StringFormField(), flaecheValidator )
+                .setSortable( false ) );  // standard comparator: ClassCastException wenn null
 
             // Bemerkung
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.bemerkung ) )
@@ -131,12 +141,12 @@ public class FlurstueckTableViewer
             setContent( new CompositesFeatureContentProvider( rs ) );
             setInput( rs );
 
-            /* Register for property change events */
-            EventManager.instance().subscribe( this, new EventFilter<PropertyChangeEvent>() {
-                public boolean apply( PropertyChangeEvent input ) {
-                    return input.getSource() instanceof Flurstueck;
-                }
-            });
+//            /* Register for property change events */
+//            EventManager.instance().subscribe( this, new EventFilter<PropertyChangeEvent>() {
+//                public boolean apply( PropertyChangeEvent input ) {
+//                    return input.getSource() instanceof Flurstueck;
+//                }
+//            });
         }
         catch (Exception e) {
             throw new RuntimeException( e );
@@ -144,12 +154,12 @@ public class FlurstueckTableViewer
     }
 
 
-    @EventHandler(display=true, delay=1000, scope=Event.Scope.JVM)
-    protected void entityChanged( List<PropertyChangeEvent> ev ) {
-        if (!getControl().isDisposed()) {
-            refresh( true );
-        }
-    }
+//    @EventHandler(display=true, delay=1000, scope=Event.Scope.JVM)
+//    protected void entityChanged( List<PropertyChangeEvent> ev ) {
+//        if (!getControl().isDisposed()) {
+//            refresh( true );
+//        }
+//    }
 
 
     public List<Flurstueck> getSelected() {

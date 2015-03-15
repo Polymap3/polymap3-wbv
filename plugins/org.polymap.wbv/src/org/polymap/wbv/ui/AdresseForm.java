@@ -14,6 +14,7 @@
  */
 package org.polymap.wbv.ui;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -23,7 +24,6 @@ import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.app.FormContainer;
 import org.polymap.rhei.field.IFormFieldLabel;
-import org.polymap.rhei.field.IFormFieldValidator;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.form.IFormEditorPageSite;
 import org.polymap.wbv.model.Adresse;
@@ -60,25 +60,42 @@ public class AdresseForm
 
         createField( body, new PropertyAdapter( adresse.strasse ) )
                 .setLabel( "Strasse" ).setToolTipText( "Strasse und Hausnummer" )
-                .setValidator( validator( null ) )
+                .setValidator( new NotEmptyValidator() )
                 .create();
                 //.setLayoutData( FormDataFactory.filled().right( 75 ).create() );
 
         Composite city = panelSite.toolkit().createComposite( body );
         createField( city, new PropertyAdapter( adresse.plz ) )
                 .setLabel( "PLZ / Ort" )
-                .setValidator( validator( null ) )
+                .setValidator( new NotEmptyValidator() {
+                    @Override
+                    public String validate( Object fieldValue ) {
+                        String result = super.validate( fieldValue );
+                        if (result == null) {
+                            if (((String)fieldValue).length() != 5) {
+                                result = "Postleitzahl muss 5 Stellen haben";
+                            }
+                            else if (!StringUtils.isNumeric( (String)fieldValue )) {
+                                result = "Postleitzahl darf nur Ziffern enthalten";
+                            }
+                        }
+                        return result;
+                    }
+                })
                 .create();
 
         createField( city, new PropertyAdapter( adresse.ort ) )
                 .setLabel( IFormFieldLabel.NO_LABEL )
-                .setValidator( null /*validator( null )*/ )
+                .setValidator( new NotEmptyValidator() )
                 .create();
-    }
 
-    
-    protected IFormFieldValidator validator( String propName ) {
-        return new NotEmptyValidator();
+        createField( body, new PropertyAdapter( adresse.ortsteil ) )
+                .setLabel( "Ortsteil" ).setToolTipText( "Ortsteil" )
+                .create();
+
+        createField( body, new PropertyAdapter( adresse.land ) )
+                .setLabel( "Land" ).setToolTipText( "Land" )
+                .create();
     }
 
 }
