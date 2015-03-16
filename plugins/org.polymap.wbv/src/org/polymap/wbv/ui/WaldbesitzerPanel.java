@@ -28,6 +28,8 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -329,7 +331,7 @@ public class WaldbesitzerPanel
     }
     
     
-    protected void createKontaktSection( final Composite parent, final Kontakt kontakt ) {
+    protected Section createKontaktSection( final Composite parent, final Kontakt kontakt ) {
         final Section section = tk.createSection( parent, kontakt.anzeigename(), TREE_NODE | Section.SHORT_TITLE_BAR | Section.FOCUS_TITLE );
         //section.setFont( JFaceResources.getFontRegistry().getBold( JFaceResources.DEFAULT_FONT ) );
         ((Composite)section.getClient()).setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
@@ -354,37 +356,47 @@ public class WaldbesitzerPanel
         form.addFieldListener( listener );
         kForms.put( form, listener );
         
-        // removeBtn
-        Button removeBtn = tk.createButton( (Composite)section.getClient(), "-", SWT.PUSH );
-        removeBtn.setToolTipText( "Diesen Kontakt löschen" );
-        removeBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( 0 ).create() );
-        removeBtn.addSelectionListener( new SelectionAdapter() {
-            @Override
-            public void widgetSelected( SelectionEvent ev ) {
-                wb.kontakte.remove( kontakt );
-                section.dispose();
-                kForms.remove( form );
-                getSite().layout( true );
-            }
-        });
-
         // addBtn
         Button addBtn = tk.createButton( (Composite)section.getClient(), "+", SWT.PUSH );
         addBtn.setToolTipText( "Einen neuen Kontakt hinzufügen" );
-        addBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( removeBtn ).create() );
+        addBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( 0 ).create() );
         addBtn.addSelectionListener( new SelectionAdapter() {
             @Override
             public void widgetSelected( SelectionEvent ev ) {
                 Kontakt neu = wb.kontakte.createElement( new ValueInitializer<Kontakt>() {
                     @Override
                     public Kontakt initialize( Kontakt proto ) throws Exception {
+                        proto.name.set( "Neu" );
                         return proto;
                     }
                 });
-                createKontaktSection( parent, neu );
+                Section newSection = createKontaktSection( parent, neu );
                 getSite().layout( true );
+                parent.layout( new Control[] {newSection}, SWT.ALL|SWT.CHANGED );
+
+                statusAdapter.updateStatusOf( parent, new Status( IStatus.OK, WbvPlugin.ID, "Ein Kontakt hinzugefügt" ) );
             }
         });
+
+        // removeBtn
+        Button removeBtn = null;
+        if (kontakt != wb.besitzer()) {
+            removeBtn = tk.createButton( (Composite)section.getClient(), "-", SWT.PUSH );
+            removeBtn.setToolTipText( "Diesen Kontakt löschen" );
+            removeBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( addBtn ).create() );
+            removeBtn.addSelectionListener( new SelectionAdapter() {
+                @Override
+                public void widgetSelected( SelectionEvent ev ) {
+                    wb.kontakte.remove( kontakt );
+                    section.dispose();
+                    kForms.remove( form );
+                    getSite().layout( true );
+
+                    statusAdapter.updateStatusOf( parent, new Status( IStatus.OK, WbvPlugin.ID, "Ein Kontakt gelöscht" ) );
+                }
+            });
+        }
+        return section;
     }
 
     
@@ -443,12 +455,12 @@ public class WaldbesitzerPanel
                     status = Status.OK_STATUS;
                 }
                 else if (!form.isValid()) {
-                    status = new Status( IStatus.ERROR, WbvPlugin.ID, "Eine oder mehrere Eingaben sind fehlerhaft." );
+                    status = new Status( IStatus.ERROR, WbvPlugin.ID, "Etwas stimmt noch nicht" );
                 }
                 else {
-                    status = new Status( IStatus.OK, WbvPlugin.ID, "Alle Eingaben sind korrekt." );
+                    status = new Status( IStatus.OK, WbvPlugin.ID, "Alle Eingaben sind in Ordnung" );
                 }
-                statusAdapter.updateStatusOf( this, status );
+                statusAdapter.updateStatusOf( EnableSubmitFormFieldListener.this, status );
                 //getSite().setStatus( status );
             }
         }
