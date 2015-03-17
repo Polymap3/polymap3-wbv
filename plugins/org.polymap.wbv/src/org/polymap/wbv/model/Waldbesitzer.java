@@ -12,23 +12,19 @@
  */
 package org.polymap.wbv.model;
 
-import static org.polymap.core.model2.query.Expressions.is;
-import static org.polymap.core.model2.query.Expressions.template;
-
 import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.collect.Iterables;
 
-import org.polymap.core.model2.CollectionProperty;
-import org.polymap.core.model2.Defaults;
-import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.MinOccurs;
-import org.polymap.core.model2.Property;
-import org.polymap.core.model2.Queryable;
-import org.polymap.core.model2.query.Query;
-import org.polymap.core.model2.store.feature.SRS;
-
+import org.polymap.model2.CollectionProperty;
+import org.polymap.model2.Defaults;
+import org.polymap.model2.Entity;
+import org.polymap.model2.MinOccurs;
+import org.polymap.model2.Property;
+import org.polymap.model2.Queryable;
+import org.polymap.model2.query.Expressions;
+import org.polymap.model2.query.Query;
 import org.polymap.wbv.mdb.ImportColumn;
 import org.polymap.wbv.mdb.ImportTable;
 
@@ -37,7 +33,7 @@ import org.polymap.wbv.mdb.ImportTable;
  * 
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-@SRS("EPSG:4326")
+//@SRS("EPSG:4326")
 @ImportTable("Waldbesitzer")
 public class Waldbesitzer
         extends Entity {
@@ -121,9 +117,9 @@ public class Waldbesitzer
      * Andere Seite der {@link Waldstueck#waldbesitzer} Assoziation.
      */
     public Query<Waldstueck> waldstuecke() {
-        Waldstueck wanted = template( Waldstueck.class, context.getRepository() );
+        Waldstueck wanted = Expressions.template( Waldstueck.class, context.getRepository() );
         return context.getUnitOfWork().query( Waldstueck.class )
-                .where( is( wanted.waldbesitzer, this ) );
+                .where( Expressions.is( wanted.waldbesitzer, this ) );
     }
 
 }

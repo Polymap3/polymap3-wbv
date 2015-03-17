@@ -21,15 +21,16 @@ import org.apache.commons.logging.LogFactory;
 
 import org.eclipse.jface.viewers.Viewer;
 
-import org.polymap.core.data.ui.featuretable.IFeatureContentProvider;
-import org.polymap.core.data.ui.featuretable.IFeatureTableElement;
-import org.polymap.core.model2.Association;
-import org.polymap.core.model2.Composite;
-import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.Property;
-import org.polymap.core.model2.PropertyBase;
-import org.polymap.core.model2.query.Query;
-import org.polymap.core.model2.runtime.PropertyInfo;
+import org.polymap.rhei.table.IFeatureContentProvider;
+import org.polymap.rhei.table.IFeatureTableElement;
+
+import org.polymap.model2.Association;
+import org.polymap.model2.Composite;
+import org.polymap.model2.Entity;
+import org.polymap.model2.Property;
+import org.polymap.model2.PropertyBase;
+import org.polymap.model2.query.Query;
+import org.polymap.model2.runtime.PropertyInfo;
 
 /**
  * Used to display {@link Entity} collections as result of a {@link Query}, or the

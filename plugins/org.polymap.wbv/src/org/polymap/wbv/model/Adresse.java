@@ -12,11 +12,10 @@
  */
 package org.polymap.wbv.model;
 
-import org.polymap.core.model2.Composite;
-import org.polymap.core.model2.Defaults;
-import org.polymap.core.model2.Property;
-import org.polymap.core.model2.Queryable;
-
+import org.polymap.model2.Composite;
+import org.polymap.model2.Defaults;
+import org.polymap.model2.Property;
+import org.polymap.model2.Queryable;
 import org.polymap.wbv.mdb.ImportColumn;
 
 /**

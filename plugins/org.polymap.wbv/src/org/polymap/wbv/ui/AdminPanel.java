@@ -31,29 +31,28 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
+
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 
-import org.polymap.core.model2.runtime.ValueInitializer;
 import org.polymap.core.operation.OperationSupport;
-import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.security.SecurityUtils;
-import org.polymap.core.ui.upload.IUploadHandler;
-import org.polymap.core.ui.upload.Upload;
+import org.polymap.core.ui.StatusDispatcher;
 
-import org.polymap.rhei.batik.IAppContext;
-import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.PropertyAccessEvent;
-import org.polymap.rhei.batik.app.BatikApplication;
 import org.polymap.rhei.batik.toolkit.ConstraintData;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
+import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 
+import org.polymap.model2.runtime.ValueInitializer;
+import org.polymap.rap.updownload.upload.IUploadHandler;
+import org.polymap.rap.updownload.upload.Upload;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.mdb.WvkImporter;
 import org.polymap.wbv.model.Baumart;
@@ -72,26 +71,18 @@ public class AdminPanel
 
 
     @Override
-    public PanelIdentifier id() {
-        return ID;
+    public boolean wantsToBeShown() {
+        return getSite().getPath().size() == 1;
     }
 
 
     @Override
-    public boolean init( IPanelSite site, IAppContext context ) {
-        super.init( site, context );
+    public void init() {
+        super.init();
 
-        if (site.getPath().size() == 1) {
-            // warten auf login
-            site.setTitle( null );
-            user.addListener( this, new EventFilter<PropertyAccessEvent>() {
-                public boolean apply( PropertyAccessEvent input ) {
-                    return input.getType() == PropertyAccessEvent.TYPE.SET;
-                }
-            });
-            return true;
-        }
-        return false;
+        // warten auf login
+        getSite().setTitle( null );
+        user.addListener( this, ev -> ev.getType() == PropertyAccessEvent.TYPE.SET );
     }
 
     
@@ -114,7 +105,7 @@ public class AdminPanel
     protected void createWkvSection( Composite parent ) {
         IPanelToolkit tk = getSite().toolkit();
         IPanelSection section = tk.createPanelSection( parent, "WKV-Daten: Import (WKV_dat.mdb)" );
-        section.addConstraint( new PriorityConstraint( 10 ), WbvPlugin.MIN_COLUMN_WIDTH );
+        section.addConstraint( new PriorityConstraint( 10 ), new MinWidthConstraint( 400, 1 ) );
 //        section.getBody().setData( WidgetUtil.CUSTOM_VARIANT, DesktopToolkit.CSS_FORM  );
 
         tk.createFlowText( section.getBody(), "Import von WKV-Daten aus einer MS-Access-Datei (WKV_dat.mdb).")
@@ -145,7 +136,7 @@ public class AdminPanel
                     });
                 }
                 catch (Exception e) {
-                    BatikApplication.handleError( "Der Import konnte nicht erfolgreich durchgeführt werden.", e );
+                    StatusDispatcher.handleError( "Der Import konnte nicht erfolgreich durchgeführt werden.", e );
                 }
             }
         });
@@ -155,7 +146,7 @@ public class AdminPanel
     protected void createBaumartenSection( Composite parent ) {
         IPanelToolkit tk = getSite().toolkit();
         IPanelSection section = tk.createPanelSection( parent, "Baumarten: Import" );
-        section.addConstraint( new PriorityConstraint( 0 ), WbvPlugin.MIN_COLUMN_WIDTH );
+        section.addConstraint( new PriorityConstraint( 0 ), new MinWidthConstraint( 400, 1 ) );
 //        section.getBody().setData( WidgetUtil.CUSTOM_VARIANT, DesktopToolkit.CSS_FORM  );
 
         tk.createFlowText( section.getBody(), "Import einer **CSV-Datei** mit Stammdaten für Baumarten." + 
@@ -202,7 +193,7 @@ public class AdminPanel
                     closeUnitOfWork( Completion.STORE );
                 }
                 catch (Exception e) {
-                    BatikApplication.handleError( "Die Daten konnten nicht korrekt importiert werden.", e );
+                    StatusDispatcher.handleError( "Die Daten konnten nicht korrekt importiert werden.", e );
                 }
                 finally {
                     closeUnitOfWork( Completion.CANCEL );

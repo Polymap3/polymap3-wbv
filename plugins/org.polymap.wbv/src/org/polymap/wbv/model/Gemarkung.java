@@ -19,12 +19,11 @@ import java.util.TreeMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.Property;
-import org.polymap.core.model2.Queryable;
-import org.polymap.core.model2.runtime.ModelRuntimeException;
-import org.polymap.core.model2.runtime.UnitOfWork;
-
+import org.polymap.model2.Entity;
+import org.polymap.model2.Property;
+import org.polymap.model2.Queryable;
+import org.polymap.model2.runtime.ModelRuntimeException;
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.wbv.mdb.ImportColumn;
 import org.polymap.wbv.mdb.ImportTable;
 

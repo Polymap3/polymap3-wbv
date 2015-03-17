@@ -14,11 +14,11 @@ package org.polymap.wbv.model;
 
 import com.vividsolutions.jts.geom.MultiPolygon;
 
-import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.NameInStore;
-import org.polymap.core.model2.Property;
-import org.polymap.core.model2.Queryable;
-import org.polymap.core.model2.store.feature.SRS;
+import org.polymap.model2.Entity;
+import org.polymap.model2.NameInStore;
+import org.polymap.model2.Property;
+import org.polymap.model2.Queryable;
+import org.polymap.model2.store.geotools.SRS;
 
 /**
  * Importierte Daten aus fgd_we_f.shp.

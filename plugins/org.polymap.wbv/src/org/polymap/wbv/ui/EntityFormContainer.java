@@ -20,9 +20,10 @@ import org.opengis.feature.Feature;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.core.model2.Entity;
-import org.polymap.rhei.batik.app.FormContainer;
 import org.polymap.rhei.form.IFormEditorPageSite;
+import org.polymap.rhei.form.batik.FormContainer;
+
+import org.polymap.model2.Entity;
 
 /**
  * 

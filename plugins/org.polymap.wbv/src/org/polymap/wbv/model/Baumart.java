@@ -12,11 +12,9 @@
  */
 package org.polymap.wbv.model;
 
-import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.Property;
-import org.polymap.core.model2.Queryable;
-import org.polymap.core.model2.store.feature.SRS;
-
+import org.polymap.model2.Entity;
+import org.polymap.model2.Property;
+import org.polymap.model2.Queryable;
 import org.polymap.wbv.mdb.ImportColumn;
 
 /**
@@ -25,7 +23,7 @@ import org.polymap.wbv.mdb.ImportColumn;
  * @see <a href="http://polymap.org/wbv/ticket/5">Ticket #5</a>
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-@SRS("EPSG:4326")
+//@SRS("EPSG:4326")
 public class Baumart
         extends Entity {
 

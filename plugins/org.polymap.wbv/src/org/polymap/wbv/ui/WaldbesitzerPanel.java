@@ -18,10 +18,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.geotools.data.FeatureStore;
-import org.opengis.feature.Feature;
-
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -43,28 +40,20 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
-import org.polymap.core.model2.runtime.ValueInitializer;
-import org.polymap.core.project.ILayer;
-import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
+import org.polymap.core.ui.StatusDispatcher;
 
-import org.polymap.rhei.batik.ContextProperty;
-import org.polymap.rhei.batik.IAppContext;
+import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IPanel;
-import org.polymap.rhei.batik.IPanelSite;
+import org.polymap.rhei.batik.IPanelSite.PanelStatus;
 import org.polymap.rhei.batik.PanelChangeEvent;
-import org.polymap.rhei.batik.PanelChangeEvent.TYPE;
+import org.polymap.rhei.batik.PanelChangeEvent.EventType;
 import org.polymap.rhei.batik.PanelIdentifier;
-import org.polymap.rhei.batik.app.BatikApplication;
 import org.polymap.rhei.batik.app.Enableable;
-import org.polymap.rhei.batik.app.FormContainer;
 import org.polymap.rhei.batik.app.SubmitStatusManager;
-import org.polymap.rhei.batik.map.FindFeaturesMenuContribution;
-import org.polymap.rhei.batik.map.IContextMenuContribution;
-import org.polymap.rhei.batik.map.IContextMenuProvider;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
@@ -73,7 +62,9 @@ import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.TextFormField;
 import org.polymap.rhei.form.IFormEditorPageSite;
+import org.polymap.rhei.form.batik.FormContainer;
 
+import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Kontakt;
@@ -82,8 +73,8 @@ import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
 
 /**
  * Dieses Panel zeigt einen {@link Waldbesitzer} und erlaubt es dessen Properties zu
- * verändern. Die Entity wird als {@link ContextProperty} übergeben. Ist dieses bei
- * {@link TYPE#ACTIVATED Aktivierung} null, dann wird eine neue Entity erzeugt.
+ * verändern. Die Entity wird als {@link Context} übergeben. Ist dieses bei
+ * {@link EventType#ACTIVATED Aktivierung} null, dann wird eine neue Entity erzeugt.
  * 
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
@@ -95,7 +86,7 @@ public class WaldbesitzerPanel
 
     public static final PanelIdentifier   ID  = new PanelIdentifier( "wbv", "waldbesitzer" );
 
-    private ContextProperty<Waldbesitzer> wbParam;
+    private Context<Waldbesitzer>         wbParam;
     
     private Waldbesitzer                  wb;
 
@@ -115,41 +106,37 @@ public class WaldbesitzerPanel
 
 
     @Override
-    public boolean init( IPanelSite site, IAppContext context ) {
-        super.init( site, context );
+    public void init() {
+        super.init();
 
-        // submit tool
-        submitAction = new Action( "Übernehmen" ) {
-            public void run() {
-                try {
-                    wbForm.submit();
-                    for (KontaktForm form : kForms.keySet()) {
-                        form.submit();
-                    }
-                    closeUnitOfWork( Completion.STORE );
-                    getContext().closePanel( getSite().getPath() );
-                }
-                catch (Exception e) {
-                    BatikApplication.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );
-                }
-            }
-        };
-        submitAction.setToolTipText( "Änderungen in die Datenbank übernehmen" );
-        submitAction.setEnabled( false );
-        submitAction.setDescription( IPanelSite.SUBMIT );
-        site.addToolbarAction( submitAction );
+//        // submit tool
+//        submitAction = new Action( "Übernehmen" ) {
+//            public void run() {
+//                try {
+//                    wbForm.submit();
+//                    for (KontaktForm form : kForms.keySet()) {
+//                        form.submit();
+//                    }
+//                    closeUnitOfWork( Completion.STORE );
+//                    getContext().closePanel( getSite().getPath() );
+//                }
+//                catch (Exception e) {
+//                    StatusDispatcher.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );
+//                }
+//            }
+//        };
+//        submitAction.setToolTipText( "Änderungen in die Datenbank übernehmen" );
+//        submitAction.setEnabled( false );
+//        submitAction.setDescription( IPanelSite.SUBMIT );
+//        getSite().addToolbarAction( submitAction );
 
         //
-        getContext().addListener( this, new EventFilter<PanelChangeEvent>() {
-            public boolean apply( PanelChangeEvent input ) {
-                return input.getPanel() == WaldbesitzerPanel.this && input.getType() == TYPE.ACTIVATING;
-            }
-        });
+        getContext().addListener( this, ev -> 
+                ev.getPanel() == WaldbesitzerPanel.this && 
+                ev.getType() == EventType.LIFECYCLE &&
+                ev.getPanel().getSite().getPanelStatus() == PanelStatus.ACTIVE );
         
         statusAdapter = new SubmitStatusManager( this ).setSubmit( Enableable.of( submitAction ) );
-        
-        // nur Anzeigen wenn direkt aufgerufen
-        return false;
     }
 
 
@@ -241,33 +228,33 @@ public class WaldbesitzerPanel
         flurstuecke.getBody().setLayout( FormLayoutFactory.defaults().create() );
         createFlurstueckSection( flurstuecke.getBody() );
 
-        // map
-        IPanelSection karte = tk.createPanelSection( parent, null );
-        karte.addConstraint( WbvPlugin.MIN_COLUMN_WIDTH, new PriorityConstraint( 10 ) );
-        karte.getBody().setLayout( ColumnLayoutFactory.defaults().columns( 1, 1 ).create() );
-
-        try {
-            map = new WbvMapViewer( getSite() );
-            map.createContents( karte.getBody() )
-                    .setLayoutData( new ColumnLayoutData( SWT.DEFAULT, 500 ) );
-        }
-        catch (Exception e) {
-            throw new RuntimeException( e );
-        }
+//        // map
+//        IPanelSection karte = tk.createPanelSection( parent, null );
+//        karte.addConstraint( WbvPlugin.MIN_COLUMN_WIDTH, new PriorityConstraint( 10 ) );
+//        karte.getBody().setLayout( ColumnLayoutFactory.defaults().columns( 1, 1 ).create() );
+//
+//        try {
+//            map = new WbvMapViewer( getSite() );
+//            map.createContents( karte.getBody() )
+//                    .setLayoutData( new ColumnLayoutData( SWT.DEFAULT, 500 ) );
+//        }
+//        catch (Exception e) {
+//            throw new RuntimeException( e );
+//        }
     
         // context menu
         //map.getContextMenu().addProvider( new WaldflaechenMenu() );
-        map.getContextMenu().addProvider( new IContextMenuProvider() {
-            @Override
-            public IContextMenuContribution createContribution() {
-                return new FindFeaturesMenuContribution() {
-                    @Override
-                    protected void onMenuOpen( FeatureStore fs, Feature feature, ILayer layer ) {
-                        log.info( "Feature: " + feature );
-                    }
-                };            
-            }
-        });
+//        map.getContextMenu().addProvider( new IContextMenuProvider() {
+//            @Override
+//            public IContextMenuContribution createContribution() {
+//                return new FindFeaturesMenuContribution() {
+//                    @Override
+//                    protected void onMenuOpen( FeatureStore fs, Feature feature, ILayer layer ) {
+//                        log.info( "Feature: " + feature );
+//                    }
+//                };            
+//            }
+//        });
     }
 
     
@@ -318,7 +305,7 @@ public class WaldbesitzerPanel
 //                log.info( wb.toString() );
 //                log.info( "Flurstücke: " + Iterables.toString( wb.flurstuecke ) );
                 if (!success) {
-                    BatikApplication.handleError( "Eintrag konnte nicht gelöscht werden.", null );
+                    StatusDispatcher.handleError( "Eintrag konnte nicht gelöscht werden.", null );
                 }
                 //viewer.setInput( wb.flurstuecke );
                 viewer.refresh( true );
@@ -376,12 +363,6 @@ public class WaldbesitzerPanel
     }
 
     
-    @Override
-    public PanelIdentifier id() {
-        return ID;
-    }
-
-
     /**
      * 
      */

@@ -25,7 +25,7 @@ import org.opengis.feature.type.Name;
 import org.opengis.feature.type.PropertyDescriptor;
 import org.opengis.feature.type.PropertyType;
 
-import org.polymap.core.model2.runtime.PropertyInfo;
+import org.polymap.model2.runtime.PropertyInfo;
 
 /**
  * 
@@ -35,7 +35,7 @@ import org.polymap.core.model2.runtime.PropertyInfo;
 class PropertyAdapter
         implements Property {
 
-    public static PropertyDescriptor descriptorFor( org.polymap.core.model2.Property prop ) {
+    public static PropertyDescriptor descriptorFor( org.polymap.model2.Property prop ) {
         PropertyInfo info = prop.getInfo();
         NameImpl name = new NameImpl( info.getName() );
         AttributeType type = new AttributeTypeImpl( name, info.getType(), true, false, null, null, null );
@@ -52,10 +52,10 @@ class PropertyAdapter
     
     // instance *******************************************
     
-    private org.polymap.core.model2.Property    delegate;
+    private org.polymap.model2.Property    delegate;
     
 
-    public PropertyAdapter( org.polymap.core.model2.Property delegate ) {
+    public PropertyAdapter( org.polymap.model2.Property delegate ) {
         assert delegate != null;
         this.delegate = delegate;
     }

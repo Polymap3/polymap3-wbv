@@ -13,20 +13,22 @@
 package org.polymap.wbv.ui;
 
 import org.geotools.geometry.jts.ReferencedEnvelope;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.eclipse.swt.widgets.Composite;
 
 import org.polymap.core.data.util.Geometries;
-import org.polymap.rhei.batik.IPanelSite;
-import org.polymap.rhei.batik.map.ContextMenuControl;
-import org.polymap.rhei.batik.map.ContextMenuExtension;
-import org.polymap.rhei.batik.map.HomeMapAction;
-import org.polymap.rhei.batik.map.MapViewer;
-import org.polymap.rhei.batik.map.ScaleMapAction;
+import org.polymap.core.mapeditor.ContextMenuControl;
+import org.polymap.core.mapeditor.ContextMenuExtension;
+import org.polymap.core.mapeditor.HomeMapAction;
+import org.polymap.core.mapeditor.MapViewer;
+import org.polymap.core.mapeditor.ScaleMapAction;
 
-import org.polymap.openlayers.rap.widget.layers.WMSLayer;
+import org.polymap.rhei.batik.IPanelSite;
+
+import org.polymap.rap.openlayers.layers.WMSLayer;
 
 /**
  * 

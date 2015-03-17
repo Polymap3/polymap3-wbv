@@ -17,10 +17,10 @@ package org.polymap.wbv.model;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.core.model2.Association;
-import org.polymap.core.model2.Composite;
-
 import org.polymap.rhei.fulltext.model2.EntityFeatureTransformer;
+
+import org.polymap.model2.Association;
+import org.polymap.model2.Composite;
 
 /**
  * 
@@ -36,8 +36,7 @@ public class WaldbesitzerFulltextTransformer
     @Override
     protected void visitAssociation( Association prop ) {
         Object value = prop.get();
-        if (value instanceof Gemeinde
-                || value instanceof Gemarkung) {
+        if (value instanceof Gemeinde || value instanceof Gemarkung) {
             processComposite( (Composite)value );
         }
     }

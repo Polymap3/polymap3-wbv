@@ -16,10 +16,8 @@ package org.polymap.wbv;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import org.eclipse.rwt.RWT;
-
-import org.polymap.core.runtime.IMessages;
-import org.polymap.core.runtime.MessagesImpl;
+import org.polymap.core.runtime.i18n.IMessages;
+import org.polymap.core.runtime.i18n.MessagesImpl;
 
 /**
  * 
@@ -45,10 +43,10 @@ public class Messages {
         return instance.get( caller, key, args );
     }
 
-    public static Messages get() {
-        Class clazz = Messages.class;
-        return (Messages)RWT.NLS.getISO8859_1Encoded( BUNDLE_NAME, clazz );
-    }
+//    public static Messages get() {
+//        Class clazz = Messages.class;
+//        return (Messages)RWT.NLS.getISO8859_1Encoded( BUNDLE_NAME, clazz );
+//    }
 
     public static IMessages forPrefix( String prefix ) {
         return instance.forPrefix( prefix );

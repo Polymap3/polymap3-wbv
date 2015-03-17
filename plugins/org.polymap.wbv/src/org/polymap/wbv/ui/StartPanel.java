@@ -12,9 +12,6 @@
  */
 package org.polymap.wbv.ui;
 
-import org.geotools.data.FeatureStore;
-import org.opengis.feature.Feature;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -32,37 +29,30 @@ import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
-import org.eclipse.ui.forms.widgets.ColumnLayoutData;
-
 import org.eclipse.core.runtime.Status;
 
-import org.polymap.core.data.ui.featuretable.FeatureTableFilterBar;
-import org.polymap.core.model2.query.ResultSet;
-import org.polymap.core.project.ILayer;
-import org.polymap.core.runtime.IMessages;
-import org.polymap.core.ui.ColumnLayoutFactory;
+import org.polymap.core.mapeditor.ContextMenuSite;
+import org.polymap.core.mapeditor.IContextMenuContribution;
+import org.polymap.core.mapeditor.IContextMenuProvider;
+import org.polymap.core.runtime.i18n.IMessages;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
+import org.polymap.core.ui.UIUtils;
 
-import org.polymap.rhei.batik.ContextProperty;
-import org.polymap.rhei.batik.IAppContext;
+import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IPanel;
-import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
-import org.polymap.rhei.batik.app.BatikApplication;
-import org.polymap.rhei.batik.map.ContextMenuSite;
-import org.polymap.rhei.batik.map.FindFeaturesMenuContribution;
-import org.polymap.rhei.batik.map.IContextMenuContribution;
-import org.polymap.rhei.batik.map.IContextMenuProvider;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.fulltext.FullTextIndex;
 import org.polymap.rhei.fulltext.ui.EntitySearchField;
 import org.polymap.rhei.fulltext.ui.FulltextProposal;
+import org.polymap.rhei.table.workbench.FeatureTableFilterBar;
 import org.polymap.rhei.um.ui.LoginPanel;
 import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
 
+import org.polymap.model2.query.ResultSet;
 import org.polymap.wbv.Messages;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Waldbesitzer;
@@ -77,34 +67,21 @@ public class StartPanel
         extends WbvPanel
         implements IPanel {
 
-    private static Log                    log = LogFactory.getLog( StartPanel.class );
+    private static Log log = LogFactory.getLog( StartPanel.class );
 
-    public static final PanelIdentifier   ID  = new PanelIdentifier( "start" );
+    public static final PanelIdentifier     ID  = new PanelIdentifier( "start" );
 
-    private static final IMessages        i18n = Messages.forPrefix( "StartPanel" );
+    private static final IMessages          i18n = Messages.forPrefix( "StartPanel" );
     
     /** Der selektierte {@link Waldbesitzer}. */
-    private ContextProperty<Waldbesitzer> selected;
+    private Context<Waldbesitzer>           selected;
 
-    private WbvMapViewer                  map;
+    private WbvMapViewer                    map;
 
 
     @Override
-    public boolean init( IPanelSite site, IAppContext context ) {
-        super.init( site, context );
-
-        // nur als start panel darstellen
-        if (site.getPath().size() == 1) {
-            
-//            // test tool
-//            site.addToolbarAction( new Action( "Test" ) {
-//                public void run() {
-//                }
-//            });
-
-            return true;
-        }
-        return false;
+    public boolean wantsToBeShown() {
+        return getSite().getPath().size() == 1;
     }
 
     
@@ -117,10 +94,12 @@ public class StartPanel
     
     protected void createLoginContents( final Composite parent ) {
         // welcome
+        getSite().setTitle( i18n.get( "loginTitle" ) );
         IPanelToolkit tk = getSite().toolkit();
-        IPanelSection welcome = tk.createPanelSection( parent, "Anmeldung" );
-        welcome.addConstraint( new PriorityConstraint( 10 ) );
-        tk.createFlowText( welcome.getBody(), i18n.get( "welcomeText" ) );
+        IPanelSection welcome = tk.createPanelSection( parent, i18n.get( "loginTitle" ) );
+        welcome.addConstraint( new PriorityConstraint( 10 ), WbvPlugin.MIN_COLUMN_WIDTH );
+        String t = i18n.get( "welcomeText" );
+        tk.createFlowText( welcome.getBody(), t );
 
         // login
         IPanelSection section = tk.createPanelSection( parent, null );
@@ -130,8 +109,8 @@ public class StartPanel
             @Override
             protected boolean login( String name, String passwd ) {
                 if (super.login( name, passwd )) {
-                    getSite().setTitle( "Start" );
-                    getSite().setIcon( WbvPlugin.instance().imageForName( "icons/house.png" ) ); //$NON-NLS-1$
+                    getSite().setTitle( i18n.get( "title" ) );
+                    //getSite().setIcon( WbvPlugin.instance().imageForName( "icons/house.png" ) ); //$NON-NLS-1$
                     getSite().setStatus( new Status( Status.OK, WbvPlugin.ID, "Erfolgreich angemeldet als: <b>" + name + "</b>" ) );
                     
                     getContext().setUserName( username );
@@ -159,13 +138,19 @@ public class StartPanel
     protected void createMainContents( Composite parent ) {
         IPanelToolkit tk = getSite().toolkit();
 
-        // results table
-        IPanelSection tableSection = tk.createPanelSection( parent, "Waldbesitzer" );
-        tableSection.addConstraint( new PriorityConstraint( 10 ), WbvPlugin.MIN_COLUMN_WIDTH );
-        tableSection.getBody().setLayout( FormLayoutFactory.defaults().spacing( 5 ).create() );
+//        // results table
+//        IPanelSection tableSection = tk.createPanelSection( parent, "Waldbesitzer" );
+//        tableSection.addConstraint( new PriorityConstraint( 10 ), WbvPlugin.MIN_COLUMN_WIDTH );
+//        tableSection.getBody().setLayout( FormLayoutFactory.defaults().spacing( 5 ).create() );
 
-        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( uow(), 
-                tableSection.getBody(), ResultSet.EMPTY, SWT.NONE );
+        Composite body = parent;
+        body.setLayout( FormLayoutFactory.defaults().spacing( 5 ).create() );
+        
+        ResultSet<Waldbesitzer> all = uow().query( Waldbesitzer.class ).execute();
+        log.info( "Query result: " + all.size() );
+        
+        Composite tableLayout = body;  //tk.createComposite( body );
+        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( uow(), tableLayout, all, SWT.NONE );
         getContext().propagate( viewer );
         // waldbesitzer öffnen
         viewer.addSelectionChangedListener( new ISelectionChangedListener() {
@@ -179,7 +164,7 @@ public class StartPanel
         });
 
         // waldbesitzer anlegen
-        Button createBtn = tk.createButton( tableSection.getBody(), "Neu", SWT.PUSH );
+        Button createBtn = tk.createButton( body, "Neu", SWT.PUSH );
         createBtn.setToolTipText( "Einen neuen Waldbesitzer anlegen" );
         createBtn.addSelectionListener( new SelectionAdapter() {
             @Override
@@ -190,11 +175,11 @@ public class StartPanel
         });
 
         // filterBar
-        FeatureTableFilterBar filterBar = new FeatureTableFilterBar( viewer, tableSection.getBody() );
+        FeatureTableFilterBar filterBar = new FeatureTableFilterBar( viewer, body );
 
         // searchField
         FullTextIndex fulltext = WbvRepository.instance.get().fulltextIndex();
-        EntitySearchField search = new EntitySearchField<Waldbesitzer>( tableSection.getBody(), fulltext, uow(), Waldbesitzer.class ) {
+        EntitySearchField search = new EntitySearchField<Waldbesitzer>( body, fulltext, uow(), Waldbesitzer.class ) {
             @Override
             protected void doRefresh() {
                 // SelectionEvent nach refresh() verhindern
@@ -203,55 +188,50 @@ public class StartPanel
             }
         };
         search.setSearchOnEnter( false );
-        search.getText().setText( "Im" );
+//        search.getText().setText( "Im" );
         search.setSearchOnEnter( true );
         new FulltextProposal( fulltext, search.getText() );
         
         // layout
-        int displayHeight = BatikApplication.sessionDisplay().getBounds().height;
+        int displayHeight = UIUtils.sessionDisplay().getBounds().height;
         int tableHeight = (displayHeight - (2*50) - 75 - 70);  // margins, searchbar, toolbar+banner 
         createBtn.setLayoutData( FormDataFactory.filled().clearRight().clearBottom().create() );
         filterBar.getControl().setLayoutData( FormDataFactory.filled().bottom( viewer.getTable() ).left( createBtn ).right( 50 ).create() );
         search.getControl().setLayoutData( FormDataFactory.filled().height( 27 ).bottom( viewer.getTable() ).left( filterBar.getControl() ).create() );
-        viewer.getTable().setLayoutData( FormDataFactory.filled().top( createBtn ).height( tableHeight ).create() );
+        viewer.getTable().setLayoutData( FormDataFactory.filled()
+                .top( createBtn ).height( tableHeight ).width( 300 ).create() );
         
-        // map
-        IPanelSection karte = tk.createPanelSection( parent, null );
-        karte.addConstraint( new PriorityConstraint( 5 ) );
-        karte.getBody().setLayout( ColumnLayoutFactory.defaults().columns( 1, 1 ).create() );
-
-        try {
-            map = new WbvMapViewer( getSite() );
-            map.createContents( karte.getBody() )
-                    .setLayoutData( new ColumnLayoutData( SWT.DEFAULT, tableHeight + 35 ) );
-                    //.setLayoutData( FormDataFactory.filled().height( tableHeight + 35 ).create() );
-        }
-        catch (Exception e) {
-            throw new RuntimeException( e );
-        }
-    
-        // context menu
-        map.getContextMenu().addProvider( new WaldflaechenMenu() );
-        map.getContextMenu().addProvider( new IContextMenuProvider() {
-            @Override
-            public IContextMenuContribution createContribution() {
-                return new FindFeaturesMenuContribution() {
-                    @Override
-                    protected void onMenuOpen( FeatureStore fs, Feature feature, ILayer layer ) {
-                        log.info( "Feature: " + feature );
-                    }
-                };            
-            }
-        });
+//        // map
+//        IPanelSection karte = tk.createPanelSection( parent, null );
+//        karte.addConstraint( new PriorityConstraint( 5 ) );
+//        karte.getBody().setLayout( ColumnLayoutFactory.defaults().columns( 1, 1 ).create() );
+//
+//        try {
+//            map = new WbvMapViewer( getSite() );
+//            map.createContents( karte.getBody() )
+//                    .setLayoutData( new ColumnLayoutData( SWT.DEFAULT, tableHeight + 35 ) );
+//                    //.setLayoutData( FormDataFactory.filled().height( tableHeight + 35 ).create() );
+//        }
+//        catch (Exception e) {
+//            throw new RuntimeException( e );
+//        }
+//    
+//        // context menu
+//        map.getContextMenu().addProvider( new WaldflaechenMenu() );
+//        map.getContextMenu().addProvider( new IContextMenuProvider() {
+//            @Override
+//            public IContextMenuContribution createContribution() {
+//                return new FindFeaturesMenuContribution() {
+//                    @Override
+//                    protected void onMenuOpen( FeatureStore fs, Feature feature, ILayer layer ) {
+//                        log.info( "Feature: " + feature );
+//                    }
+//                };            
+//            }
+//        });
     }
 
 
-    @Override
-    public PanelIdentifier id() {
-        return ID;
-    }
-
-    
     class WaldflaechenMenu
             extends ContributionItem
             implements IContextMenuContribution, IContextMenuProvider {

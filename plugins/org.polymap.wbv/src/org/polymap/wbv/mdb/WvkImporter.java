@@ -37,12 +37,11 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
-import org.polymap.core.model2.runtime.UnitOfWork;
-import org.polymap.core.model2.runtime.ValueInitializer;
 import org.polymap.core.runtime.SubMonitor;
+import org.polymap.core.ui.StatusDispatcher;
 
-import org.polymap.rhei.batik.app.BatikApplication;
-
+import org.polymap.model2.runtime.UnitOfWork;
+import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
@@ -81,7 +80,7 @@ public class WvkImporter
             return monitor.isCanceled() ? Status.CANCEL_STATUS : Status.OK_STATUS;
         }
         catch (Exception e) {
-            BatikApplication.handleError( "", e );
+            StatusDispatcher.handleError( "", e );
             return new Status( IStatus.ERROR, WbvPlugin.ID, "", e );
         }
     }

@@ -15,22 +15,21 @@
 package org.polymap.wbv.ui;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
-import static org.polymap.rhei.batik.Panels.is;
 import static org.polymap.wbv.ui.WbvPanel.Completion.COMMIT;
 import static org.polymap.wbv.ui.WbvPanel.Completion.STORE;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.core.model2.runtime.UnitOfWork;
 import org.polymap.core.security.UserPrincipal;
 
-import org.polymap.rhei.batik.ContextProperty;
+import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.DefaultPanel;
-import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.IPanel;
-import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelPath;
+import org.polymap.rhei.batik.Panels;
 
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.wbv.model.WbvRepository;
 
 /**
@@ -56,20 +55,18 @@ public abstract class WbvPanel
         CANCEL
     }
     
-    private ContextProperty<UnitOfWork>         rootUow;
+    private Context<UnitOfWork>         rootUow;
     
     private UnitOfWork                          uow;
 
     private UnitOfWork                          parentUow;
 
-    protected ContextProperty<UserPrincipal>    user;
+    protected Context<UserPrincipal>    user;
     
     
     
     @Override
-    public boolean init( IPanelSite site, IAppContext context ) {
-        boolean result = super.init( site, context );
-
+    public void init() {
         // rootUow
         if (rootUow.get() == null) {
             rootUow.set( WbvRepository.instance.get().newUnitOfWork() );
@@ -80,12 +77,11 @@ public abstract class WbvPanel
             parentUow = rootUow.get();
         }
         else {
-            WbvPanel parentPanel = (WbvPanel)getOnlyElement( getContext().findPanels( is( myPath.removeLast( 1 ) ) ) ); 
+            WbvPanel parentPanel = (WbvPanel)getOnlyElement( getContext().findPanels( Panels.is( myPath.removeLast( 1 ) ) ) ); 
             parentUow = parentPanel.uow();
         }
         // uow
         uow = parentUow;
-        return result;
     }
 
 
@@ -101,7 +97,7 @@ public abstract class WbvPanel
     /**
      * Creates a new, nested {@link UnitOfWork} for this panel.
      * <p/>
-     * Care must be taken when working with {@link ContextProperty} variables.
+     * Care must be taken when working with {@link Context} variables.
      * Entities have to be re-fetched from the local/nested UnitOfWork to make sure
      * that their state is properly handled by the local UnitOfWork.
      */

@@ -24,10 +24,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.polymap.rhei.form.DefaultFormEditorPage;
-import org.polymap.rhei.form.FormEditor;
 import org.polymap.rhei.form.IFormEditorPage;
 import org.polymap.rhei.form.IFormEditorPageSite;
 import org.polymap.rhei.form.IFormPageProvider;
+import org.polymap.rhei.form.workbench.FormEditor;
 
 import org.polymap.wbv.model.Waldbesitzer;
 

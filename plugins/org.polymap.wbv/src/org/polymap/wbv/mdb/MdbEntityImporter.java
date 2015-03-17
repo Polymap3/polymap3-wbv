@@ -29,12 +29,13 @@ import com.healthmarketscience.jackcess.Table;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import org.polymap.core.model2.Composite;
-import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.Property;
-import org.polymap.core.model2.runtime.UnitOfWork;
-import org.polymap.core.model2.runtime.ValueInitializer;
 import org.polymap.core.runtime.SubMonitor;
+
+import org.polymap.model2.Composite;
+import org.polymap.model2.Entity;
+import org.polymap.model2.Property;
+import org.polymap.model2.runtime.UnitOfWork;
+import org.polymap.model2.runtime.ValueInitializer;
 
 /**
  * Importiert Spalten aus einer Tabelle in ein {@link Composite}.
