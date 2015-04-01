@@ -44,7 +44,7 @@ import org.polymap.model2.runtime.ValueInitializer;
  * @see ImportColumn
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public class MdbEntityImporter<T extends Composite> {
+public class MdbEntityImporter<T /*extends Composite*/> {
 
     private static Log log = LogFactory.getLog( MdbEntityImporter.class );
     
@@ -71,6 +71,12 @@ public class MdbEntityImporter<T extends Composite> {
     }
     
     
+    public MdbEntityImporter( String tableName, Class entityClass ) {
+        this.entityClass = entityClass;
+        this.tableName = tableName;
+    }
+    
+    
     public String getTableName() {
         return tableName;
     }
@@ -79,7 +85,7 @@ public class MdbEntityImporter<T extends Composite> {
     public int importTable( Database db, IProgressMonitor monitor ) throws IOException {
         SubMonitor submon = new SubMonitor( monitor, 10 );
         Table table = db.getTable( getTableName() );
-        submon.beginTask( entityClass.getSimpleName(), table.getRowCount() );
+        submon.beginTask( entityClass != null ? entityClass.getSimpleName() : tableName, table.getRowCount() );
         int count = 0;
         for (Row row=table.getNextRow(); row != null; row = table.getNextRow()) {
             createEntity( row, buildId( row ) );

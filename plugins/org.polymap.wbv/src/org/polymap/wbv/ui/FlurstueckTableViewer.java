@@ -17,10 +17,9 @@ import static com.google.common.collect.Iterables.transform;
 import static java.util.Arrays.asList;
 import static org.polymap.wbv.ui.PropertyAdapter.descriptorFor;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-
-import java.beans.PropertyChangeEvent;
 
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.commons.logging.Log;
@@ -42,14 +41,13 @@ import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.NumberValidator;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.StringFormField;
+import org.polymap.rhei.table.FeatureTableViewer;
 import org.polymap.rhei.table.FormFeatureTableColumn;
 import org.polymap.rhei.table.IFeatureTableElement;
-import org.polymap.rhei.table.workbench.FeatureTableViewer;
 
 import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
-import org.polymap.wbv.model.Gemeinde;
 import org.polymap.wbv.ui.CompositesFeatureContentProvider.FeatureTableElement;
 
 /**
@@ -71,40 +69,43 @@ public class FlurstueckTableViewer
         super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | */SWT.FULL_SELECTION );
         this.uow = uow;
         try {
-            // Gemeinde
-            String propName = Flurstueck.TYPE.gemeinde.getInfo().getName();
-            addColumn( new FormFeatureTableColumn( descriptorFor( propName, String.class ) )
-                .setWeight( 1, 80 )
-                .setLabelProvider( new ColumnLabelProvider() {
-                    @Override
-                    public String getText( Object elm ) {
-                        Flurstueck entity = FeatureTableElement.entity( elm );
-                        Gemeinde gemeinde = entity.gemeinde.get();
-                        return gemeinde != null ? gemeinde.name.get() : "(kein Gemeinde)";
-                    }
-                })
-                .setEditing( new PicklistFormField( Gemeinde.all( uow ) ), null )
-                ); //.sort( SWT.UP ) );
-
             // Gemarkung
-            propName = Flurstueck.TYPE.gemarkung.getInfo().getName();
+            String propName = Flurstueck.TYPE.gemarkung.getInfo().getName();
+            final ColumnLabelProvider lp[] = new ColumnLabelProvider[1];
             addColumn( new FormFeatureTableColumn( descriptorFor( propName, String.class ) )
-                .setWeight( 1, 80 )
-                .setLabelProvider( new ColumnLabelProvider() {
+                .setWeight( 3, 80 )
+                .setLabelProvider( lp[0] = new ColumnLabelProvider() {
                     @Override
                     public String getText( Object elm ) {
                         Flurstueck entity = FeatureTableElement.entity( elm );
-                        Gemarkung gemarkung = entity.gemarkung.get();
-                        return gemarkung != null ? gemarkung.name.get() : "(kein Gemarkung)";
+                        Gemarkung gmk = entity.gemarkung.get();
+                        return gmk != null ? gmk.label() : "(kein Gemarkung)";
+                    }
+                    @Override
+                    public String getToolTipText( Object elm ) {
+                        return getText( elm );
                     }
                 })
-                .setEditing( new PicklistFormField( Gemarkung.all( uow ) ), null ) );
+                .setEditing( new PicklistFormField( Gemarkung.all.get() ), null )
+                .setSortable( new Comparator<IFeatureTableElement>() {
+                    public int compare( IFeatureTableElement e1, IFeatureTableElement e2 ) {
+                        String l1 = lp[0].getText( e1 );
+                        String l2 = lp[0].getText( e2 );
+                        return l1.compareTo( l2 );
+                    }
+                }))
+                .sort( SWT.DOWN );
             
             // Flurstücksnummer
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.zaehlerNenner ) )
                 .setWeight( 1, 60 )
                 .setHeader( "Nummer" )
-                .setLabelProvider( new NotEmptyValidator() )
+                .setLabelProvider( new NotEmptyValidator() {
+                    public Object transform2Field( Object modelValue ) throws Exception {
+                        log.info( "Column: " + modelValue );
+                        return super.transform2Field( modelValue );
+                    }
+                })
                 .setEditing( new StringFormField(), new NotEmptyValidator() ) );
             
             // Fläche
@@ -113,14 +114,16 @@ public class FlurstueckTableViewer
                 .setWeight( 1, 60 )
                 .setHeader( "Fläche\n(in ha)" )
                 .setLabelProvider( flaecheValidator )
-                .setEditing( new StringFormField(), flaecheValidator ) );
+                .setEditing( new StringFormField(), flaecheValidator )
+                .setSortable( false ) );  // standard comparator: ClassCastException wenn null
             
             // davon Wald
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.flaecheWald ) )
                 .setWeight( 1, 60 )
                 .setHeader( "Wald\n(in ha)" )
                 .setLabelProvider( flaecheValidator )
-                .setEditing( new StringFormField(), flaecheValidator ) );
+                .setEditing( new StringFormField(), flaecheValidator )
+                .setSortable( false ) );  // standard comparator: ClassCastException wenn null
 
             // Bemerkung
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.bemerkung ) )
@@ -144,12 +147,12 @@ public class FlurstueckTableViewer
             setContent( new CompositesFeatureContentProvider( rs ) );
             setInput( rs );
 
-            /* Register for property change events */
-            EventManager.instance().subscribe( this, new EventFilter<PropertyChangeEvent>() {
-                public boolean apply( PropertyChangeEvent input ) {
-                    return input.getSource() instanceof Flurstueck;
-                }
-            });
+//            /* Register for property change events */
+//            EventManager.instance().subscribe( this, new EventFilter<PropertyChangeEvent>() {
+//                public boolean apply( PropertyChangeEvent input ) {
+//                    return input.getSource() instanceof Flurstueck;
+//                }
+//            });
         }
         catch (Exception e) {
             throw new RuntimeException( e );
@@ -157,12 +160,12 @@ public class FlurstueckTableViewer
     }
 
 
-    @EventHandler(display=true, delay=1000, scope=Event.Scope.JVM)
-    protected void entityChanged( List<PropertyChangeEvent> ev ) {
-        if (!getControl().isDisposed()) {
-            refresh( true );
-        }
-    }
+//    @EventHandler(display=true, delay=1000, scope=Event.Scope.JVM)
+//    protected void entityChanged( List<PropertyChangeEvent> ev ) {
+//        if (!getControl().isDisposed()) {
+//            refresh( true );
+//        }
+//    }
 
 
     public List<Flurstueck> getSelected() {

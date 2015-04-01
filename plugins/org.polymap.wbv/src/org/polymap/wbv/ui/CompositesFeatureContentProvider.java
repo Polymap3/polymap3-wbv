@@ -108,7 +108,7 @@ class CompositesFeatureContentProvider
                 }
                 else if (prop instanceof Association) {
                     // XXX sorting???
-                    return null;
+                    return ((Association)prop).get();
                 }
                 else {
                     return null;

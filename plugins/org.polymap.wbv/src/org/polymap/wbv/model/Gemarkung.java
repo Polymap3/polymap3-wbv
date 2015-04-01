@@ -15,20 +15,26 @@ package org.polymap.wbv.model;
 
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import org.polymap.core.runtime.CachedLazyInit;
+import org.polymap.core.runtime.Lazy;
+
+import org.polymap.rhei.field.PicklistFormField;
 
 import org.polymap.model2.Entity;
 import org.polymap.model2.Property;
 import org.polymap.model2.Queryable;
 import org.polymap.model2.runtime.ModelRuntimeException;
 import org.polymap.model2.runtime.UnitOfWork;
-import org.polymap.wbv.mdb.ImportColumn;
 import org.polymap.wbv.mdb.ImportTable;
+import org.polymap.wbv.ui.FlurstueckTableViewer;
 
 /**
- * 
+ * {@link #id()} ist der Gemarkungsschlüssel.
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
@@ -38,27 +44,70 @@ public class Gemarkung
 
     private static Log log = LogFactory.getLog( Gemarkung.class );
     
-    public static Map<String,Gemarkung> all( UnitOfWork uow ) {
-        Map<String,Gemarkung> result = new TreeMap();
-        for (Gemarkung gemarkung : uow.query( Gemarkung.class ).execute()) {
-            try {
-                result.put( gemarkung.name.get(), gemarkung );
+    public static Gemarkung         TYPE = null;
+
+    /** {@link #label()} -> Gemarkung */
+    public static Lazy<Map<String,Gemarkung>> all = new CachedLazyInit( 1000, new Supplier<Map<String,Gemarkung>>() {
+        public Map<String,Gemarkung> get() {
+            UnitOfWork uow = WbvRepository.instance.get().newUnitOfWork();
+            Map<String,Gemarkung> result = new TreeMap();
+            for (Gemarkung gmk : uow.query( Gemarkung.class ).execute()) {
+                try {
+                    result.put( gmk.label(), gmk );
+                }
+                catch (ModelRuntimeException e) {
+                    log.warn( "Gemarkung ohne Namen: " + gmk );
+                }
             }
-            catch (ModelRuntimeException e) {
-                log.warn( "Gemarkung ohne Namen: " + gemarkung );
-            }
+            return result;
         }
-        return result;
+    }); 
+
+    
+    // instance *******************************************
+
+//  ESt_Gemarkung (433 Datensätze)
+//  0|ID_Gemarkung                   (LONG 4)                  
+//  1|Gemarkung_Name                 (TEXT 100)
+  
+    /**
+     * Der Primärschlüssel - ist der Gemarkungsschlüssel.
+     */
+    @Override
+    public Object id() {
+        return super.id();
     }
 
-    // instance *******************************************
-    
-//    ESt_Gemarkung (433 Datensätze)
-//    0|ID_Gemarkung                   (LONG 4)                  
-//    1|Gemarkung_Name                 (TEXT 100)
+    @Queryable
+    public Property<String>             gemarkung;
     
     @Queryable
-    @ImportColumn("Gemarkung_Name")
-    public Property<String>             name;
+    public Property<String>             gemeinde;
+    
+    @Queryable
+    public Property<String>             revier;
+
+    public String label() {
+        return gemeinde.get() + "/" + gemarkung.get();
+    }
+
+    
+    /**
+     * Entities sind (bis jetzt) nur gleich, wenn sie "same" sind. Dadurch würde in
+     * {@link FlurstueckTableViewer} der Wert im {@link PicklistFormField} für die
+     * Gemarkung nicht gefunden.
+     */
+    @Override
+    public boolean equals( Object obj ) {
+        if (obj instanceof Gemarkung) {
+            return id().equals( ((Gemarkung)obj).id() );
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return id().hashCode();
+    }
     
 }

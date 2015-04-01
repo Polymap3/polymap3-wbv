@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Polymap GmbH. All rights reserved.
+ * Copyright (C) 2014-2015 Polymap GmbH. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -57,21 +57,31 @@ public class Waldbesitzer
 //   14|WBS_FBNr                       (LONG 4)
    
     public enum Waldeigentumsart {
-        /** Staatswald (Land Sachsen, Bund) */
-        Staat,
-        /** Kommunen, Kirchen, Vereine */
-        Körperschaft,
-        /** Kirchen */
-        Kirche,
-        /** Privates Eigentum (Einzelpersonen, Unternehmen) */
-        Privat,
+        Staat_Sachsen( "Staatswald", "Freistaat Sachsen" ),
+        Staat_Bund( "Staatswald", "BRD" ),
+        Körperschaft_Kommune( "Körperschaftswald", "Kommunen" ),
+        Körperschaft_ZVB( "Körperschaftswald", "Zweckverbände" ),
+        Kirche( "Kirchenwald", null ),
+        Privat( "Privatwald", null ),
         /** Nach dem Import kein bekannter Wert */
-        Unbekannt;
+        Unbekannt( "Unbekannt", null );
         
+        private String      name;
+        private String      zusatz;
+        
+        private Waldeigentumsart( String name, String zusatz ) {
+            this.name = name;
+            this.zusatz = zusatz;
+        }
+        
+        public String label() {
+            return name + (zusatz != null ? " / " + zusatz : "");
+        }
+
         public static Map<String,Waldeigentumsart> map() {
             Map<String,Waldeigentumsart> result = new HashMap();
             for (Waldeigentumsart elm : Waldeigentumsart.values()) {
-                result.put( elm.name(), elm );
+                result.put( elm.label(), elm );
             }
             return result;
         }
@@ -111,7 +121,6 @@ public class Waldbesitzer
     public Kontakt besitzer() {
         return Iterables.get( kontakte, besitzerIndex.get(), null );
     }
-
 
     /**
      * Andere Seite der {@link Waldstueck#waldbesitzer} Assoziation.

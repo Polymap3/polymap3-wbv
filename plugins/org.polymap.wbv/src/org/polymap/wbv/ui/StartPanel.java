@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014, Falko Bräutigam. All rights reserved.
+ * Copyright (C) 2014-2015, Falko Bräutigam. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -11,6 +11,10 @@
  * PARTICULAR PURPOSE. See the GNU Lesser General Public License for more details.
  */
 package org.polymap.wbv.ui;
+
+import java.util.List;
+
+import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -30,6 +34,8 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
 import org.eclipse.core.runtime.Status;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.service.ISettingStore;
 
 import org.polymap.core.mapeditor.ContextMenuSite;
 import org.polymap.core.mapeditor.IContextMenuContribution;
@@ -45,6 +51,9 @@ import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
+import org.polymap.rhei.field.PicklistFormField;
+import org.polymap.rhei.field.PlainValuePropertyAdapter;
+import org.polymap.rhei.form.IFormEditorPageSite;
 import org.polymap.rhei.fulltext.FullTextIndex;
 import org.polymap.rhei.fulltext.ui.EntitySearchField;
 import org.polymap.rhei.fulltext.ui.FulltextProposal;
@@ -52,9 +61,13 @@ import org.polymap.rhei.table.workbench.FeatureTableFilterBar;
 import org.polymap.rhei.um.ui.LoginPanel;
 import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
 
+import org.polymap.model2.query.Expressions;
 import org.polymap.model2.query.ResultSet;
 import org.polymap.wbv.Messages;
 import org.polymap.wbv.WbvPlugin;
+import org.polymap.wbv.model.Flurstueck;
+import org.polymap.wbv.model.Gemarkung;
+import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.WbvRepository;
 
@@ -73,6 +86,9 @@ public class StartPanel
 
     private static final IMessages          i18n = Messages.forPrefix( "StartPanel" );
     
+    /** */
+    private Context<Revier>                 revier;
+    
     /** Der selektierte {@link Waldbesitzer}. */
     private Context<Waldbesitzer>           selected;
 
@@ -88,6 +104,7 @@ public class StartPanel
     @Override
     public void createContents( Composite parent ) {
         getSite().setTitle( "Login" );
+        getSite().setPreferredWidth( 400 ); // table viewer
         createLoginContents( parent );
     }
     
@@ -106,6 +123,17 @@ public class StartPanel
         section.addConstraint( new PriorityConstraint( 0 ), WbvPlugin.MIN_COLUMN_WIDTH );
 
         LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), user ) {
+            ISettingStore       settings = RWT.getSettingStore();
+            @Override
+            public void createFormContent( IFormEditorPageSite site ) {
+                String cookieRevier = settings.getAttribute( WbvPlugin.ID + ".revier" );
+                Revier preSelected = cookieRevier != null ? Revier.all.get().get( cookieRevier ) : null;
+                new FormFieldBuilder( site.getPageBody(), new PlainValuePropertyAdapter( "revier", preSelected ) )
+                        .setField( new PicklistFormField( Revier.all.get() ) )
+                        .setLabel( i18n.get( "revier" ) ).setToolTipText( i18n.get( "revierTip" ) )
+                        .create();
+                super.createFormContent( site );
+            }
             @Override
             protected boolean login( String name, String passwd ) {
                 if (super.login( name, passwd )) {
@@ -114,6 +142,18 @@ public class StartPanel
                     getSite().setStatus( new Status( Status.OK, WbvPlugin.ID, "Erfolgreich angemeldet als: <b>" + name + "</b>" ) );
                     
                     getContext().setUserName( username );
+                    
+                    // Revier
+                    Revier r = null; //formSite.getFieldValue( "revier" );
+                    revier.set( r );
+                    try {
+                        if (r != null) {
+                            settings.setAttribute( WbvPlugin.ID + ".revier", r.name );
+                        }
+                    }
+                    catch (IOException e) {
+                        log.warn( "", e );
+                    }
 
                     for (Control child : parent.getChildren()) {
                         child.dispose();
@@ -158,7 +198,7 @@ public class StartPanel
             public void selectionChanged( SelectionChangedEvent ev ) {
                 if (!viewer.getSelected().isEmpty()) {
                     selected.set( viewer.getSelected().get( 0 ) );
-                    getContext().openPanel( WaldbesitzerPanel.ID );
+                    getContext().openPanel( getSite().getPath(), WaldbesitzerPanel.ID );
                 }
             }
         });
@@ -170,7 +210,7 @@ public class StartPanel
             @Override
             public void widgetSelected( SelectionEvent e ) {
                 selected.set( null );
-                getContext().openPanel( WaldbesitzerPanel.ID );
+                getContext().openPanel( getSite().getPath(), WaldbesitzerPanel.ID );
             }
         });
 
@@ -182,13 +222,23 @@ public class StartPanel
         EntitySearchField search = new EntitySearchField<Waldbesitzer>( body, fulltext, uow(), Waldbesitzer.class ) {
             @Override
             protected void doRefresh() {
+                if (revier.get() != null) {
+                    Waldbesitzer wb = Expressions.template( Waldbesitzer.class, WbvRepository.instance.get().repo() );
+                    Flurstueck fl = Expressions.template( Flurstueck.class, WbvRepository.instance.get().repo() );
+                    
+                    List<Gemarkung> gemarkungen = revier.get().gemarkungen;
+                    Gemarkung[] revierGemarkungen = gemarkungen.toArray( new Gemarkung[gemarkungen.size()] );
+                    query.andWhere( Expressions.anyOf( wb.flurstuecke, 
+                                    Expressions.isAnyOf( fl.gemarkung, revierGemarkungen ) ) );
+                }
                 // SelectionEvent nach refresh() verhindern
                 viewer.clearSelection();
-                viewer.setInput( results );
+                viewer.setInput( query.execute() );
             }
         };
-        search.setSearchOnEnter( false );
+//        search.setSearchOnEnter( false );
 //        search.getText().setText( "Im" );
+//        search.getText().setFocus();
         search.setSearchOnEnter( true );
         new FulltextProposal( fulltext, search.getText() );
         

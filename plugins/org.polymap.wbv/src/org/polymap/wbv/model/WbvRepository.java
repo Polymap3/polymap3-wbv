@@ -121,7 +121,6 @@ public class WbvRepository {
                             Waldbesitzer.class, 
                             Kontakt.class,
                             Flurstueck.class,
-                            Gemeinde.class,
                             Gemarkung.class} )
                     .store.set( 
                             new OptimisticLocking(
