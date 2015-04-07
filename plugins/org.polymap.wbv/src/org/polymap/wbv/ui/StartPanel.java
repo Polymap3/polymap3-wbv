@@ -113,7 +113,7 @@ public class StartPanel
         // welcome
         getSite().setTitle( i18n.get( "loginTitle" ) );
         IPanelToolkit tk = getSite().toolkit();
-        IPanelSection welcome = tk.createPanelSection( parent, i18n.get( "loginTitle" ) );
+        IPanelSection welcome = tk.createPanelSection( parent, "Willkommen" /*i18n.get( "loginTitle" )*/ );
         welcome.addConstraint( new PriorityConstraint( 10 ), WbvPlugin.MIN_COLUMN_WIDTH );
         String t = i18n.get( "welcomeText" );
         tk.createFlowText( welcome.getBody(), t );
