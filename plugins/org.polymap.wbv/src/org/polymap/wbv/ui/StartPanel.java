@@ -15,6 +15,7 @@ package org.polymap.wbv.ui;
 import static org.polymap.core.model2.query.Expressions.anyOf;
 import static org.polymap.core.model2.query.Expressions.isAnyOf;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -24,6 +25,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
@@ -31,6 +33,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.rwt.RWT;
 import org.eclipse.rwt.service.ISettingStore;
 import org.eclipse.rwt.service.SettingStoreException;
+import org.eclipse.rwt.widgets.ExternalBrowser;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
@@ -40,6 +43,7 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 
 import org.eclipse.core.runtime.Status;
 
+import org.polymap.core.data.operation.DownloadServiceHandler;
 import org.polymap.core.data.ui.featuretable.FeatureTableFilterBar;
 import org.polymap.core.model2.query.Expressions;
 import org.polymap.core.model2.query.ResultSet;
@@ -75,6 +79,11 @@ import org.polymap.wbv.model.Gemarkung;
 import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.WbvRepository;
+import org.polymap.wbv.ui.reports.DownloadableReport;
+import org.polymap.wbv.ui.reports.Report101;
+import org.polymap.wbv.ui.reports.Report105;
+import org.polymap.wbv.ui.reports.DownloadableReport.OutputType;
+import org.polymap.wbv.ui.reports.WbvReport;
 
 /**
  * 
@@ -93,6 +102,9 @@ public class StartPanel
 
     /** */
     private ContextProperty<Revier>       revier;
+    
+    /** */
+    private ContextProperty<String>       queryString;
     
     /** Der selektierte {@link Waldbesitzer}. */
     private ContextProperty<Waldbesitzer> selected;
@@ -223,12 +235,47 @@ public class StartPanel
             }
         });
 
+        // reports
+        final List<WbvReport> reportsMap = new ArrayList();
+        reportsMap.add( getContext().propagate( new Report101() ) );
+        reportsMap.add( getContext().propagate( new Report105() ) );
+        
+        final Combo reports = new Combo( tableSection.getBody(), SWT.BORDER | SWT.READ_ONLY );
+        reports.add( "Auswertung wählen..." );
+        for (DownloadableReport report : reportsMap) {
+            reports.add( report.getName() );
+        }
+        reports.select( 0 );
+        reports.addSelectionListener( new SelectionAdapter() {
+            @Override
+            public void widgetSelected( SelectionEvent ev ) {
+                try {
+                    if (reports.getSelectionIndex() > 0) {
+                        WbvReport report = reportsMap.get( reports.getSelectionIndex()-1 );
+                        report.setEntities( viewer.getInput() ).setOutputType( OutputType.PDF );
+                        String url = DownloadServiceHandler.registerContent( report );
+
+                        ExternalBrowser.open( "download_window", url, ExternalBrowser.NAVIGATION_BAR | ExternalBrowser.STATUS );
+                        reports.select( 0 );
+                    }
+                }
+                catch (Exception e) {
+                    throw new RuntimeException( e );
+                }
+            }
+        });
+            
         // filterBar
         FeatureTableFilterBar filterBar = new FeatureTableFilterBar( viewer, tableSection.getBody() );
 
         // searchField
         FullTextIndex fulltext = WbvRepository.instance.get().fulltextIndex();
         EntitySearchField search = new EntitySearchField<Waldbesitzer>( tableSection.getBody(), fulltext, uow(), Waldbesitzer.class ) {
+            @Override
+            protected void doSearch( String _queryString ) throws Exception {
+                super.doSearch( _queryString );
+                queryString.set( _queryString );
+            }
             @Override
             protected void doRefresh() {
                 if (revier.get() != null) {
@@ -246,16 +293,18 @@ public class StartPanel
             }
         };
         search.setSearchOnEnter( false );
-        search.getText().setText( "Im" );
-        search.getText().setFocus();
+        search.getText().setText( "Hedwig" );
+
         search.setSearchOnEnter( true );
+        search.getText().setFocus();
         new FulltextProposal( fulltext, search.getText() );
         
         // layout
         int displayHeight = BatikApplication.sessionDisplay().getBounds().height;
         int tableHeight = (displayHeight - (2*50) - 75 - 70);  // margins, searchbar, toolbar+banner 
         createBtn.setLayoutData( FormDataFactory.filled().clearRight().clearBottom().create() );
-        filterBar.getControl().setLayoutData( FormDataFactory.filled().bottom( viewer.getTable() ).left( createBtn ).right( 50 ).create() );
+        reports.setLayoutData( FormDataFactory.filled().left( createBtn ).clearRight().clearBottom().height( 24 ).create() );
+        filterBar.getControl().setLayoutData( FormDataFactory.filled().bottom( viewer.getTable() ).left( reports ).right( 50 ).create() );
         search.getControl().setLayoutData( FormDataFactory.filled().height( 27 ).bottom( viewer.getTable() ).left( filterBar.getControl() ).create() );
         viewer.getTable().setLayoutData( FormDataFactory.filled().top( createBtn ).height( tableHeight ).create() );
         

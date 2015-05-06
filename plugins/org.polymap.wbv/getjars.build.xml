@@ -37,6 +37,8 @@
             <dependency groupId="com.healthmarketscience.jackcess" artifactId="jackcess" version="2.0.4" />
             <dependency groupId="org.supercsv" artifactId="SuperCSV" version="1.52" />
 
+            <dependency groupId="net.sourceforge.dynamicreports" artifactId="dynamicreports-core" version="4.0.0" />
+
             <dependency groupId="commons-collections" artifactId="commons-collections" version="3" scope="provided" />
             <dependency groupId="commons-lang" artifactId="commons-lang" version="2" scope="provided" />
             <dependency groupId="commons-logging" artifactId="commons-logging" version="1" scope="provided" />

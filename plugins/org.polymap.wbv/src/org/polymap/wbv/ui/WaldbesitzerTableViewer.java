@@ -105,6 +105,12 @@ public class WaldbesitzerTableViewer
     }
 
 
+    @Override
+    public Iterable<Waldbesitzer> getInput() {
+        return (Iterable<Waldbesitzer>)super.getInput();
+    }
+
+
     public List<Waldbesitzer> getSelected() {
         return copyOf( transform( asList( getSelectedElements() ), new Function<IFeatureTableElement,Waldbesitzer>() {
             public Waldbesitzer apply( IFeatureTableElement input ) {

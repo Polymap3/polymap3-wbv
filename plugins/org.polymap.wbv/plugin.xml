@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
+   <extension
+         point="org.eclipse.rap.ui.entrypoint">
+      <entrypoint
+            class="org.polymap.rhei.batik.app.BatikApplication"
+            id="org.polymap.wbv.entrypoint"
+            path="/wbv">
+      </entrypoint>
+   </extension>
    <!--extension
          point="org.polymap.rhei.form.pageProviders">
       <pageProvider
@@ -13,7 +21,7 @@
          point="org.eclipse.rap.ui.branding">
       <branding
             body="resources/html/body.html"
-            defaultEntrypointId="org.polymap.rhei.batik.entrypoint"
+            defaultEntrypointId="org.polymap.wbv.entrypoint"
             id="org.polymap.wbv.branding"
             servletName="wbv"
             themeId="org.polymap.rhei.batik.theme"
