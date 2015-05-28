@@ -13,6 +13,7 @@
 package org.polymap.wbv.ui;
 
 import static org.eclipse.ui.forms.widgets.ExpandableComposite.TREE_NODE;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +37,7 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 
 import org.eclipse.ui.forms.widgets.ColumnLayoutData;
 import org.eclipse.ui.forms.widgets.Section;
+
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
@@ -47,6 +49,7 @@ import org.polymap.core.ui.StatusDispatcher;
 
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IPanel;
+import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.IPanelSite.PanelStatus;
 import org.polymap.rhei.batik.PanelChangeEvent;
 import org.polymap.rhei.batik.PanelChangeEvent.EventType;
@@ -108,26 +111,26 @@ public class WaldbesitzerPanel
     public void init() {
         super.init();
 
-//        // submit tool
-//        submitAction = new Action( "Übernehmen" ) {
-//            public void run() {
-//                try {
-//                    wbForm.submit();
-//                    for (KontaktForm form : kForms.keySet()) {
-//                        form.submit();
-//                    }
-//                    closeUnitOfWork( Completion.STORE );
-//                    getContext().closePanel( getSite().getPath() );
-//                }
-//                catch (Exception e) {
-//                    StatusDispatcher.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );
-//                }
-//            }
-//        };
-//        submitAction.setToolTipText( "Änderungen in die Datenbank übernehmen" );
-//        submitAction.setEnabled( false );
-//        submitAction.setDescription( IPanelSite.SUBMIT );
-//        getSite().addToolbarAction( submitAction );
+        // submit tool
+        submitAction = new Action( "Übernehmen" ) {
+            public void run() {
+                try {
+                    wbForm.submit();
+                    for (KontaktForm form : kForms.keySet()) {
+                        form.submit();
+                    }
+                    closeUnitOfWork( Completion.STORE );
+                    getContext().closePanel( getSite().getPath() );
+                }
+                catch (Exception e) {
+                    StatusDispatcher.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );
+                }
+            }
+        };
+        submitAction.setToolTipText( "Änderungen in die Datenbank übernehmen" );
+        submitAction.setEnabled( false );
+        submitAction.setDescription( IPanelSite.SUBMIT );
+        getSite().addToolbarAction( submitAction );
 
         //
         getContext().addListener( this, ev -> 
@@ -338,7 +341,7 @@ public class WaldbesitzerPanel
         form.addFieldListener( new IFormFieldListener() {
             public void fieldChange( FormFieldEvent ev ) {
                 if (ev.getEventCode() == VALUE_CHANGE 
-                        && ev.getFieldName().equals( kontakt.name.getInfo().getName() )
+                        && ev.getFieldName().equals( kontakt.name.info().getName() )
                         && !section.isDisposed()) {
                     section.setText( (String)ev.getNewFieldValue() );
                     section.layout();

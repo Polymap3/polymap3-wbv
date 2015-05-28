@@ -36,7 +36,7 @@ class PropertyAdapter
         implements Property {
 
     public static PropertyDescriptor descriptorFor( org.polymap.model2.Property prop ) {
-        PropertyInfo info = prop.getInfo();
+        PropertyInfo info = prop.info();
         NameImpl name = new NameImpl( info.getName() );
         AttributeType type = new AttributeTypeImpl( name, info.getType(), true, false, null, null, null );
         return new AttributeDescriptorImpl( type, name, 1, 1, false, null );
@@ -68,15 +68,15 @@ class PropertyAdapter
     @Override
     public void setValue( Object newValue ) {
         if (newValue != null 
-                && !delegate.getInfo().getType().isAssignableFrom( newValue.getClass() )) {
-            throw new ClassCastException( "Wrong value for Property of type '" + delegate.getInfo().getType() + "': " + newValue.getClass() );
+                && !delegate.info().getType().isAssignableFrom( newValue.getClass() )) {
+            throw new ClassCastException( "Wrong value for Property of type '" + delegate.info().getType() + "': " + newValue.getClass() );
         }
         delegate.set( newValue );
     }
 
     @Override
     public PropertyType getType() {
-        return new AttributeTypeImpl( getName(), delegate.getInfo().getType(), false, false, null, null, null );
+        return new AttributeTypeImpl( getName(), delegate.info().getType(), false, false, null, null, null );
     }
 
     @Override
@@ -87,12 +87,12 @@ class PropertyAdapter
 
     @Override
     public Name getName() {
-        return new NameImpl( delegate.getInfo().getName() );
+        return new NameImpl( delegate.info().getName() );
     }
 
     @Override
     public boolean isNillable() {
-        return delegate.getInfo().isNullable();
+        return delegate.info().isNullable();
     }
 
     @Override

@@ -57,9 +57,9 @@ public abstract class WbvPanel
     
     private Context<UnitOfWork>         rootUow;
     
-    private UnitOfWork                          uow;
+    private UnitOfWork                  uow;
 
-    private UnitOfWork                          parentUow;
+    private UnitOfWork                  parentUow;
 
     protected Context<UserPrincipal>    user;
     

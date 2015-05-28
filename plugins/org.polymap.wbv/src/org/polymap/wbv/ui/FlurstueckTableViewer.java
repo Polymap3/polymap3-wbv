@@ -70,7 +70,7 @@ public class FlurstueckTableViewer
         this.uow = uow;
         try {
             // Gemarkung
-            String propName = Flurstueck.TYPE.gemarkung.getInfo().getName();
+            String propName = Flurstueck.TYPE.gemarkung.info().getName();
             final ColumnLabelProvider lp[] = new ColumnLabelProvider[1];
             addColumn( new FormFeatureTableColumn( descriptorFor( propName, String.class ) )
                 .setWeight( 3, 80 )
