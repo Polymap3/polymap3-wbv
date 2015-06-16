@@ -12,6 +12,7 @@
  */
 package org.polymap.wbv.ui;
 
+import java.util.Collections;
 import java.util.List;
 
 import java.io.IOException;
@@ -53,16 +54,16 @@ import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.PlainValuePropertyAdapter;
-import org.polymap.rhei.form.IFormEditorPageSite;
-import org.polymap.rhei.fulltext.FullTextIndex;
+import org.polymap.rhei.form.IFormPageSite;
+import org.polymap.rhei.form.batik.BatikFormContainer;
+import org.polymap.rhei.fulltext.FulltextIndex;
 import org.polymap.rhei.fulltext.ui.EntitySearchField;
 import org.polymap.rhei.fulltext.ui.FulltextProposal;
-import org.polymap.rhei.table.workbench.FeatureTableFilterBar;
+import org.polymap.rhei.table.FeatureTableFilterBar;
 import org.polymap.rhei.um.ui.LoginPanel;
 import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
 
 import org.polymap.model2.query.Expressions;
-import org.polymap.model2.query.ResultSet;
 import org.polymap.wbv.Messages;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Flurstueck;
@@ -125,14 +126,15 @@ public class StartPanel
         LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), user ) {
             ISettingStore       settings = RWT.getSettingStore();
             @Override
-            public void createFormContent( IFormEditorPageSite site ) {
+            public void createFormContents( IFormPageSite site ) {
                 String cookieRevier = settings.getAttribute( WbvPlugin.ID + ".revier" );
                 Revier preSelected = cookieRevier != null ? Revier.all.get().get( cookieRevier ) : null;
-                new FormFieldBuilder( site.getPageBody(), new PlainValuePropertyAdapter( "revier", preSelected ) )
-                        .setField( new PicklistFormField( Revier.all.get() ) )
-                        .setLabel( i18n.get( "revier" ) ).setToolTipText( i18n.get( "revierTip" ) )
+                site.newFormField( new PlainValuePropertyAdapter( "revier", preSelected ) )
+                        .field.put( new PicklistFormField( Revier.all.get() ) )
+                        .label.put( i18n.get( "revier" ) )
+                        .tooltip.put( i18n.get( "revierTip" ) )
                         .create();
-                super.createFormContent( site );
+                super.createFormContents( site );
             }
             @Override
             protected boolean login( String name, String passwd ) {
@@ -171,7 +173,7 @@ public class StartPanel
         loginForm.setShowRegisterLink( false );
         loginForm.setShowStoreCheck( true );
         loginForm.setShowLostLink( true );
-        loginForm.createContents( section );
+        new BatikFormContainer( loginForm ).createContents( section );
     }
     
     
@@ -186,11 +188,11 @@ public class StartPanel
         Composite body = parent;
         body.setLayout( FormLayoutFactory.defaults().spacing( 5 ).create() );
         
-        ResultSet<Waldbesitzer> all = uow().query( Waldbesitzer.class ).execute();
-        log.info( "Query result: " + all.size() );
+//        ResultSet<Waldbesitzer> all = uow().query( Waldbesitzer.class ).execute();
+//        log.info( "Query result: " + all.size() );
         
         Composite tableLayout = body;  //tk.createComposite( body );
-        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( uow(), tableLayout, all, SWT.NONE );
+        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( uow(), tableLayout, Collections.EMPTY_LIST, SWT.NONE );
         getContext().propagate( viewer );
         // waldbesitzer öffnen
         viewer.addSelectionChangedListener( new ISelectionChangedListener() {
@@ -218,7 +220,7 @@ public class StartPanel
         FeatureTableFilterBar filterBar = new FeatureTableFilterBar( viewer, body );
 
         // searchField
-        FullTextIndex fulltext = WbvRepository.instance.get().fulltextIndex();
+        FulltextIndex fulltext = WbvRepository.instance.get().fulltextIndex();
         EntitySearchField search = new EntitySearchField<Waldbesitzer>( body, fulltext, uow(), Waldbesitzer.class ) {
             @Override
             protected void doRefresh() {
@@ -236,10 +238,10 @@ public class StartPanel
                 viewer.setInput( query.execute() );
             }
         };
-//        search.setSearchOnEnter( false );
-//        search.getText().setText( "Im" );
-//        search.getText().setFocus();
-        search.setSearchOnEnter( true );
+        search.searchOnEnter.set( false );
+        search.getText().setText( "Im" );
+        search.searchOnEnter.set( true );
+        search.getText().setFocus();
         new FulltextProposal( fulltext, search.getText() );
         
         // layout

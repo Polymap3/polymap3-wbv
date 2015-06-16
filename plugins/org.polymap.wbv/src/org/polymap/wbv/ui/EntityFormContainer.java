@@ -20,8 +20,9 @@ import org.opengis.feature.Feature;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.rhei.form.IFormEditorPageSite;
-import org.polymap.rhei.form.batik.FormContainer;
+import org.polymap.rhei.form.IFormPage;
+import org.polymap.rhei.form.IFormPageSite;
+import org.polymap.rhei.form.batik.BatikFormContainer;
 
 import org.polymap.model2.Entity;
 
@@ -31,7 +32,7 @@ import org.polymap.model2.Entity;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 abstract class EntityFormContainer
-        extends FormContainer {
+        extends BatikFormContainer {
 
     private static Log log = LogFactory.getLog( EntityFormContainer.class );
 
@@ -44,11 +45,16 @@ abstract class EntityFormContainer
     private Feature                 feature;
     
 
+    public EntityFormContainer( IFormPage page ) {
+        super( page );
+    }
+
+
     @SuppressWarnings("hiding")
     public abstract void createFormContent( Feature feature, FeatureStore fs );
     
     
-    public final void createFormContent( IFormEditorPageSite site ) {
+    public final void createFormContent( IFormPageSite site ) {
 //        try {
 //            site.getPageBody().setLayout( ColumnLayoutFactory.defaults().spacing( 5 ).margins( 10, 10 ).columns( 1, 1 ).create() );
 //

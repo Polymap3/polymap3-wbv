@@ -30,11 +30,11 @@ import org.polymap.core.runtime.LockedLazyInit;
 import org.polymap.core.runtime.Polymap;
 
 import org.polymap.rhei.fulltext.FullQueryProposalDecorator;
-import org.polymap.rhei.fulltext.FullTextIndex;
+import org.polymap.rhei.fulltext.FulltextIndex;
 import org.polymap.rhei.fulltext.indexing.LowerCaseTokenFilter;
 import org.polymap.rhei.fulltext.model2.FulltextIndexer;
 import org.polymap.rhei.fulltext.model2.FulltextIndexer.TypeFilter;
-import org.polymap.rhei.fulltext.store.lucene.LuceneFullTextIndex;
+import org.polymap.rhei.fulltext.store.lucene.LuceneFulltextIndex;
 
 import org.polymap.model2.Composite;
 import org.polymap.model2.runtime.CompositeInfo;
@@ -69,7 +69,7 @@ public class WbvRepository {
 
     private EntityRepository                repo;
 
-    private LuceneFullTextIndex             fulltextIndex;
+    private LuceneFulltextIndex             fulltextIndex;
     
     
     /**
@@ -99,7 +99,7 @@ public class WbvRepository {
             
             // init fulltext
             File wbvDir = new File( Polymap.getDataDir(), WbvPlugin.ID );
-            fulltextIndex = new LuceneFullTextIndex( new File( wbvDir, "fulltext" ) );
+            fulltextIndex = new LuceneFulltextIndex( new File( wbvDir, "fulltext" ) );
             fulltextIndex.addTokenFilter( new LowerCaseTokenFilter() );
             
             WaldbesitzerFulltextTransformer wbTransformer = new WaldbesitzerFulltextTransformer();
@@ -142,7 +142,7 @@ public class WbvRepository {
     }
 
     
-    public FullTextIndex fulltextIndex() {
+    public FulltextIndex fulltextIndex() {
         return new FullQueryProposalDecorator(
                new LowerCaseTokenFilter( fulltextIndex ) );
 

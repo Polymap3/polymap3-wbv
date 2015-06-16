@@ -28,63 +28,61 @@ import org.polymap.core.mapeditor.ScaleMapAction;
 
 import org.polymap.rhei.batik.IPanelSite;
 
-import org.polymap.rap.openlayers.layers.WMSLayer;
-
 /**
  * 
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public class WbvMapViewer
-        extends MapViewer {
-
-    private static Log log = LogFactory.getLog( WbvMapViewer.class );
-    
-    private ContextMenuControl      contextMenu;
-
-    
-    public WbvMapViewer( IPanelSite site ) throws Exception {
-        super( site, new ReferencedEnvelope( 4500000, 4700000, 5550000, 5700000, Geometries.crs( "EPSG:31468" ) ) );
-    }
-
-    
-    public ContextMenuControl getContextMenu() {
-        return contextMenu;
-    }
-
-
-    @Override
-    public Composite createContents( Composite parent ) {
-        Composite result = super.createContents( parent );
-        
-//        WMSLayer osm = new WMSLayer( "OSM", "services/WBV/", "OSM" );
-//        addLayer( osm, true, false );
-        
-        WMSLayer waldflaechen = new WMSLayer( "Waldflächen", "services/WBV/", "Waldflaechen" );
-        addLayer( waldflaechen, true, false );
-        setLayerVisible( waldflaechen, true );
-
-        addToolbarItem( new HomeMapAction( this ) );
-        addToolbarItem( new ScaleMapAction( this, 1000 ) );
-        addToolbarItem( new ScaleMapAction( this, 5000 ) );
-        getMap().zoomTo( 12 );
-        
-        // context menu
-        contextMenu = new ContextMenuControl( this );
-        contextMenu.addProvider( ContextMenuExtension.all() );
-//        contextMenu.addProvider( new IContextMenuProvider() {
-//            @Override
-//            public IContextMenuContribution createContribution() {
-//                return new FindFeaturesMenuContribution() {
-//                    @Override
-//                    protected void onMenuOpen( FeatureStore fs, Feature feature, ILayer layer ) {
-//                        log.info( "Feature: " + feature );
-//                    }
-//                };            
-//            }
-//        });
-//        //map.addMapControl( contextMenu );
-        return result;
-    }
-
+public class WbvMapViewer {
+//        extends MapViewer {
+//
+//    private static Log log = LogFactory.getLog( WbvMapViewer.class );
+//    
+//    private ContextMenuControl      contextMenu;
+//
+//    
+//    public WbvMapViewer( IPanelSite site ) throws Exception {
+//        super( site, new ReferencedEnvelope( 4500000, 4700000, 5550000, 5700000, Geometries.crs( "EPSG:31468" ) ) );
+//    }
+//
+//    
+//    public ContextMenuControl getContextMenu() {
+//        return contextMenu;
+//    }
+//
+//
+//    @Override
+//    public Composite createContents( Composite parent ) {
+//        Composite result = super.createContents( parent );
+//        
+////        WMSLayer osm = new WMSLayer( "OSM", "services/WBV/", "OSM" );
+////        addLayer( osm, true, false );
+//        
+//        WMSLayer waldflaechen = new WMSLayer( "Waldflächen", "services/WBV/", "Waldflaechen" );
+//        addLayer( waldflaechen, true, false );
+//        setLayerVisible( waldflaechen, true );
+//
+//        addToolbarItem( new HomeMapAction( this ) );
+//        addToolbarItem( new ScaleMapAction( this, 1000 ) );
+//        addToolbarItem( new ScaleMapAction( this, 5000 ) );
+//        getMap().zoomTo( 12 );
+//        
+//        // context menu
+//        contextMenu = new ContextMenuControl( this );
+//        contextMenu.addProvider( ContextMenuExtension.all() );
+////        contextMenu.addProvider( new IContextMenuProvider() {
+////            @Override
+////            public IContextMenuContribution createContribution() {
+////                return new FindFeaturesMenuContribution() {
+////                    @Override
+////                    protected void onMenuOpen( FeatureStore fs, Feature feature, ILayer layer ) {
+////                        log.info( "Feature: " + feature );
+////                    }
+////                };            
+////            }
+////        });
+////        //map.addMapControl( contextMenu );
+//        return result;
+//    }
+//
 }

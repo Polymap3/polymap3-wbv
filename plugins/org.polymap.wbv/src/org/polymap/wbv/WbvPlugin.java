@@ -40,8 +40,8 @@ import org.polymap.core.security.UserPrincipal;
 import org.polymap.core.ui.StatusDispatcher;
 
 import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
-import org.polymap.rhei.fulltext.FullTextPlugin;
-import org.polymap.rhei.fulltext.FullTextPlugin.ErrorHandler;
+import org.polymap.rhei.fulltext.FulltextPlugin;
+import org.polymap.rhei.fulltext.FulltextPlugin.ErrorHandler;
 
 import org.polymap.wbv.model.WbvRepository;
 
@@ -113,7 +113,7 @@ public class WbvPlugin
         httpServiceTracker.open();
 
 		// init FullText error handler
-		FullTextPlugin.instance().setErrorHandler( new ErrorHandler() {
+		FulltextPlugin.instance().setErrorHandler( new ErrorHandler() {
             @Override
             public void handleError( String msg, Throwable e ) {
                 StatusDispatcher.handleError( msg, e );
