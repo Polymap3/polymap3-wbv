@@ -37,6 +37,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
+import org.eclipse.rap.rwt.client.ClientFile;
 
 import org.polymap.core.operation.OperationSupport;
 import org.polymap.core.runtime.event.EventHandler;
@@ -170,7 +171,7 @@ public class AdminPanel
         Upload upload = new Upload( formSection.getBody(), SWT.NONE );
         upload.setHandler( new IUploadHandler() {
             @Override
-            public void uploadStarted( String name, String contentType, int contentLength, InputStream in ) throws Exception {
+            public void uploadStarted( ClientFile clientFile, InputStream in ) throws Exception {
                 // quoteChar, delimiterChar, endOfLineSymbols
                 CsvPreference prefs = new CsvPreference( '"', ',', "\r\n" );
                 ICsvListReader csv = new CsvListReader( new InputStreamReader( in, "UTF-8" ), prefs );
@@ -227,7 +228,7 @@ public class AdminPanel
         Upload upload = new Upload( formSection.getBody(), SWT.NONE );
         upload.setHandler( new IUploadHandler() {
             @Override
-            public void uploadStarted( String name, String contentType, int contentLength, InputStream in ) throws Exception {
+            public void uploadStarted( ClientFile clientFile, InputStream in ) throws Exception {
                 // quoteChar, delimiterChar, endOfLineSymbols
                 CsvPreference prefs = new CsvPreference( '"', ',', "\r\n" );
                 ICsvListReader csv = new CsvListReader( new InputStreamReader( in, "UTF-8" ), prefs );
