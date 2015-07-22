@@ -32,11 +32,6 @@ import org.eclipse.swt.widgets.Composite;
 
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 
-import org.polymap.core.runtime.event.Event;
-import org.polymap.core.runtime.event.EventFilter;
-import org.polymap.core.runtime.event.EventHandler;
-import org.polymap.core.runtime.event.EventManager;
-
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.NumberValidator;
 import org.polymap.rhei.field.PicklistFormField;

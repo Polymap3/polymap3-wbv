@@ -168,7 +168,7 @@ public class AdminPanel
 
         IPanelSection formSection = tk.createPanelSection( section, null );
         formSection.addConstraint( new PriorityConstraint( 0 ) );
-        Upload upload = new Upload( formSection.getBody(), SWT.NONE );
+        Upload upload = new Upload( formSection.getBody(), SWT.NONE, Upload.SHOW_PROGRESS );
         upload.setHandler( new IUploadHandler() {
             @Override
             public void uploadStarted( ClientFile clientFile, InputStream in ) throws Exception {
@@ -225,7 +225,7 @@ public class AdminPanel
 
         IPanelSection formSection = tk.createPanelSection( section, null );
         formSection.addConstraint( new PriorityConstraint( 0 ) );
-        Upload upload = new Upload( formSection.getBody(), SWT.NONE );
+        Upload upload = new Upload( formSection.getBody(), SWT.NONE, Upload.SHOW_PROGRESS );
         upload.setHandler( new IUploadHandler() {
             @Override
             public void uploadStarted( ClientFile clientFile, InputStream in ) throws Exception {

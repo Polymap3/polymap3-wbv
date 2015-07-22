@@ -338,7 +338,7 @@ public class WaldbesitzerPanel
         // KontaktForm
         KontaktForm form = new KontaktForm( kontakt, getSite() );
         BatikFormContainer formContainer = new BatikFormContainer( form );
-        formContainer.createContents( tk.createComposite( (Composite)section.getClient() ) );
+        formContainer.createContents( (Composite)section.getClient() );
         formContainer.getContents().setLayoutData( FormDataFactory.filled().right( 100, -33 ).create() );
 
         
