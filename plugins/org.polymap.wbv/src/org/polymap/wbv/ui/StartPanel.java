@@ -17,6 +17,8 @@ import static org.polymap.core.model2.query.Expressions.isAnyOf;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -80,7 +82,6 @@ import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.WbvRepository;
 import org.polymap.wbv.ui.reports.DownloadableReport;
-import org.polymap.wbv.ui.reports.Report101;
 import org.polymap.wbv.ui.reports.Report105;
 import org.polymap.wbv.ui.reports.DownloadableReport.OutputType;
 import org.polymap.wbv.ui.reports.WbvReport;
@@ -153,10 +154,14 @@ public class StartPanel
             ISettingStore       settings = RWT.getSettingStore();
             @Override
             public void createFormContent( IFormEditorPageSite site ) {
+                Map<String,Revier> reviere = new TreeMap( Revier.all.get() );
+                reviere.put( Revier.UNKNOWN.name, Revier.UNKNOWN );
+
                 String cookieRevier = settings.getAttribute( WbvPlugin.ID + ".revier" );
-                Revier preSelected = cookieRevier != null ? Revier.all.get().get( cookieRevier ) : null;
+                Revier preSelected = cookieRevier != null ? reviere.get( cookieRevier ) : null;
+                
                 new FormFieldBuilder( site.getPageBody(), new PlainValuePropertyAdapter( "revier", preSelected ) )
-                        .setField( new PicklistFormField( Revier.all.get() ) )
+                        .setField( new PicklistFormField( reviere ) )
                         .setLabel( i18n.get( "revier" ) ).setToolTipText( i18n.get( "revierTip" ) )
                         .create();
                 super.createFormContent( site );
@@ -172,7 +177,9 @@ public class StartPanel
                     
                     // Revier
                     Revier r = formSite.getFieldValue( "revier" );
-                    revier.set( r );
+                    if (r != Revier.UNKNOWN) {
+                        revier.set( r );
+                    }
                     try {
                         if (r != null) {
                             settings.setAttribute( WbvPlugin.ID + ".revier", r.name );
@@ -237,7 +244,7 @@ public class StartPanel
 
         // reports
         final List<WbvReport> reportsMap = new ArrayList();
-        reportsMap.add( getContext().propagate( new Report101() ) );
+//        reportsMap.add( getContext().propagate( new Report101() ) );
         reportsMap.add( getContext().propagate( new Report105() ) );
         
         final Combo reports = new Combo( tableSection.getBody(), SWT.BORDER | SWT.READ_ONLY );
