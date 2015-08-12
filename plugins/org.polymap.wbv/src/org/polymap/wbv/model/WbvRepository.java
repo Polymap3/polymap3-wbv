@@ -112,7 +112,7 @@ public class WbvRepository {
 //            }
             // create repo
             IRecordStore store = LuceneRecordStore.newConfiguration()
-                    .indexDir.set( new File( Polymap.getDataDir(), "recordstore/WBV" ) )
+                    .indexDir.put( new File( Polymap.getDataDir(), "recordstore/WBV" ) )
                     .create();
             repo = EntityRepository.newConfiguration()
                     .entities.set( new Class[] {
