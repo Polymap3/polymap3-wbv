@@ -71,6 +71,7 @@ public class Flurstueck
     @Nullable
     public Association<Gemarkung>       gemarkung;
 
+    //@Queryable: wird behandelt in WaldbesitzerFulltextTransformer
     @Nullable
     @ImportColumn("FL_Flstnr")
     public Property<String>             zaehlerNenner;
@@ -88,7 +89,6 @@ public class Flurstueck
     @ImportColumn("FL_Bemerkung")
     public Property<String>             bemerkung;
 
-    @Queryable
     @Nullable
     @ImportColumn("FL_Datum_Eingabe")
     public Property<Date>               eingabe;

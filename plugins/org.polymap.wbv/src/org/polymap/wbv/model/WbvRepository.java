@@ -57,6 +57,8 @@ import org.polymap.rhei.fulltext.model2.FulltextIndexer.TypeFilter;
 import org.polymap.rhei.fulltext.store.lucene.LuceneFullTextIndex;
 
 import org.polymap.wbv.WbvPlugin;
+import org.polymap.wbv.model.fulltext.WbvTokenizer;
+import org.polymap.wbv.model.fulltext.WaldbesitzerFulltextTransformer;
 
 /**
  * 
@@ -117,6 +119,7 @@ public class WbvRepository {
             // init fulltext
             File wbvDir = new File( Polymap.getDataDir(), WbvPlugin.ID );
             fulltextIndex = new LuceneFullTextIndex( new File( wbvDir, "fulltext" ) );
+            fulltextIndex.setTokenizer( new WbvTokenizer() );
             fulltextIndex.addTokenFilter( new LowerCaseTokenFilter() );
             
             WaldbesitzerFulltextTransformer wbTransformer = new WaldbesitzerFulltextTransformer();

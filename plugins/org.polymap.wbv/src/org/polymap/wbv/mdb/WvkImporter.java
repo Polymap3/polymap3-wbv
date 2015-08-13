@@ -37,6 +37,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
+import org.polymap.core.model2.query.ResultSet;
 import org.polymap.core.model2.runtime.UnitOfWork;
 import org.polymap.core.model2.runtime.ValueInitializer;
 import org.polymap.core.runtime.SubMonitor;
@@ -97,9 +98,22 @@ public class WvkImporter
                 }
             });
             monitor.worked( 10 );
+
+            SubMonitor submon = null;
+            
+            // Waldbesitzer löschen
+            submon = new SubMonitor( monitor, 10 );
+            ResultSet<Waldbesitzer> wbs = uow.query( Waldbesitzer.class ).execute();
+            submon.beginTask( "Waldbesitzer löschen", wbs.size() );
+            for (Waldbesitzer wb : wbs) {
+                uow.removeEntity( wb );
+                submon.worked( 1 );
+            }
+            uow.commit();
+            submon.done();
    
             // Waldbesitzer
-            SubMonitor submon = new SubMonitor( monitor, 10 );
+            submon = new SubMonitor( monitor, 10 );
             final MdbEntityImporter<Waldbesitzer> wbImporter = new MdbEntityImporter( uow, Waldbesitzer.class );
             Table table = db.getTable( wbImporter.getTableName() );
             submon.beginTask( "Waldbesitzer", table.getRowCount() );

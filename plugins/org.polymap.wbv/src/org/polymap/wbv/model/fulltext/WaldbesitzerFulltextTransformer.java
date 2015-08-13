@@ -12,15 +12,21 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  */
-package org.polymap.wbv.model;
+package org.polymap.wbv.model.fulltext;
+
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.polymap.core.model2.Association;
+import org.polymap.core.model2.CollectionProperty;
 import org.polymap.core.model2.Composite;
 
 import org.polymap.rhei.fulltext.model2.EntityFeatureTransformer;
+
+import org.polymap.wbv.model.Flurstueck;
+import org.polymap.wbv.model.Gemarkung;
 
 /**
  * 
@@ -32,12 +38,40 @@ public class WaldbesitzerFulltextTransformer
 
     private static Log log = LogFactory.getLog( WaldbesitzerFulltextTransformer.class );
 
+    private static final Pattern        whitespace = Pattern.compile( "\\s" );
+    
     
     @Override
     protected void visitAssociation( Association prop ) {
         Object value = prop.get();
         if (value instanceof Gemarkung) {
             processComposite( (Composite)value );
+        }
+    }
+
+
+    @Override
+    protected boolean visitCompositeCollectionProperty( CollectionProperty prop ) {
+        // Flurstueck
+        if (Flurstueck.class.isAssignableFrom( prop.getInfo().getType() )) {
+            for (Object fst : prop) {
+                visitFlurstueck( (Flurstueck)fst );
+            }
+        }
+        // default process
+        return true;
+    }
+    
+    
+    protected void visitFlurstueck( Flurstueck fst ) {
+        String zn = fst.zaehlerNenner.get();
+        if (zn != null && zn.length() > 0) {
+            String normalized = whitespace.matcher( zn ).replaceAll( "" );
+            if (!normalized.contains( "/" )) {
+                normalized = normalized + "/";
+            }
+            //log.debug( "zaehlerNenner: " + zn + " -> " + normalized );
+            putValue( "zaehlerNenner", normalized );
         }
     }
     
