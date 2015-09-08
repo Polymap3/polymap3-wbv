@@ -24,6 +24,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 
+import org.eclipse.ui.forms.widgets.ColumnLayoutData;
+
 import org.polymap.core.ui.ColumnLayoutFactory;
 
 import org.polymap.rhei.batik.IPanelSite;
@@ -33,6 +35,7 @@ import org.polymap.rhei.field.IFormFieldLabel;
 import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.PicklistFormField;
+import org.polymap.rhei.field.TextFormField;
 import org.polymap.rhei.form.IFormEditorPageSite;
 
 import org.polymap.wbv.model.Kontakt;
@@ -111,6 +114,12 @@ public class KontaktForm
         
         // Adresse
         new AdresseForm( kontakt, panelSite ).createContents( this );
+        
+        // Bemerkung 
+        new FormFieldBuilder( body, new PropertyAdapter( kontakt.bemerkung ) )
+                .setField( new TextFormField() )
+                .setToolTipText( "Zusätzliche Informationen zu diesem Kontakt.\nZum Besipiel: 'Besitzer', 'Ansprechpartner', 'Verwalter', 'Erbengemeinschaft'" )
+                .create().setLayoutData( new ColumnLayoutData( SWT.DEFAULT, 80 ) );
     }
     
 }
