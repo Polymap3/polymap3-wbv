@@ -113,7 +113,7 @@ public class WbvRepository {
             }
 
             //
-            BooleanQuery.setMaxClauseCount( 4 * 1024 );
+            BooleanQuery.setMaxClauseCount( 8 * 1024 );
             log.info( "Maximale Anzahl Lucene-Klauseln erhöht auf: " + BooleanQuery.getMaxClauseCount() );
             
             // init fulltext

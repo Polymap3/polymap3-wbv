@@ -131,9 +131,14 @@ public class WvkImporter
                             case "P": proto.eigentumsArt.set( Waldeigentumsart.Privat ); break;
                             case "K42": proto.eigentumsArt.set( Waldeigentumsart.Kirche ); break;
                             case "C": proto.eigentumsArt.set( Waldeigentumsart.Körperschaft_Kommune ); break;
+                            case "T": proto.eigentumsArt.set( Waldeigentumsart.T ); break;
+                            case "B": proto.eigentumsArt.set( Waldeigentumsart.B ); break;
+                            case "A": proto.eigentumsArt.set( Waldeigentumsart.A ); break;
+                            case "L": proto.eigentumsArt.set( Waldeigentumsart.L ); break;
                             default : {
                                 log.warn( "Unbekannte Eigentumsart: " + ea );
                                 proto.eigentumsArt.set( Waldeigentumsart.Unbekannt );
+                                break;
                             }
                         }
                         return proto;

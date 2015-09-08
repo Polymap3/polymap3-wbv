@@ -22,11 +22,12 @@ import org.apache.commons.logging.LogFactory;
 import org.polymap.core.model2.Association;
 import org.polymap.core.model2.CollectionProperty;
 import org.polymap.core.model2.Composite;
-
+import org.polymap.core.model2.Property;
 import org.polymap.rhei.fulltext.model2.EntityFeatureTransformer;
 
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
+import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
 
 /**
  * 
@@ -39,6 +40,20 @@ public class WaldbesitzerFulltextTransformer
     private static Log log = LogFactory.getLog( WaldbesitzerFulltextTransformer.class );
 
     private static final Pattern        whitespace = Pattern.compile( "\\s" );
+    
+    
+    @Override
+    protected void visitProperty( Property prop ) {        
+        Object value = prop.get();
+
+        // Waldeigentumsart
+        if (value instanceof Waldeigentumsart) {
+            putValue( prop, ((Waldeigentumsart)value).label() );
+        }
+        else {
+            super.visitProperty( prop );
+        }
+    }
     
     
     @Override
