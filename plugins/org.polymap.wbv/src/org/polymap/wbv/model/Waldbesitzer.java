@@ -125,6 +125,8 @@ public class Waldbesitzer
     @Defaults
     public Property<Integer>            besitzerIndex;
 
+    public CollectionProperty<Ereignis> ereignisse;
+    
 
     public Kontakt besitzer() {
         return Iterables.get( kontakte, besitzerIndex.get(), null );
