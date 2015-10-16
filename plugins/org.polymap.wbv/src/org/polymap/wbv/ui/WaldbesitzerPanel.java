@@ -14,9 +14,14 @@ package org.polymap.wbv.ui;
 
 import static org.eclipse.ui.forms.widgets.ExpandableComposite.TREE_NODE;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import java.beans.PropertyChangeEvent;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -30,6 +35,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -275,6 +281,10 @@ public class WaldbesitzerPanel
                         return proto;
                     }
                 });
+                Control child = liste.getChildren()[0];
+                if (child instanceof Label) {
+                    child.dispose();
+                }
                 Section newSection = createEreignisSection( liste, neu );
                 newSection.setExpanded( true );
                 getSite().layout( true );
@@ -284,8 +294,15 @@ public class WaldbesitzerPanel
             }
         });
         //
-        for (final Ereignis ereignis : wb.ereignisse) {
-            createEreignisSection( liste, ereignis ).setExpanded( false );
+        if (wb.ereignisse.isEmpty()) {
+            tk.createLabel( liste, "Noch keine Ereignisse." );
+        }
+        else {
+            List<Ereignis> reversed = new ArrayList( wb.ereignisse );
+            Collections.reverse( reversed );
+            for (final Ereignis ereignis : reversed ) {
+                createEreignisSection( liste, ereignis ).setExpanded( false );
+            }
         }
 
         // Flurstücke
@@ -329,7 +346,22 @@ public class WaldbesitzerPanel
     protected void createFlurstueckSection( Composite parent ) {
         parent.setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
 
-        final FlurstueckTableViewer viewer = new FlurstueckTableViewer( uow(), parent, wb.flurstuecke );
+        final FlurstueckTableViewer viewer = new FlurstueckTableViewer( uow(), parent, wb.flurstuecke ) {
+            @Override
+            protected void fieldChange( PropertyChangeEvent ev ) {
+                IStatus status = null;
+                if (!isDirty()) {
+                    status = Status.OK_STATUS;
+                }
+                else if (!isValid()) {
+                    status = new Status( IStatus.ERROR, WbvPlugin.ID, "Etwas stimmt noch nicht" );
+                }
+                else {
+                    status = new Status( IStatus.OK, WbvPlugin.ID, "Alle Eingaben sind in Ordnung" );
+                }
+                statusAdapter.updateStatusOf( this, status );
+            }
+        };
         getContext().propagate( viewer );
         viewer.getTable().setLayoutData( FormDataFactory.filled().right( 100, -33 ).height( 250 ).create() );
         
