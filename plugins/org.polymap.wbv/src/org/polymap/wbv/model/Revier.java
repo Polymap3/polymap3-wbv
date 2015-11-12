@@ -1,5 +1,6 @@
 /*
- * polymap.org Copyright (C) 2014 Polymap GmbH. All rights reserved.
+ * polymap.org 
+ * Copyright (C) 2014-2014 Polymap GmbH. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -13,6 +14,7 @@
 package org.polymap.wbv.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -33,7 +35,6 @@ import org.polymap.model2.runtime.UnitOfWork;
  * 
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-//@SRS("EPSG:31468")
 public class Revier {
 
     /**
@@ -52,8 +53,11 @@ public class Revier {
                 }
                 revier.gemarkungen.add( gemarkung );
             }
-            return result;
+            return Collections.unmodifiableMap( result );
         }});
+    
+    
+    public static final Revier      UNKNOWN = new Revier( "Alle" );
     
     
     // istance ********************************************

@@ -14,9 +14,14 @@ package org.polymap.wbv.ui;
 
 import static org.eclipse.ui.forms.widgets.ExpandableComposite.TREE_NODE;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import java.beans.PropertyChangeEvent;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -30,6 +35,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
@@ -41,6 +47,9 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
+import org.polymap.model2.runtime.ValueInitializer;
+import org.polymap.core.runtime.Polymap;
+import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.core.ui.FormDataFactory;
@@ -66,8 +75,8 @@ import org.polymap.rhei.form.DefaultFormPage;
 import org.polymap.rhei.form.IFormPageSite;
 import org.polymap.rhei.form.batik.BatikFormContainer;
 
-import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.wbv.WbvPlugin;
+import org.polymap.wbv.model.Ereignis;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer;
@@ -99,6 +108,8 @@ public class WaldbesitzerPanel
     private IFormFieldListener            wbFormListener;
 
     private Map<BatikFormContainer,IFormFieldListener> kForms = new HashMap();
+
+    private Map<EreignisForm,IFormFieldListener> eForms = new HashMap();
 
     private WbvMapViewer                  map;
 
@@ -152,6 +163,9 @@ public class WaldbesitzerPanel
             wbFormContainer.removeFieldListener( wbFormListener );
         }
         for (Map.Entry<BatikFormContainer,IFormFieldListener> entry : kForms.entrySet()) {
+            entry.getKey().removeFieldListener( entry.getValue() );
+        }
+        for (Map.Entry<BatikFormContainer,IFormFieldListener> entry : eForms.entrySet()) {
             entry.getKey().removeFieldListener( entry.getValue() );
         }
         super.dispose();
@@ -232,6 +246,59 @@ public class WaldbesitzerPanel
             createKontaktSection( besitzer.getBody(), kontakt );
         }
 
+        // Ereignisse
+        final IPanelSection ereignisse = tk.createPanelSection( parent, "Ereignisse" );
+        ereignisse.addConstraint( 
+                WbvPlugin.MIN_COLUMN_WIDTH, 
+                new PriorityConstraint( 0 ) );
+        ereignisse.getBody().setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
+
+        final Composite liste = tk.createComposite( ereignisse.getBody() );
+        liste.setLayoutData( FormDataFactory.filled().right( 100, -30 ).clearBottom().create() );
+        liste.setLayout( ColumnLayoutFactory.defaults().spacing( 0 ).columns( 1, 1 ).create() );
+        
+        // addBtn
+        Button addBtn = tk.createButton( ereignisse.getBody(), "+", SWT.PUSH );
+        addBtn.setToolTipText( "Ein Ereignis hinzufügen" );
+        addBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( 0 ).create() );
+        addBtn.addSelectionListener( new SelectionAdapter() {
+            @Override
+            public void widgetSelected( SelectionEvent ev ) {
+                Ereignis neu = wb.ereignisse.createElement( new ValueInitializer<Ereignis>() {
+                    @Override
+                    public Ereignis initialize( Ereignis proto ) throws Exception {
+                        //proto.titel.set( "Neu" );
+                        proto.angelegt.set( new Date() );
+                        proto.angelegtVon.set( Polymap.instance().getUser().getName() );
+                        proto.geaendert.set( new Date() );
+                        proto.geaendertVon.set( Polymap.instance().getUser().getName() );
+                        return proto;
+                    }
+                });
+                Control child = liste.getChildren()[0];
+                if (child instanceof Label) {
+                    child.dispose();
+                }
+                Section newSection = createEreignisSection( liste, neu );
+                newSection.setExpanded( true );
+                getSite().layout( true );
+                liste.layout( new Control[] {newSection}, SWT.ALL|SWT.CHANGED );
+
+                statusAdapter.updateStatusOf( liste, new Status( IStatus.OK, WbvPlugin.ID, "Ein Ereignis hinzugefügt" ) );
+            }
+        });
+        //
+        if (wb.ereignisse.isEmpty()) {
+            tk.createLabel( liste, "Noch keine Ereignisse." );
+        }
+        else {
+            List<Ereignis> reversed = new ArrayList( wb.ereignisse );
+            Collections.reverse( reversed );
+            for (final Ereignis ereignis : reversed ) {
+                createEreignisSection( liste, ereignis ).setExpanded( false );
+            }
+        }
+
         // Flurstücke
         final IPanelSection flurstuecke = tk.createPanelSection( parent, "Flurstücke" );
         flurstuecke.addConstraint( 
@@ -273,7 +340,22 @@ public class WaldbesitzerPanel
     protected void createFlurstueckSection( Composite parent ) {
         parent.setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
 
-        final FlurstueckTableViewer viewer = new FlurstueckTableViewer( uow(), parent, wb.flurstuecke );
+        final FlurstueckTableViewer viewer = new FlurstueckTableViewer( uow(), parent, wb.flurstuecke ) {
+            @Override
+            protected void fieldChange( PropertyChangeEvent ev ) {
+                IStatus status = null;
+                if (!isDirty()) {
+                    status = Status.OK_STATUS;
+                }
+                else if (!isValid()) {
+                    status = new Status( IStatus.ERROR, WbvPlugin.ID, "Etwas stimmt noch nicht" );
+                }
+                else {
+                    status = new Status( IStatus.OK, WbvPlugin.ID, "Alle Eingaben sind in Ordnung" );
+                }
+                statusAdapter.updateStatusOf( this, status );
+            }
+        };
         getContext().propagate( viewer );
         viewer.getTable().setLayoutData( FormDataFactory.filled().right( 100, -33 ).height( 250 ).create() );
         
@@ -398,6 +480,39 @@ public class WaldbesitzerPanel
                 }
             });
         }
+        return section;
+    }
+
+
+    protected Section createEreignisSection( final Composite parent, final Ereignis ereignis ) {
+        String titel = WbvPlugin.df.format( ereignis.geaendert.get() ) +  " - " + ereignis.titel.get();
+        final Section section = tk.createSection( parent, titel, TREE_NODE | Section.SHORT_TITLE_BAR | Section.FOCUS_TITLE );
+        section.setToolTipText( ereignis.geaendertVon.get() );
+        //((Composite)section.getClient()).setLayout( new FillLayout() );
+
+        // form
+        final EreignisForm form = new EreignisForm( ereignis, getSite() );
+        form.createContents( tk.createComposite( (Composite)section.getClient() ) );
+
+        form.addFieldListener( new IFormFieldListener() {
+            public void fieldChange( FormFieldEvent ev ) {
+                if (ev.getEventCode() == VALUE_CHANGE) {
+                    if (ev.getFieldName().equals( ereignis.titel.info().getName() )
+                            && !section.isDisposed()) {
+                        section.setText( (String)ev.getNewFieldValue() );
+                        section.layout();
+                    }
+                    
+                    ereignis.geaendert.set( new Date() );
+                    ereignis.geaendertVon.set( Polymap.instance().getUser().getName() );
+                }
+            }
+        });
+        
+        EnableSubmitFormFieldListener listener = new EnableSubmitFormFieldListener( form );
+        form.addFieldListener( listener );
+        eForms.put( form, listener );
+
         return section;
     }
 

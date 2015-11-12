@@ -45,6 +45,8 @@ import org.polymap.model2.store.recordstore.RecordStoreAdapter;
 import org.polymap.recordstore.IRecordStore;
 import org.polymap.recordstore.lucene.LuceneRecordStore;
 import org.polymap.wbv.WbvPlugin;
+import org.polymap.wbv.model.fulltext.WbvTokenizer;
+import org.polymap.wbv.model.fulltext.WaldbesitzerFulltextTransformer;
 
 /**
  * 
@@ -94,12 +96,13 @@ public class WbvRepository {
 //            }
 
             //
-            BooleanQuery.setMaxClauseCount( 4 * 1024 );
+            BooleanQuery.setMaxClauseCount( 8 * 1024 );
             log.info( "Maximale Anzahl Lucene-Klauseln erhöht auf: " + BooleanQuery.getMaxClauseCount() );
             
             // init fulltext
             File wbvDir = new File( Polymap.getDataDir(), WbvPlugin.ID );
             fulltextIndex = new LuceneFulltextIndex( new File( wbvDir, "fulltext" ) );
+            fulltextIndex.setTokenizer( new WbvTokenizer() );
             fulltextIndex.addTokenFilter( new LowerCaseTokenFilter() );
             
             WaldbesitzerFulltextTransformer wbTransformer = new WaldbesitzerFulltextTransformer();

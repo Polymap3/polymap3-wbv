@@ -64,6 +64,10 @@ public class Waldbesitzer
         Kirche( "Kirchenwald", null ),
         Privat( "Privatwald", null ),
         /** Nach dem Import kein bekannter Wert */
+        T( "Nicht bestimmt (Code: T)", null ),
+        B( "Nicht bestimmt (Code: B)", null ),
+        A( "Nicht bestimmt (Code: A)", null ),
+        L( "Nicht bestimmt (Code: L)", null ),
         Unbekannt( "Unbekannt", null );
         
         private String      name;
@@ -117,6 +121,8 @@ public class Waldbesitzer
     @Defaults
     public Property<Integer>            besitzerIndex;
 
+    public CollectionProperty<Ereignis> ereignisse;
+    
 
     public Kontakt besitzer() {
         return Iterables.get( kontakte, besitzerIndex.get(), null );

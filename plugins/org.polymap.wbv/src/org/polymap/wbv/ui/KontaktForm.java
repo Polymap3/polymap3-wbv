@@ -24,6 +24,8 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
 
+import org.eclipse.ui.forms.widgets.ColumnLayoutData;
+
 import org.polymap.core.ui.ColumnLayoutFactory;
 
 import org.polymap.rhei.batik.IPanelSite;
@@ -32,8 +34,11 @@ import org.polymap.rhei.field.IFormFieldLabel;
 import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.PicklistFormField;
+import org.polymap.rhei.field.TextFormField;
 import org.polymap.rhei.form.DefaultFormPage;
 import org.polymap.rhei.form.IFormPageSite;
+import org.polymap.rhei.form.batik.BatikFormContainer;
+
 import org.polymap.wbv.model.Kontakt;
 
 /**
@@ -116,7 +121,13 @@ public class KontaktForm
         formSite.newFormField( new PropertyAdapter( kontakt.fax ) ).label.put( "Fax" ).create();
         
         // Adresse
-        new AdresseForm( kontakt, panelSite ).createFormContents( formSite );
+        new BatikFormContainer( new AdresseForm( kontakt, panelSite ) ).createContents( body );
+        
+        // Bemerkung 
+        formSite.newFormField( new PropertyAdapter( kontakt.bemerkung ) )
+                .field.put( new TextFormField() )
+                .tooltip.put( "Zusätzliche Informationen zu diesem Kontakt.\nZum Besipiel: 'Besitzer', 'Ansprechpartner', 'Verwalter', 'Erbengemeinschaft'" )
+                .create().setLayoutData( new ColumnLayoutData( SWT.DEFAULT, 80 ) );
     }
     
 }

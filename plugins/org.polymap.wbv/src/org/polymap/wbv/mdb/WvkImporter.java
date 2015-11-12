@@ -37,11 +37,12 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
+import org.polymap.model2.query.ResultSet;
+import org.polymap.model2.runtime.UnitOfWork;
+import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.core.runtime.SubMonitor;
 import org.polymap.core.ui.StatusDispatcher;
 
-import org.polymap.model2.runtime.UnitOfWork;
-import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
@@ -96,9 +97,22 @@ public class WvkImporter
                 }
             });
             monitor.worked( 10 );
+
+            SubMonitor submon = null;
+            
+            // Waldbesitzer löschen
+            submon = new SubMonitor( monitor, 10 );
+            ResultSet<Waldbesitzer> wbs = uow.query( Waldbesitzer.class ).execute();
+            submon.beginTask( "Waldbesitzer löschen", wbs.size() );
+            for (Waldbesitzer wb : wbs) {
+                uow.removeEntity( wb );
+                submon.worked( 1 );
+            }
+            uow.commit();
+            submon.done();
    
             // Waldbesitzer
-            SubMonitor submon = new SubMonitor( monitor, 10 );
+            submon = new SubMonitor( monitor, 10 );
             final MdbEntityImporter<Waldbesitzer> wbImporter = new MdbEntityImporter( uow, Waldbesitzer.class );
             Table table = db.getTable( wbImporter.getTableName() );
             submon.beginTask( "Waldbesitzer", table.getRowCount() );
@@ -116,9 +130,14 @@ public class WvkImporter
                             case "P": proto.eigentumsArt.set( Waldeigentumsart.Privat ); break;
                             case "K42": proto.eigentumsArt.set( Waldeigentumsart.Kirche ); break;
                             case "C": proto.eigentumsArt.set( Waldeigentumsart.Körperschaft_Kommune ); break;
+                            case "T": proto.eigentumsArt.set( Waldeigentumsart.T ); break;
+                            case "B": proto.eigentumsArt.set( Waldeigentumsart.B ); break;
+                            case "A": proto.eigentumsArt.set( Waldeigentumsart.A ); break;
+                            case "L": proto.eigentumsArt.set( Waldeigentumsart.L ); break;
                             default : {
                                 log.warn( "Unbekannte Eigentumsart: " + ea );
                                 proto.eigentumsArt.set( Waldeigentumsart.Unbekannt );
+                                break;
                             }
                         }
                         return proto;

@@ -15,13 +15,22 @@ package org.polymap.wbv.ui;
 import static com.google.common.collect.ImmutableList.copyOf;
 import static com.google.common.collect.Iterables.transform;
 import static java.util.Arrays.asList;
+import static org.polymap.model2.query.Expressions.and;
+import static org.polymap.model2.query.Expressions.anyOf;
+import static org.polymap.model2.query.Expressions.eq;
+import static org.polymap.model2.query.Expressions.id;
+import static org.polymap.model2.query.Expressions.the;
 import static org.polymap.wbv.ui.PropertyAdapter.descriptorFor;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
+
+import java.beans.PropertyChangeEvent;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -32,17 +41,25 @@ import org.eclipse.swt.widgets.Composite;
 
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 
+import org.polymap.model2.query.ResultSet;
+import org.polymap.model2.runtime.UnitOfWork;
+
+import org.polymap.core.runtime.event.EventFilter;
+import org.polymap.core.runtime.event.EventHandler;
+import org.polymap.core.runtime.event.EventManager;
+
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.NumberValidator;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.StringFormField;
 import org.polymap.rhei.table.FeatureTableViewer;
 import org.polymap.rhei.table.FormFeatureTableColumn;
+import org.polymap.rhei.table.IFeatureTableColumn;
 import org.polymap.rhei.table.IFeatureTableElement;
 
-import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
+import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.ui.CompositesFeatureContentProvider.FeatureTableElement;
 
 /**
@@ -60,9 +77,44 @@ public class FlurstueckTableViewer
     private UnitOfWork                  uow;
     
 
+    public boolean isDirty() {
+        for (IFeatureTableColumn col : displayed.values()) {
+            if (!((FormFeatureTableColumn)col).dirtyFids().isEmpty()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+
+    public boolean isValid() {
+        for (IFeatureTableColumn col : displayed.values()) {
+            if (!((FormFeatureTableColumn)col).invalidFids().isEmpty()) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    
+    @EventHandler( display=true )
+    protected void fieldChange( PropertyChangeEvent ev ) {
+        log.info( "isDirty: " + isDirty() + ", isValid: " + isValid() );
+    }
+
+    
     public FlurstueckTableViewer( UnitOfWork uow, Composite parent, Iterable<Flurstueck> rs ) {
-        super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | */SWT.FULL_SELECTION );
+        super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | */SWT.FULL_SELECTION | SWT.BORDER );
         this.uow = uow;
+        
+        // listen to column/field changes
+        EventManager.instance().subscribe( this, new EventFilter<PropertyChangeEvent>() {
+            @Override
+            public boolean apply( PropertyChangeEvent ev ) {
+                return displayed.values().contains( ev.getSource() );
+            }
+        });
+        
         try {
             // Gemarkung
             String propName = Flurstueck.TYPE.gemarkung.info().getName();
@@ -72,13 +124,13 @@ public class FlurstueckTableViewer
                 .setLabelProvider( lp[0] = new ColumnLabelProvider() {
                     @Override
                     public String getText( Object elm ) {
-                        Flurstueck entity = FeatureTableElement.entity( elm );
-                        Gemarkung gmk = entity.gemarkung.get();
-                        return gmk != null ? gmk.label() : "(kein Gemarkung)";
+                        return StringUtils.abbreviate( getToolTipText( elm ), 30 );
                     }
                     @Override
                     public String getToolTipText( Object elm ) {
-                        return getText( elm );
+                        Flurstueck entity = FeatureTableElement.entity( elm );
+                        Gemarkung gmk = entity.gemarkung.get();
+                        return gmk != null ? gmk.label() : "(kein Gemarkung)";
                     }
                 })
                 .setEditing( new PicklistFormField( Gemarkung.all.get() ), null )
@@ -101,10 +153,10 @@ public class FlurstueckTableViewer
                         return super.transform2Field( modelValue );
                     }
                 })
-                .setEditing( new StringFormField(), new NotEmptyValidator() ) );
+                .setEditing( new StringFormField(), new FlurstueckExistsValidator() ) );
             
             // Fläche
-            NumberValidator flaecheValidator = new NumberValidator( Double.class, Locale.GERMANY, 10, 4, 1, 4 );
+            NumberValidator flaecheValidator = new NumberValidator( Double.class, Locale.GERMANY, 10, 2, 1, 2 );
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.flaeche ) )
                 .setWeight( 1, 60 )
                 .setHeader( "Fläche\n(in ha)" )
@@ -117,7 +169,7 @@ public class FlurstueckTableViewer
                 .setWeight( 1, 60 )
                 .setHeader( "Wald\n(in ha)" )
                 .setLabelProvider( flaecheValidator )
-                .setEditing( new StringFormField(), flaecheValidator )
+                .setEditing( new StringFormField(), new WaldflaecheValidator() )
                 .setSortable( false ) );  // standard comparator: ClassCastException wenn null
 
             // Bemerkung
@@ -171,4 +223,87 @@ public class FlurstueckTableViewer
         }));
     }
 
+    
+    /**
+     * 
+     */
+    class FlurstueckExistsValidator
+            extends NotEmptyValidator
+            implements ITableFieldValidator {
+        
+        Flurstueck      flurstueck;
+
+        @Override
+        public void init( IFeatureTableElement elm ) {
+            flurstueck = FeatureTableElement.entity( elm );
+        }
+        
+        @Override
+        public String validate( Object fieldValue ) {
+            String notEmpty = super.validate( fieldValue );
+            if (notEmpty != null) {
+                return notEmpty;
+            }
+            else {
+                if (fieldValue.equals( flurstueck.zaehlerNenner.get() )) {
+                    return null;
+                }
+                else {
+                    Gemarkung gmk = flurstueck.gemarkung.get();
+                    if (gmk == null) {
+                        return "Noch keine Gemarkung";
+                    }
+                    else {
+                        ResultSet<Waldbesitzer> rs = uow.query( Waldbesitzer.class )
+                                .where( anyOf( Waldbesitzer.TYPE.flurstuecke, 
+                                        and(
+                                                the( Flurstueck.TYPE.gemarkung, id( gmk.id() ) ),
+                                                eq( Flurstueck.TYPE.zaehlerNenner, (String)fieldValue ) ) ) )
+                                .execute();
+                        return rs.size() == 0 ? null : "Dieser Zähler/Nenner existiert bereits";
+                    }
+                }
+            }
+        }
+    }
+    
+
+    /**
+     * 
+     */
+    class WaldflaecheValidator
+            extends NumberValidator
+            implements ITableFieldValidator {
+        
+        Flurstueck      flurstueck;
+
+        public WaldflaecheValidator() {
+            super( Double.class, Locale.GERMANY, 10, 2, 1, 2 );
+        }
+
+        @Override
+        public void init( IFeatureTableElement elm ) {
+            flurstueck = FeatureTableElement.entity( elm );
+        }
+
+        @Override
+        public String validate( Object fieldValue ) {
+            String isNumber = super.validate( fieldValue );
+            if (isNumber != null) {
+                return isNumber;
+            }
+            else {
+                try {
+                    Double flaeche = flurstueck.flaeche.get();
+                    Double neueWaldflaeche = (Double)super.transform2Model( fieldValue );
+                    return flaeche == null || neueWaldflaeche > flaeche ? "Dieser Zähler/Nenner existiert bereits" : null;
+                }
+                catch (Exception e) {
+                    log.warn( "", e );
+                    return "Fehler beim validieren der Eingabe: " + e.getLocalizedMessage(); 
+                }
+            }
+        }
+    }
+    
 }
