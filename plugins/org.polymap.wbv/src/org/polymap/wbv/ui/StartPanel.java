@@ -36,7 +36,7 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 
 import org.eclipse.core.runtime.Status;
 import org.eclipse.rap.rwt.RWT;
-import org.eclipse.rap.rwt.service.ISettingStore;
+import org.eclipse.rap.rwt.service.SettingStore;
 
 import org.polymap.core.mapeditor.ContextMenuSite;
 import org.polymap.core.mapeditor.IContextMenuContribution;
@@ -124,7 +124,9 @@ public class StartPanel
         section.addConstraint( new PriorityConstraint( 0 ), WbvPlugin.MIN_COLUMN_WIDTH );
 
         LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), user ) {
-            ISettingStore       settings = RWT.getSettingStore();
+            
+            SettingStore        settings = RWT.getSettingStore();
+            
             @Override
             public void createFormContents( IFormPageSite site ) {
                 String cookieRevier = settings.getAttribute( WbvPlugin.ID + ".revier" );
@@ -136,6 +138,7 @@ public class StartPanel
                         .create();
                 super.createFormContents( site );
             }
+            
             @Override
             protected boolean login( String name, String passwd ) {
                 if (super.login( name, passwd )) {

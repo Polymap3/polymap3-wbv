@@ -14,11 +14,11 @@
          point="org.eclipse.rap.ui.branding">
       <branding
             id="org.polymap.wbv.branding"
-            themeId="org.polymap.rhei.batik.theme"
+            themeId="org.polymap.rhei.batik.materialDesign"
             title="WBV">
          <additionalHeaders>
             <link
-                  href="wbvres/css/flowtext.css"
+                  href="batikres/css/roboto.css"
                   rel="stylesheet">
             </link>
             <!--link

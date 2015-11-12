@@ -39,7 +39,7 @@ public class Revier {
     /**
      * Alle Reviere: Reviername -> {@link Revier}
      */
-    public static Lazy<Map<String,Revier>> all = new CachedLazyInit( 1000, new Supplier<Map<String,Revier>>() {
+    public static Lazy<Map<String,Revier>> all = new CachedLazyInit( new Supplier<Map<String,Revier>>() {
         public Map<String,Revier> get() {
             UnitOfWork uow = WbvRepository.instance.get().newUnitOfWork();
             Map<String,Revier> result = new TreeMap();

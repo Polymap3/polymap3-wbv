@@ -106,7 +106,7 @@ public class KontaktForm
         formSite.newFormField( new PropertyAdapter( kontakt.email ) )
                 .label.put( "E-Mail" )
                 .tooltip.put( "Die E-Mail-Adresse des kontaktes. Beispiel: info@example.com" )
-                .validator.put( new EMailAddressValidator() )
+                .validator.put( new EMailAddressValidator().msg.put( "Das ist keine gültige E-Mail-Adresse" ) )
                 .create();
 
         formSite.newFormField( new PropertyAdapter( kontakt.telefon1 ) ).label.put( "Telefon1" ).create();

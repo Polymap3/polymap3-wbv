@@ -47,7 +47,7 @@ public class Gemarkung
     public static Gemarkung         TYPE = null;
 
     /** {@link #label()} -> Gemarkung */
-    public static Lazy<Map<String,Gemarkung>> all = new CachedLazyInit( 1000, new Supplier<Map<String,Gemarkung>>() {
+    public static Lazy<Map<String,Gemarkung>> all = new CachedLazyInit( new Supplier<Map<String,Gemarkung>>() {
         public Map<String,Gemarkung> get() {
             UnitOfWork uow = WbvRepository.instance.get().newUnitOfWork();
             Map<String,Gemarkung> result = new TreeMap();

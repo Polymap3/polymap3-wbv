@@ -49,7 +49,6 @@ import org.polymap.core.ui.StatusDispatcher;
 
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IPanel;
-import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.IPanelSite.PanelStatus;
 import org.polymap.rhei.batik.PanelChangeEvent;
 import org.polymap.rhei.batik.PanelChangeEvent.EventType;
@@ -112,32 +111,32 @@ public class WaldbesitzerPanel
     public void init() {
         super.init();
 
-        // submit tool
-        submitAction = new Action( "Übernehmen" ) {
-            public void run() {
-                try {
-                    wbFormContainer.submit();
-                    for (BatikFormContainer formContainer : kForms.keySet()) {
-                        formContainer.submit();
-                    }
-                    closeUnitOfWork( Completion.STORE );
-                    getContext().closePanel( getSite().getPath() );
-                }
-                catch (Exception e) {
-                    StatusDispatcher.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );
-                }
-            }
-        };
-        submitAction.setToolTipText( "Änderungen in die Datenbank übernehmen" );
-        submitAction.setEnabled( false );
-        submitAction.setDescription( IPanelSite.SUBMIT );
-        getSite().addToolbarAction( submitAction );
+//        // submit tool
+//        submitAction = new Action( "Übernehmen" ) {
+//            public void run() {
+//                try {
+//                    wbFormContainer.submit( false );
+//                    for (BatikFormContainer formContainer : kForms.keySet()) {
+//                        formContainer.submit( false );
+//                    }
+//                    closeUnitOfWork( Completion.STORE );
+//                    getContext().closePanel( getSite().getPath() );
+//                }
+//                catch (Exception e) {
+//                    StatusDispatcher.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );
+//                }
+//            }
+//        };
+//        submitAction.setToolTipText( "Änderungen in die Datenbank übernehmen" );
+//        submitAction.setEnabled( false );
+//        submitAction.setDescription( IPanelSite.SUBMIT );
+//        getSite().addToolbarAction( submitAction );
 
         //
         getContext().addListener( this, ev -> 
                 ev.getPanel() == WaldbesitzerPanel.this && 
                 ev.getType() == EventType.LIFECYCLE &&
-                ev.getPanel().getSite().getPanelStatus() == PanelStatus.FOCUSED );
+                ev.getPanel().site().panelStatus() == PanelStatus.FOCUSED );
         
         statusAdapter = new SubmitStatusManager( this ).setSubmit( Enableable.of( submitAction ) );
     }

@@ -32,10 +32,11 @@ import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
 import org.polymap.core.runtime.Closer;
-import org.polymap.core.runtime.Polymap;
 import org.polymap.core.runtime.session.DefaultSessionContextProvider;
 import org.polymap.core.runtime.session.SessionContext;
+import org.polymap.core.security.SecurityContext;
 import org.polymap.core.security.SecurityUtils;
+import org.polymap.core.security.StandardConfiguration;
 import org.polymap.core.security.UserPrincipal;
 import org.polymap.core.ui.StatusDispatcher;
 
@@ -120,16 +121,24 @@ public class WbvPlugin
             }
 		});
 
+        // JAAS config: no dialog; let LoginPanel create UI
+        SecurityContext.registerConfiguration( () -> new StandardConfiguration() {
+            @Override
+            public String getConfigName() {
+                return SecurityContext.SERVICES_CONFIG_NAME;
+            }
+        });
+        
 		//
 		try {
-		    contextProvider.mapContext( "wbv_init", true );
-            Polymap.instance().addPrincipal( new AdminPrincipal() );
+//		    contextProvider.mapContext( "wbv_init", true );
+//            SecurityContext.instance().addPrincipal( new AdminPrincipal() );
 
             // init the global instance
             WbvRepository.instance.get();
 	    }
 		finally {
-            contextProvider.unmapContext();
+//            contextProvider.unmapContext();
 		}
 	}
 

@@ -1,6 +1,6 @@
+/*
 Display {
   rwt-fontlist: 12px Arial, sans-serif;
-  /*background-image: url(resources/icons/rap/display/browser_bg.png );*/
   font: 12px Arial, sans-serif;
 }
 * {
@@ -24,3 +24,4 @@ Button[PUSH][FLAT] {
 List-Item {
   padding: 5px 10px 5px 10px;
 }
+*/

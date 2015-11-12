@@ -22,7 +22,7 @@ import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.core.ui.UIUtils;
 
 import org.polymap.rhei.batik.app.IAppDesign;
-import org.polymap.rhei.batik.engine.DefaultAppDesign;
+import org.polymap.rhei.batik.toolkit.md.MdAppDesign;
 
 /**
  * 
@@ -30,18 +30,18 @@ import org.polymap.rhei.batik.engine.DefaultAppDesign;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class WbvAppDesign
-        extends DefaultAppDesign
+        extends MdAppDesign
         implements IAppDesign {
 
 
     @Override
     protected Composite fillHeaderArea( Composite parent ) {
         Composite result = new Composite( parent, SWT.NO_FOCUS );
-        UIUtils.setVariant( result, IAppDesign.CSS_HEADER );
+        UIUtils.setVariant( result, CSS_HEADER );
         
         result.setLayout( FormLayoutFactory.defaults().margins( 5, 0, 0, 0 ).create() );
         Label l = new Label( result, SWT.NONE );
-        UIUtils.setVariant( l, IAppDesign.CSS_HEADER );
+        UIUtils.setVariant( l, CSS_HEADER );
 
         boolean showText = UIUtils.sessionDisplay().getClientArea().width > 900;
         l.setText( showText ? "Waldbesitzerverzeichnis" : "WBV" );
