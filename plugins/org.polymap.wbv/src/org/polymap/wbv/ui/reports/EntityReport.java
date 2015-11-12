@@ -39,7 +39,9 @@ import org.polymap.model2.Composite;
 import org.polymap.model2.Entity;
 import org.polymap.model2.Property;
 import org.polymap.model2.PropertyBase;
+import org.polymap.model2.runtime.CompositeInfo;
 import org.polymap.model2.runtime.PropertyInfo;
+import org.polymap.wbv.model.WbvRepository;
 
 import org.polymap.core.runtime.UIJob;
 
@@ -157,7 +159,14 @@ public abstract class EntityReport
             }
             else if (value instanceof Composite) {
                 JSONObject result = new JSONObject();
-                Collection<PropertyInfo> props = ((Composite)value).info().getProperties();
+                
+                // There is a annoying bug in this method that causes ((Kontakt)value).info()
+                // to return WaldbesitzerInfo; the impl below fixes this and keeps us indepent of
+                // value.info() implementation
+//                CompositeInfo<Composite> info = ((Composite)value).info();
+                CompositeInfo<Composite> info = WbvRepository.instance.get().repo().infoOf( (Class<Composite>)value.getClass() );
+
+                Collection<PropertyInfo> props = info.getProperties();
                 for (PropertyInfo propInfo : props) {
                     PropertyBase prop = propInfo.get( (Composite)value );
                     // Property
