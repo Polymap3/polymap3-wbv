@@ -78,7 +78,7 @@ public class Report105
         super.build();
         
         // datasource
-        JsonBuilderJob jsonBuilder = new JsonBuilderJob( entities ) {
+        JsonBuilder jsonBuilder = new JsonBuilder( entities ) {
             @Override
             protected Object buildJson( Object value ) {
                 Object result = super.buildJson( value );
@@ -149,7 +149,7 @@ public class Report105
             
 //            String name = (String)values.get( 0 );
 //            String vorname = (String)values.get( 1 );
-            return Joiner.on( ' ' ).skipNulls().join( /*anrede.get(),*/ vorname, name );
+            return Joiner.on( ", " ).skipNulls().join( /*anrede.get(),*/ name, vorname );
         }
     }
 }

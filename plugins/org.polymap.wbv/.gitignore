@@ -1,8 +1,4 @@
 /lib-static
-<<<<<<< HEAD
-/build/
-/lib/
-=======
 /build
 /lib
->>>>>>> refs/remotes/github/master
+**/*.pdf

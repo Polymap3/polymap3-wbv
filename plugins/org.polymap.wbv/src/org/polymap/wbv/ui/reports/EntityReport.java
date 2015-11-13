@@ -14,36 +14,34 @@
  */
 package org.polymap.wbv.ui.reports;
 
-import java.util.Collection;
-import java.util.Date;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
+import java.util.Collection;
+import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.eclipse.core.runtime.IProgressMonitor;
-
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Platform;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.polymap.core.runtime.UIJob;
 import org.polymap.model2.CollectionProperty;
 import org.polymap.model2.Composite;
-import org.polymap.model2.Entity;
 import org.polymap.model2.Property;
 import org.polymap.model2.PropertyBase;
 import org.polymap.model2.runtime.CompositeInfo;
+import org.polymap.model2.runtime.EntityRepository;
 import org.polymap.model2.runtime.PropertyInfo;
 import org.polymap.wbv.model.WbvRepository;
-
-import org.polymap.core.runtime.UIJob;
 
 /**
  * 
@@ -57,22 +55,16 @@ public abstract class EntityReport
     
     public static final DateFormat          df = new SimpleDateFormat( "dd.MM.yyyy" );
 
-    protected Iterable<? extends Entity>    entities;
+    protected Iterable<? extends Composite>    entities;
     
 
-    public EntityReport setEntities( Iterable<? extends Entity> entities ) {
+    public EntityReport setEntities( Iterable<? extends Composite> entities ) {
         this.entities = entities;
         return this;
     }
 
-    
-    /**
-     * 
-     */
-    protected static class JsonBuilderJob
-            extends UIJob {
-        
-        private Iterable<? extends Entity>  entities;
+    protected class JsonBuilder {
+        private Iterable<? extends Composite>  entities;
         
         private PipedOutputStream           out;
 
@@ -81,23 +73,36 @@ public abstract class EntityReport
         private int                         indent;
         
 
-        public JsonBuilderJob( Iterable<? extends Entity> entities ) {
-            super( "JsonBuilder" );
+        public JsonBuilder( Iterable<? extends Composite> entities ) {
             this.entities = entities;
         }
 
         
         public InputStream run() throws IOException {
+            if(Platform.isRunning()) {
+                JsonBuilderJob jsonBuilderJob = new JsonBuilderJob( this );
+                return jsonBuilderJob.run();
+            } else {
+                PipedInputStream result = createPipedInputStream();
+                try {
+                    runWithException(new NullProgressMonitor());
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return result;
+            }
+        }
+
+
+        PipedInputStream createPipedInputStream() throws UnsupportedEncodingException, IOException {
             assert out == null;
             out = new PipedOutputStream();
             writer = new OutputStreamWriter( out, "UTF8" );
             PipedInputStream result = new PipedInputStream( out, 4*1024 );
-            schedule();
             return result;
         }
         
-        
-        @Override
         protected void runWithException( IProgressMonitor monitor ) throws Exception {
             try {
                 monitor.beginTask( "Daten lesen", IProgressMonitor.UNKNOWN );
@@ -106,7 +111,7 @@ public abstract class EntityReport
                 
                 //
                 int count = 0;
-                for (Entity entity : entities) {
+                for (Composite entity : entities) {
                     JSONObject json = ((JSONObject)buildJson( entity ));
                     writeln( count++ > 0 ? "," : "", json.toString( 4 ) );
                     
@@ -164,7 +169,7 @@ public abstract class EntityReport
                 // to return WaldbesitzerInfo; the impl below fixes this and keeps us indepent of
                 // value.info() implementation
 //                CompositeInfo<Composite> info = ((Composite)value).info();
-                CompositeInfo<Composite> info = WbvRepository.instance.get().repo().infoOf( (Class<Composite>)value.getClass() );
+                CompositeInfo<Composite> info = getRepository().infoOf( (Class<Composite>)value.getClass() );
 
                 Collection<PropertyInfo> props = info.getProperties();
                 for (PropertyInfo propInfo : props) {
@@ -208,7 +213,38 @@ public abstract class EntityReport
                 throw new RuntimeException( e );
             }
         }
-        
-    }    
+    }
 
+    
+    protected EntityRepository getRepository() {
+        return WbvRepository.instance.get().repo();
+    }
+
+    
+    /**
+     * 
+     */
+    protected class JsonBuilderJob
+            extends UIJob {
+        
+        private JsonBuilder jsonBuilder;
+        
+        public JsonBuilderJob( JsonBuilder jsonBuilder ) {
+            super( "JsonBuilder" );
+            this.jsonBuilder = jsonBuilder;
+        }
+
+        
+        public InputStream run() throws IOException {
+            PipedInputStream result = jsonBuilder.createPipedInputStream();
+            schedule();
+            return result;
+        }
+        
+        
+        @Override
+        protected void runWithException( IProgressMonitor monitor ) throws Exception {
+            jsonBuilder.runWithException( monitor );
+        }
+    }    
 }

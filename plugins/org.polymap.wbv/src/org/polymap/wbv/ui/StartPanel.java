@@ -12,18 +12,24 @@
  */
 package org.polymap.wbv.ui;
 
-import java.util.Collections;
-import java.util.ArrayList;
-import java.util.List;
-
 import java.io.IOException;
-
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
+import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.ActionContributionItem;
+import org.eclipse.jface.action.ContributionItem;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
+import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.service.SettingStore;
+import org.eclipse.rap.rwt.widgets.ExternalBrowser;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -32,18 +38,6 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
-
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.ActionContributionItem;
-import org.eclipse.jface.action.ContributionItem;
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
-
-import org.eclipse.core.runtime.Status;
-import org.eclipse.rap.rwt.RWT;
-import org.eclipse.rap.rwt.service.SettingStore;
-import org.eclipse.rap.rwt.widgets.ExternalBrowser;
-
 import org.polymap.core.mapeditor.ContextMenuSite;
 import org.polymap.core.mapeditor.IContextMenuContribution;
 import org.polymap.core.mapeditor.IContextMenuProvider;
@@ -51,7 +45,8 @@ import org.polymap.core.runtime.i18n.IMessages;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.core.ui.UIUtils;
-
+import org.polymap.model2.query.Expressions;
+import org.polymap.rap.updownload.download.DownloadService;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.PanelIdentifier;
@@ -68,9 +63,6 @@ import org.polymap.rhei.fulltext.ui.FulltextProposal;
 import org.polymap.rhei.table.FeatureTableFilterBar;
 import org.polymap.rhei.um.ui.LoginPanel;
 import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
-
-import org.polymap.model2.query.Expressions;
-import org.polymap.rap.updownload.download.DownloadService;
 import org.polymap.wbv.Messages;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Flurstueck;
@@ -79,8 +71,9 @@ import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.WbvRepository;
 import org.polymap.wbv.ui.reports.DownloadableReport;
-import org.polymap.wbv.ui.reports.Report105;
 import org.polymap.wbv.ui.reports.DownloadableReport.OutputType;
+import org.polymap.wbv.ui.reports.Report101;
+import org.polymap.wbv.ui.reports.Report105;
 import org.polymap.wbv.ui.reports.WbvReport;
 
 /**
@@ -242,7 +235,7 @@ public class StartPanel
 
         // reports
         final List<WbvReport> reportsMap = new ArrayList();
-//        reportsMap.add( getContext().propagate( new Report101() ) );
+        reportsMap.add( getContext().propagate( new Report101() ) );
         reportsMap.add( getContext().propagate( new Report105() ) );
         
         final Combo reports = new Combo( body, SWT.BORDER | SWT.READ_ONLY );
