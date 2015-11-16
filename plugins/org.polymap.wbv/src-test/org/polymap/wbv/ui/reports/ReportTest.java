@@ -183,6 +183,7 @@ public class ReportTest {
         Gemarkung gem = unitOfWork.createEntity( Gemarkung.class, null );
         gem.gemeinde.set( gemeinde );
         gem.gemarkung.set( gemarkung );
+        gem.revier.set( "Geringswalde" );
         return gem;
     }
 
@@ -303,6 +304,16 @@ public class ReportTest {
             protected EntityRepository getRepository() {
                 return entityRepository;
             }
+            
+            @Override
+            protected String getQuery() {
+                return "Hedwig";
+            }
+
+            @Override
+            protected String getRevier() {
+                return "Geringswalde";
+            }            
         };
         executeTest( entityRepository, wbs, report, "report106c_", counter );
     }
