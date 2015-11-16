@@ -17,35 +17,25 @@ package org.polymap.wbv.ui.reports;
 import static net.sf.dynamicreports.report.builder.DynamicReports.asc;
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
-import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
-import java.util.Date;
-import java.util.List;
-
 import java.io.IOException;
+import java.util.Date;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
-import net.sf.dynamicreports.report.builder.expression.AbstractComplexExpression;
 import net.sf.dynamicreports.report.constant.PageOrientation;
 import net.sf.dynamicreports.report.constant.PageType;
-import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.data.JsonDataSource;
 
-import org.json.JSONObject;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import com.google.common.base.Joiner;
-
+import org.json.JSONObject;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.Scope;
-
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
@@ -56,16 +46,16 @@ import org.polymap.wbv.model.Waldbesitzer;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class Report105
-        extends WbvReport {
+        extends WaldbesitzerReport {
 
-    private static Log log = LogFactory.getLog( Report105.class );
-    
+    private static Log      log = LogFactory.getLog( Report105.class );
+
     @Scope("org.polymap.wbv.ui")
-    private Context<Revier>         revier;
-    
+    private Context<Revier> revier;
+
     @Scope("org.polymap.wbv.ui")
-    private Context<String>         queryString;
-    
+    private Context<String> queryString;
+
 
     @Override
     public String getName() {
@@ -76,9 +66,10 @@ public class Report105
     @Override
     public JasperReportBuilder build() throws DRException, JRException, IOException {
         super.build();
-        
+
         // datasource
         JsonBuilder jsonBuilder = new JsonBuilder( entities ) {
+
             @Override
             protected Object buildJson( Object value ) {
                 Object result = super.buildJson( value );
@@ -94,62 +85,29 @@ public class Report105
                 return result;
             }
         };
-        
+
         // report
         TextColumnBuilder<String> nameColumn = col.column( "Waldbesitzer", new NameExpr() );
         TextColumnBuilder<Double> flaecheColumn = col.column( "Fläche (Wald)", "gesamtWald", type.doubleType() )
                 .setValueFormatter( new NumberFormatter( 1, 4, 100, 4 ) );
-        
+
         return report()
-            .setDataSource( new JsonDataSource( jsonBuilder.run() ) )
+                .setDataSource( new JsonDataSource( jsonBuilder.run() ) )
 
-            .setPageFormat( PageType.A4, PageOrientation.PORTRAIT )
-            .title( 
-                    cmp.text( "Waldflächen der Waldbesitzer" ).setStyle( titleStyle ),
-                    cmp.text( "Forstbezirk: Mittelsachsen" ).setStyle( headerStyle ),
-                    cmp.text( "Revier: " + revier.get().name + " / Abfrage: \"" + queryString.get() + "\"" ).setStyle( headerStyle ),
-                    //cmp.text( "Abfrage: \"" + queryString.get() + "\"" ).setStyle( headerStyle ),
-                    cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
-                    cmp.text( "" ).setStyle( headerStyle ) )
-            .pageFooter( cmp.pageXofY().setStyle( footerStyle ) ) // number of page
+                .setPageFormat( PageType.A4, PageOrientation.PORTRAIT )
+                .title( cmp.text( "Waldflächen der Waldbesitzer" ).setStyle( titleStyle ),
+                        cmp.text( "Forstbezirk: Mittelsachsen" ).setStyle( headerStyle ),
+                        cmp.text( "Revier: " + revier.get().name + " / Abfrage: \"" + queryString.get() + "\"" )
+                                .setStyle( headerStyle ),
+                        // cmp.text( "Abfrage: \"" + queryString.get() + "\""
+                        // ).setStyle( headerStyle ),
+                        cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
+                        cmp.text( "" ).setStyle( headerStyle ) ).pageFooter( cmp.pageXofY().setStyle( footerStyle ) )
+                // number of page
 
-            .highlightDetailOddRows()
-            .setDetailOddRowStyle( highlightRowStyle )
-            
-            .setColumnTitleStyle( columnTitleStyle )
-            .columns( nameColumn, flaecheColumn )
-            .sortBy( asc( nameColumn ) );
-    }
+                .highlightDetailOddRows().setDetailOddRowStyle( highlightRowStyle )
 
-    
-    /**
-     * 
-     */
-    static class NameExpr 
-            extends AbstractComplexExpression<String> {
-
-        public NameExpr() {
-            addExpression( field( "besitzerIndex", Integer.class ) );
-            addExpression( field( "kontakte[0].name", String.class ) );
-            addExpression( field( "kontakte[0].vorname", String.class ) );
-            addExpression( field( "kontakte[0].organisation", String.class ) );
-            addExpression( field( "kontakte[1].name", String.class ) );
-            addExpression( field( "kontakte[1].vorname", String.class ) );
-            addExpression( field( "kontakte[1].organisation", String.class ) );
-            addExpression( field( "kontakte[2].name", String.class ) );
-            addExpression( field( "kontakte[2].vorname", String.class ) );
-            addExpression( field( "kontakte[2].organisation", String.class ) );
-        }
-        
-        @Override
-        public String evaluate( List<?> values, ReportParameters params ) {
-            Integer besitzerIndex = params.getFieldValue( "besitzerIndex" );
-            String name = params.getFieldValue( "kontakte[" + besitzerIndex + "].name" );
-            String vorname = params.getFieldValue( "kontakte[" + besitzerIndex + "].vorname" );
-            
-//            String name = (String)values.get( 0 );
-//            String vorname = (String)values.get( 1 );
-            return Joiner.on( ", " ).skipNulls().join( /*anrede.get(),*/ name, vorname );
-        }
+                .setColumnTitleStyle( columnTitleStyle ).columns( nameColumn, flaecheColumn )
+                .sortBy( asc( nameColumn ) );
     }
 }

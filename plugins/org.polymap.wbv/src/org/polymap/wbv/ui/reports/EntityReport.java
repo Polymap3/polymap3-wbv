@@ -42,6 +42,7 @@ import org.polymap.model2.runtime.CompositeInfo;
 import org.polymap.model2.runtime.EntityRepository;
 import org.polymap.model2.runtime.PropertyInfo;
 import org.polymap.wbv.model.WbvRepository;
+import org.polymap.wbv.ui.reports.WbvReport.NumberFormatter;
 
 /**
  * 
@@ -51,41 +52,46 @@ import org.polymap.wbv.model.WbvRepository;
 public abstract class EntityReport
         extends DownloadableReport {
 
-    private static Log log = LogFactory.getLog( EntityReport.class );
-    
-    public static final DateFormat          df = new SimpleDateFormat( "dd.MM.yyyy" );
+    private static Log                      log = LogFactory.getLog( EntityReport.class );
 
-    protected Iterable<? extends Composite>    entities;
-    
+    public static final DateFormat          df  = new SimpleDateFormat( "dd.MM.yyyy" );
+
+    public static final NumberFormatter     nf  = new NumberFormatter( 1, 4, 100, 4 );
+
+    protected Iterable<? extends Composite> entities;
+
 
     public EntityReport setEntities( Iterable<? extends Composite> entities ) {
         this.entities = entities;
         return this;
     }
 
-    protected class JsonBuilder {
-        private Iterable<? extends Composite>  entities;
-        
-        private PipedOutputStream           out;
 
-        private OutputStreamWriter          writer;
-        
-        private int                         indent;
-        
+    protected class JsonBuilder {
+
+        private Iterable<? extends Composite> entities;
+
+        private PipedOutputStream             out;
+
+        private OutputStreamWriter            writer;
+
+        private int                           indent;
+
 
         public JsonBuilder( Iterable<? extends Composite> entities ) {
             this.entities = entities;
         }
 
-        
+
         public InputStream run() throws IOException {
-            if(Platform.isRunning()) {
+            if (Platform.isRunning()) {
                 JsonBuilderJob jsonBuilderJob = new JsonBuilderJob( this );
                 return jsonBuilderJob.run();
-            } else {
+            }
+            else {
                 PipedInputStream result = createPipedInputStream();
                 try {
-                    runWithException(new NullProgressMonitor());
+                    runWithException( new NullProgressMonitor() );
                 }
                 catch (Exception e) {
                     e.printStackTrace();
@@ -99,22 +105,23 @@ public abstract class EntityReport
             assert out == null;
             out = new PipedOutputStream();
             writer = new OutputStreamWriter( out, "UTF8" );
-            PipedInputStream result = new PipedInputStream( out, 4*1024 );
+            PipedInputStream result = new PipedInputStream( out, 4 * 1024 );
             return result;
         }
-        
+
+
         protected void runWithException( IProgressMonitor monitor ) throws Exception {
             try {
                 monitor.beginTask( "Daten lesen", IProgressMonitor.UNKNOWN );
                 // prefix
                 writeln( "[" );
-                
+
                 //
                 int count = 0;
                 for (Composite entity : entities) {
                     JSONObject json = ((JSONObject)buildJson( entity ));
                     writeln( count++ > 0 ? "," : "", json.toString( 4 ) );
-                    
+
                     monitor.worked( 1 );
                     monitor.subTask( "Objekte: " + count );
                     if (monitor.isCanceled()) {
@@ -132,7 +139,7 @@ public abstract class EntityReport
             }
         }
 
-        
+
         /**
          * 
          * <p/>
@@ -143,7 +150,7 @@ public abstract class EntityReport
          * @return
          */
         protected Object buildJson( Object value ) {
-            log.info( StringUtils.rightPad( "", indent+=4 ) + value );
+            log.info( StringUtils.rightPad( "", indent += 4 ) + value );
             if (value == null) {
                 return "null";
             }
@@ -164,11 +171,13 @@ public abstract class EntityReport
             }
             else if (value instanceof Composite) {
                 JSONObject result = new JSONObject();
-                
-                // There is a annoying bug in this method that causes ((Kontakt)value).info()
-                // to return WaldbesitzerInfo; the impl below fixes this and keeps us indepent of
+
+                // There is a annoying bug in this method that causes
+                // ((Kontakt)value).info()
+                // to return WaldbesitzerInfo; the impl below fixes this and keeps us
+                // indepent of
                 // value.info() implementation
-//                CompositeInfo<Composite> info = ((Composite)value).info();
+                // CompositeInfo<Composite> info = ((Composite)value).info();
                 CompositeInfo<Composite> info = getRepository().infoOf( (Class<Composite>)value.getClass() );
 
                 Collection<PropertyInfo> props = info.getProperties();
@@ -182,7 +191,7 @@ public abstract class EntityReport
                     else if (prop instanceof CollectionProperty) {
                         JSONArray array = new JSONArray();
                         for (Object propValue : ((CollectionProperty)prop)) {
-                            array.put( buildJson( propValue ) );                            
+                            array.put( buildJson( propValue ) );
                         }
                         result.put( propInfo.getName(), array );
                     }
@@ -197,8 +206,8 @@ public abstract class EntityReport
                 throw new IllegalStateException( "Unknown value type: " + value );
             }
         }
-        
-        
+
+
         protected void writeln( String... strings ) {
             try {
                 for (String s : strings) {
@@ -215,36 +224,37 @@ public abstract class EntityReport
         }
     }
 
-    
+
     protected EntityRepository getRepository() {
         return WbvRepository.instance.get().repo();
     }
 
-    
+
     /**
      * 
      */
     protected class JsonBuilderJob
             extends UIJob {
-        
+
         private JsonBuilder jsonBuilder;
-        
+
+
         public JsonBuilderJob( JsonBuilder jsonBuilder ) {
             super( "JsonBuilder" );
             this.jsonBuilder = jsonBuilder;
         }
 
-        
+
         public InputStream run() throws IOException {
             PipedInputStream result = jsonBuilder.createPipedInputStream();
             schedule();
             return result;
         }
-        
-        
+
+
         @Override
         protected void runWithException( IProgressMonitor monitor ) throws Exception {
             jsonBuilder.runWithException( monitor );
         }
-    }    
+    }
 }
