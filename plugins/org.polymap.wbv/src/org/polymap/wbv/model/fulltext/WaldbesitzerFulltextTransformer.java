@@ -19,10 +19,10 @@ import java.util.regex.Pattern;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.core.model2.Association;
-import org.polymap.core.model2.CollectionProperty;
-import org.polymap.core.model2.Composite;
-import org.polymap.core.model2.Property;
+import org.polymap.model2.Association;
+import org.polymap.model2.CollectionProperty;
+import org.polymap.model2.Composite;
+import org.polymap.model2.Property;
 import org.polymap.rhei.fulltext.model2.EntityFeatureTransformer;
 
 import org.polymap.wbv.model.Flurstueck;
@@ -68,7 +68,7 @@ public class WaldbesitzerFulltextTransformer
     @Override
     protected boolean visitCompositeCollectionProperty( CollectionProperty prop ) {
         // Flurstueck
-        if (Flurstueck.class.isAssignableFrom( prop.getInfo().getType() )) {
+        if (Flurstueck.class.isAssignableFrom( prop.info().getType() )) {
             for (Object fst : prop) {
                 visitFlurstueck( (Flurstueck)fst );
             }

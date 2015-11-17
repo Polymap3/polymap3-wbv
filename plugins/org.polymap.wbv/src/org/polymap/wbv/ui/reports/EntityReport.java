@@ -14,32 +14,35 @@
  */
 package org.polymap.wbv.ui.reports;
 
-import java.util.Collection;
-import java.util.Date;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
+import java.util.Date;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.eclipse.core.runtime.IProgressMonitor;
-
-import org.polymap.core.model2.CollectionProperty;
-import org.polymap.core.model2.Composite;
-import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.Property;
-import org.polymap.core.model2.PropertyBase;
-import org.polymap.core.model2.runtime.PropertyInfo;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.Platform;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.polymap.core.runtime.UIJob;
+import org.polymap.model2.CollectionProperty;
+import org.polymap.model2.Composite;
+import org.polymap.model2.Property;
+import org.polymap.model2.PropertyBase;
+import org.polymap.model2.runtime.CompositeInfo;
+import org.polymap.model2.runtime.EntityRepository;
+import org.polymap.model2.runtime.PropertyInfo;
+import org.polymap.wbv.model.WbvRepository;
+import org.polymap.wbv.ui.reports.WbvReport.NumberFormatter;
 
 /**
  * 
@@ -49,61 +52,76 @@ import org.polymap.core.runtime.UIJob;
 public abstract class EntityReport
         extends DownloadableReport {
 
-    private static Log log = LogFactory.getLog( EntityReport.class );
-    
-    public static final DateFormat          df = new SimpleDateFormat( "dd.MM.yyyy" );
+    private static Log                      log = LogFactory.getLog( EntityReport.class );
 
-    protected Iterable<? extends Entity>    entities;
-    
+    public static final DateFormat          df  = new SimpleDateFormat( "dd.MM.yyyy" );
 
-    public EntityReport setEntities( Iterable<? extends Entity> entities ) {
+    public static final NumberFormatter     nf  = new NumberFormatter( 1, 4, 100, 4 );
+
+    protected Iterable<? extends Composite> entities;
+
+
+    public EntityReport setEntities( Iterable<? extends Composite> entities ) {
         this.entities = entities;
         return this;
     }
 
-    
-    /**
-     * 
-     */
-    protected static class JsonBuilderJob
-            extends UIJob {
-        
-        private Iterable<? extends Entity>  entities;
-        
-        private PipedOutputStream           out;
 
-        private OutputStreamWriter          writer;
-        
+    protected class JsonBuilder {
 
-        public JsonBuilderJob( Iterable<? extends Entity> entities ) {
-            super( "JsonBuilder" );
+        private Iterable<? extends Composite> entities;
+
+        private PipedOutputStream             out;
+
+        private OutputStreamWriter            writer;
+
+        private int                           indent;
+
+
+        public JsonBuilder( Iterable<? extends Composite> entities ) {
             this.entities = entities;
         }
 
-        
+
         public InputStream run() throws IOException {
+            if (Platform.isRunning()) {
+                JsonBuilderJob jsonBuilderJob = new JsonBuilderJob( this );
+                return jsonBuilderJob.run();
+            }
+            else {
+                PipedInputStream result = createPipedInputStream();
+                try {
+                    runWithException( new NullProgressMonitor() );
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+                return result;
+            }
+        }
+
+
+        PipedInputStream createPipedInputStream() throws UnsupportedEncodingException, IOException {
             assert out == null;
             out = new PipedOutputStream();
             writer = new OutputStreamWriter( out, "UTF8" );
-            PipedInputStream result = new PipedInputStream( out, 4*1024 );
-            schedule();
+            PipedInputStream result = new PipedInputStream( out, 4 * 1024 );
             return result;
         }
-        
-        
-        @Override
+
+
         protected void runWithException( IProgressMonitor monitor ) throws Exception {
             try {
                 monitor.beginTask( "Daten lesen", IProgressMonitor.UNKNOWN );
                 // prefix
                 writeln( "[" );
-                
+
                 //
                 int count = 0;
-                for (Entity entity : entities) {
+                for (Composite entity : entities) {
                     JSONObject json = ((JSONObject)buildJson( entity ));
                     writeln( count++ > 0 ? "," : "", json.toString( 4 ) );
-                    
+
                     monitor.worked( 1 );
                     monitor.subTask( "Objekte: " + count );
                     if (monitor.isCanceled()) {
@@ -121,7 +139,7 @@ public abstract class EntityReport
             }
         }
 
-        
+
         /**
          * 
          * <p/>
@@ -132,6 +150,7 @@ public abstract class EntityReport
          * @return
          */
         protected Object buildJson( Object value ) {
+            log.info( StringUtils.rightPad( "", indent += 4 ) + value );
             if (value == null) {
                 return "null";
             }
@@ -152,7 +171,16 @@ public abstract class EntityReport
             }
             else if (value instanceof Composite) {
                 JSONObject result = new JSONObject();
-                Collection<PropertyInfo> props = ((Composite)value).info().getProperties();
+
+                // There is a annoying bug in this method that causes
+                // ((Kontakt)value).info()
+                // to return WaldbesitzerInfo; the impl below fixes this and keeps us
+                // indepent of
+                // value.info() implementation
+                // CompositeInfo<Composite> info = ((Composite)value).info();
+                CompositeInfo<Composite> info = getRepository().infoOf( (Class<Composite>)value.getClass() );
+
+                Collection<PropertyInfo> props = info.getProperties();
                 for (PropertyInfo propInfo : props) {
                     PropertyBase prop = propInfo.get( (Composite)value );
                     // Property
@@ -163,7 +191,7 @@ public abstract class EntityReport
                     else if (prop instanceof CollectionProperty) {
                         JSONArray array = new JSONArray();
                         for (Object propValue : ((CollectionProperty)prop)) {
-                            array.put( buildJson( propValue ) );                            
+                            array.put( buildJson( propValue ) );
                         }
                         result.put( propInfo.getName(), array );
                     }
@@ -178,8 +206,8 @@ public abstract class EntityReport
                 throw new IllegalStateException( "Unknown value type: " + value );
             }
         }
-        
-        
+
+
         protected void writeln( String... strings ) {
             try {
                 for (String s : strings) {
@@ -194,7 +222,39 @@ public abstract class EntityReport
                 throw new RuntimeException( e );
             }
         }
-        
-    }    
+    }
 
+
+    protected EntityRepository getRepository() {
+        return WbvRepository.instance.get().repo();
+    }
+
+
+    /**
+     * 
+     */
+    protected class JsonBuilderJob
+            extends UIJob {
+
+        private JsonBuilder jsonBuilder;
+
+
+        public JsonBuilderJob( JsonBuilder jsonBuilder ) {
+            super( "JsonBuilder" );
+            this.jsonBuilder = jsonBuilder;
+        }
+
+
+        public InputStream run() throws IOException {
+            PipedInputStream result = jsonBuilder.createPipedInputStream();
+            schedule();
+            return result;
+        }
+
+
+        @Override
+        protected void runWithException( IProgressMonitor monitor ) throws Exception {
+            jsonBuilder.runWithException( monitor );
+        }
+    }
 }

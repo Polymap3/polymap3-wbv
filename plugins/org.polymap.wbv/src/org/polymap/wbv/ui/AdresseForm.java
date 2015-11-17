@@ -14,18 +14,19 @@
  */
 package org.polymap.wbv.ui;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.eclipse.swt.widgets.Composite;
 
 import org.polymap.core.ui.ColumnLayoutFactory;
+
 import org.polymap.rhei.batik.IPanelSite;
-import org.polymap.rhei.batik.app.FormContainer;
 import org.polymap.rhei.field.IFormFieldLabel;
 import org.polymap.rhei.field.NotEmptyValidator;
-import org.polymap.rhei.form.IFormEditorPageSite;
+import org.polymap.rhei.form.DefaultFormPage;
+import org.polymap.rhei.form.IFormPageSite;
 import org.polymap.wbv.model.Adresse;
 
 /**
@@ -34,7 +35,7 @@ import org.polymap.wbv.model.Adresse;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class AdresseForm
-        extends FormContainer {
+        extends DefaultFormPage {
 
     private static Log log = LogFactory.getLog( AdresseForm.class );
     
@@ -52,22 +53,23 @@ public class AdresseForm
 
 
     @Override
-    public void createFormContent( final IFormEditorPageSite formSite ) {
+    public void createFormContents( final IFormPageSite formSite ) {
         body = formSite.getPageBody();
 //        if (body.getLayout() == null) {
             body.setLayout( ColumnLayoutFactory.defaults().spacing( 3 ).margins( 10, 10 ).columns( 1, 1 ).create() );
 //        }
 
-        createField( body, new PropertyAdapter( adresse.strasse ) )
-                .setLabel( "Strasse" ).setToolTipText( "Strasse und Hausnummer" )
-                .setValidator( new NotEmptyValidator() )
+        formSite.newFormField( new PropertyAdapter( adresse.strasse ) )
+                .label.put( "Strasse" ).tooltip.put( "Strasse und Hausnummer" )
+                .validator.put( new NotEmptyValidator() )
                 .create();
                 //.setLayoutData( FormDataFactory.filled().right( 75 ).create() );
 
         Composite city = panelSite.toolkit().createComposite( body );
-        createField( city, new PropertyAdapter( adresse.plz ) )
-                .setLabel( "PLZ / Ort" )
-                .setValidator( new NotEmptyValidator() {
+        formSite.newFormField( new PropertyAdapter( adresse.plz ) )
+                .parent.put( city )
+                .label.put( "PLZ / Ort" )
+                .validator.put( new NotEmptyValidator() {
                     @Override
                     public String validate( Object fieldValue ) {
                         String result = super.validate( fieldValue );
@@ -84,17 +86,18 @@ public class AdresseForm
                 })
                 .create();
 
-        createField( city, new PropertyAdapter( adresse.ort ) )
-                .setLabel( IFormFieldLabel.NO_LABEL )
-                .setValidator( new NotEmptyValidator() )
+        formSite.newFormField( new PropertyAdapter( adresse.ort ) )
+                .parent.put( city )
+                .label.put( IFormFieldLabel.NO_LABEL )
+                .validator.put( new NotEmptyValidator() )
                 .create();
 
-        createField( body, new PropertyAdapter( adresse.ortsteil ) )
-                .setLabel( "Ortsteil" ).setToolTipText( "Ortsteil" )
+        formSite.newFormField( new PropertyAdapter( adresse.ortsteil ) )
+                .label.put( "Ortsteil" ).tooltip.put( "Ortsteil" )
                 .create();
 
-        createField( body, new PropertyAdapter( adresse.land ) )
-                .setLabel( "Land" ).setToolTipText( "Land" )
+        formSite.newFormField( new PropertyAdapter( adresse.land ) )
+                .label.put( "Land" ).tooltip.put( "Land" )
                 .create();
     }
 

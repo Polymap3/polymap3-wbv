@@ -29,8 +29,8 @@ import org.apache.commons.logging.LogFactory;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import org.polymap.core.data.operation.DownloadServiceHandler.ContentProvider;
 import org.polymap.core.runtime.UIJob;
+import org.polymap.rap.updownload.download.DownloadService;
 
 /**
  * Base class for downloadable Jasper reports. The report can serve as a
@@ -40,7 +40,7 @@ import org.polymap.core.runtime.UIJob;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public abstract class DownloadableReport
-        implements ContentProvider {
+        implements DownloadService.ContentProvider {
 
     private static Log log = LogFactory.getLog( DownloadableReport.class );
     

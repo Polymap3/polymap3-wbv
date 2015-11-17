@@ -23,7 +23,7 @@ import java.util.Map;
 
 import java.beans.PropertyChangeEvent;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -47,24 +47,22 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
-import org.polymap.core.model2.runtime.ValueInitializer;
+import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.core.runtime.Polymap;
 import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
+import org.polymap.core.ui.StatusDispatcher;
 
-import org.polymap.rhei.batik.ContextProperty;
-import org.polymap.rhei.batik.IAppContext;
+import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IPanel;
-import org.polymap.rhei.batik.IPanelSite;
+import org.polymap.rhei.batik.IPanelSite.PanelStatus;
 import org.polymap.rhei.batik.PanelChangeEvent;
-import org.polymap.rhei.batik.PanelChangeEvent.TYPE;
+import org.polymap.rhei.batik.PanelChangeEvent.EventType;
 import org.polymap.rhei.batik.PanelIdentifier;
-import org.polymap.rhei.batik.app.BatikApplication;
 import org.polymap.rhei.batik.app.Enableable;
-import org.polymap.rhei.batik.app.FormContainer;
 import org.polymap.rhei.batik.app.SubmitStatusManager;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
@@ -73,7 +71,9 @@ import org.polymap.rhei.field.FormFieldEvent;
 import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.TextFormField;
-import org.polymap.rhei.form.IFormEditorPageSite;
+import org.polymap.rhei.form.DefaultFormPage;
+import org.polymap.rhei.form.IFormPageSite;
+import org.polymap.rhei.form.batik.BatikFormContainer;
 
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Ereignis;
@@ -84,8 +84,8 @@ import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
 
 /**
  * Dieses Panel zeigt einen {@link Waldbesitzer} und erlaubt es dessen Properties zu
- * verändern. Die Entity wird als {@link ContextProperty} übergeben. Ist dieses bei
- * {@link TYPE#ACTIVATED Aktivierung} null, dann wird eine neue Entity erzeugt.
+ * verändern. Die Entity wird als {@link Context} übergeben. Ist dieses bei
+ * {@link EventType#ACTIVATED Aktivierung} null, dann wird eine neue Entity erzeugt.
  * 
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
@@ -97,17 +97,17 @@ public class WaldbesitzerPanel
 
     public static final PanelIdentifier   ID  = new PanelIdentifier( "wbv", "waldbesitzer" );
 
-    private ContextProperty<Waldbesitzer> wbParam;
+    private Context<Waldbesitzer>         wbParam;
     
     private Waldbesitzer                  wb;
 
     private IPanelToolkit                 tk;
 
-    private WaldbesitzerForm              wbForm;
+    private BatikFormContainer            wbFormContainer;
 
     private IFormFieldListener            wbFormListener;
 
-    private Map<KontaktForm,IFormFieldListener> kForms = new HashMap();
+    private Map<BatikFormContainer,IFormFieldListener> kForms = new HashMap();
 
     private Map<EreignisForm,IFormFieldListener> eForms = new HashMap();
 
@@ -119,44 +119,37 @@ public class WaldbesitzerPanel
 
 
     @Override
-    public boolean init( IPanelSite site, IAppContext context ) {
-        super.init( site, context );
+    public void init() {
+        super.init();
 
-        // submit tool
-        submitAction = new Action( "Übernehmen" ) {
-            public void run() {
-                try {
-                    wbForm.submit();
-                    for (KontaktForm form : kForms.keySet()) {
-                        form.submit();
-                    }
-                    for (EreignisForm form : eForms.keySet()) {
-                        form.submit();
-                    }
-                    closeUnitOfWork( Completion.STORE );
-                    getContext().closePanel( getSite().getPath() );
-                }
-                catch (Exception e) {
-                    BatikApplication.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );
-                }
-            }
-        };
-        submitAction.setToolTipText( "Änderungen in die Datenbank übernehmen" );
-        submitAction.setEnabled( false );
-        submitAction.setDescription( IPanelSite.SUBMIT );
-        site.addToolbarAction( submitAction );
+//        // submit tool
+//        submitAction = new Action( "Übernehmen" ) {
+//            public void run() {
+//                try {
+//                    wbFormContainer.submit( false );
+//                    for (BatikFormContainer formContainer : kForms.keySet()) {
+//                        formContainer.submit( false );
+//                    }
+//                    closeUnitOfWork( Completion.STORE );
+//                    getContext().closePanel( getSite().getPath() );
+//                }
+//                catch (Exception e) {
+//                    StatusDispatcher.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );
+//                }
+//            }
+//        };
+//        submitAction.setToolTipText( "Änderungen in die Datenbank übernehmen" );
+//        submitAction.setEnabled( false );
+//        submitAction.setDescription( IPanelSite.SUBMIT );
+//        getSite().addToolbarAction( submitAction );
 
         //
-        getContext().addListener( this, new EventFilter<PanelChangeEvent>() {
-            public boolean apply( PanelChangeEvent input ) {
-                return input.getPanel() == WaldbesitzerPanel.this && input.getType() == TYPE.ACTIVATING;
-            }
-        });
+        getContext().addListener( this, ev -> 
+                ev.getPanel() == WaldbesitzerPanel.this && 
+                ev.getType() == EventType.LIFECYCLE &&
+                ev.getPanel().site().panelStatus() == PanelStatus.FOCUSED );
         
         statusAdapter = new SubmitStatusManager( this ).setSubmit( Enableable.of( submitAction ) );
-        
-        // nur Anzeigen wenn direkt aufgerufen
-        return false;
     }
 
 
@@ -167,12 +160,12 @@ public class WaldbesitzerPanel
         wb = null;
         
         if (wbFormListener != null) {
-            wbForm.removeFieldListener( wbFormListener );
+            wbFormContainer.removeFieldListener( wbFormListener );
         }
-        for (Map.Entry<KontaktForm,IFormFieldListener> entry : kForms.entrySet()) {
+        for (Map.Entry<BatikFormContainer,IFormFieldListener> entry : kForms.entrySet()) {
             entry.getKey().removeFieldListener( entry.getValue() );
         }
-        for (Map.Entry<EreignisForm,IFormFieldListener> entry : eForms.entrySet()) {
+        for (Map.Entry<BatikFormContainer,IFormFieldListener> entry : eForms.entrySet()) {
             entry.getKey().removeFieldListener( entry.getValue() );
         }
         super.dispose();
@@ -237,8 +230,9 @@ public class WaldbesitzerPanel
         IPanelSection basis = tk.createPanelSection( parent, "Basisdaten", IPanelSection.EXPANDABLE );
         basis.addConstraint( WbvPlugin.MIN_COLUMN_WIDTH, new PriorityConstraint( 100 ) );
         
-        (wbForm = new WaldbesitzerForm()).createContents( basis );
-        wbForm.addFieldListener( wbFormListener = new EnableSubmitFormFieldListener( wbForm ) );
+        wbFormContainer = new BatikFormContainer( new WaldbesitzerForm() );
+        wbFormContainer.createContents( basis );
+        wbFormContainer.addFieldListener( wbFormListener = new EnableSubmitFormFieldListener( wbFormContainer ) );
 
         // Kontakte
         final IPanelSection besitzer = tk.createPanelSection( parent, "Besitzer/Kontakte" );
@@ -326,9 +320,9 @@ public class WaldbesitzerPanel
 //        catch (Exception e) {
 //            throw new RuntimeException( e );
 //        }
-//    
-//        // context menu
-//        //map.getContextMenu().addProvider( new WaldflaechenMenu() );
+    
+        // context menu
+        //map.getContextMenu().addProvider( new WaldflaechenMenu() );
 //        map.getContextMenu().addProvider( new IContextMenuProvider() {
 //            @Override
 //            public IContextMenuContribution createContribution() {
@@ -407,7 +401,7 @@ public class WaldbesitzerPanel
 //                log.info( wb.toString() );
 //                log.info( "Flurstücke: " + Iterables.toString( wb.flurstuecke ) );
                 if (!success) {
-                    BatikApplication.handleError( "Eintrag konnte nicht gelöscht werden.", null );
+                    StatusDispatcher.handleError( "Eintrag konnte nicht gelöscht werden.", null );
                 }
                 //viewer.setInput( wb.flurstuecke );
                 viewer.refresh( true );
@@ -423,14 +417,18 @@ public class WaldbesitzerPanel
         ((Composite)section.getClient()).setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
 
         // KontaktForm
-        final KontaktForm form = new KontaktForm( kontakt, getSite() );
-        form.createContents( tk.createComposite( (Composite)section.getClient() ) )
-                .setLayoutData( FormDataFactory.filled().right( 100, -33 ).create() );
+        KontaktForm form = new KontaktForm( kontakt, getSite() );
+        BatikFormContainer formContainer = new BatikFormContainer( form );
+        formContainer.createContents( (Composite)section.getClient() );
+        formContainer.getContents().setLayoutData( FormDataFactory.filled().right( 100, -33 ).create() );
 
-        form.addFieldListener( new IFormFieldListener() {
+        
+        // FIXME this listener gets soon GCed
+        // after porting KontaktForm to page the hackish hard reference is no longer there
+        formContainer.addFieldListener( new IFormFieldListener() {
             public void fieldChange( FormFieldEvent ev ) {
                 if (ev.getEventCode() == VALUE_CHANGE 
-                        && ev.getFieldName().equals( kontakt.name.getInfo().getName() )
+                        && ev.getFieldName().equals( kontakt.name.info().getName() )
                         && !section.isDisposed()) {
                     section.setText( (String)ev.getNewFieldValue() );
                     section.layout();
@@ -438,9 +436,9 @@ public class WaldbesitzerPanel
             }
         });
         
-        EnableSubmitFormFieldListener listener = new EnableSubmitFormFieldListener( form );
-        form.addFieldListener( listener );
-        kForms.put( form, listener );
+        EnableSubmitFormFieldListener listener = new EnableSubmitFormFieldListener( formContainer );
+        formContainer.addFieldListener( listener );
+        kForms.put( formContainer, listener );
         
         // addBtn
         Button addBtn = tk.createButton( (Composite)section.getClient(), "+", SWT.PUSH );
@@ -499,7 +497,7 @@ public class WaldbesitzerPanel
         form.addFieldListener( new IFormFieldListener() {
             public void fieldChange( FormFieldEvent ev ) {
                 if (ev.getEventCode() == VALUE_CHANGE) {
-                    if (ev.getFieldName().equals( ereignis.titel.getInfo().getName() )
+                    if (ev.getFieldName().equals( ereignis.titel.info().getName() )
                             && !section.isDisposed()) {
                         section.setText( (String)ev.getNewFieldValue() );
                         section.layout();
@@ -519,34 +517,28 @@ public class WaldbesitzerPanel
     }
 
     
-    @Override
-    public PanelIdentifier id() {
-        return ID;
-    }
-
-
     /**
      * 
      */
     class WaldbesitzerForm
-            extends FormContainer {
+            extends DefaultFormPage {
 
         @Override
-        public void createFormContent( IFormEditorPageSite site ) {
+        public void createFormContents( IFormPageSite site ) {
             Composite body = site.getPageBody();
             body.setLayout( ColumnLayoutFactory.defaults().spacing( 3 ).margins( 10, 10 ).columns( 1, 1 ).create() );
 
             assert wb != null;
 
-            createField( body, new PropertyAdapter( wb.eigentumsArt ) )
-                    .setLabel( "Eigentumsart" )
-                    .setField( new PicklistFormField( Waldeigentumsart.map() ) )
+            site.newFormField( new PropertyAdapter( wb.eigentumsArt ) )
+                    .label.put( "Eigentumsart" )
+                    .field.put( new PicklistFormField( Waldeigentumsart.map() ) )
                     .create();
 
-            createField( body, new PropertyAdapter( wb.pächter ) ).create();
+            site.newFormField( new PropertyAdapter( wb.pächter ) ).create();
 
-            createField( body, new PropertyAdapter( wb.bemerkung ) )
-                    .setField( new TextFormField() )
+            site.newFormField( new PropertyAdapter( wb.bemerkung ) )
+                    .field.put( new TextFormField() )
                     .create().setLayoutData( new ColumnLayoutData( SWT.DEFAULT, 80 ) );
         }
     }
@@ -558,9 +550,9 @@ public class WaldbesitzerPanel
     class EnableSubmitFormFieldListener
             implements IFormFieldListener {
 
-        private FormContainer       form;
+        private BatikFormContainer       form;
 
-        public EnableSubmitFormFieldListener( FormContainer form ) {
+        public EnableSubmitFormFieldListener( BatikFormContainer form ) {
             this.form = form;
         }
 

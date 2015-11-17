@@ -1,0 +1,260 @@
+/* 
+ * polymap.org
+ * Copyright (C) 2015, Falko Bräutigam. All rights reserved.
+ *
+ * This is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation; either version 3.0 of
+ * the License, or (at your option) any later version.
+ *
+ * This software is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Lesser General Public License for more details.
+ */
+package org.polymap.wbv.ui.reports;
+
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.col;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
+import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
+import static net.sf.dynamicreports.report.builder.DynamicReports.template;
+import static net.sf.dynamicreports.report.builder.DynamicReports.type;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
+import net.sf.dynamicreports.report.builder.ReportTemplateBuilder;
+import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
+import net.sf.dynamicreports.report.constant.GroupHeaderLayout;
+import net.sf.dynamicreports.report.constant.HorizontalAlignment;
+import net.sf.dynamicreports.report.constant.PageOrientation;
+import net.sf.dynamicreports.report.constant.PageType;
+import net.sf.dynamicreports.report.constant.Position;
+import net.sf.dynamicreports.report.exception.DRException;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.data.JsonDataSource;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.json.JSONObject;
+import org.polymap.rhei.batik.Context;
+import org.polymap.rhei.batik.Scope;
+import org.polymap.wbv.model.Flurstueck;
+import org.polymap.wbv.model.Gemarkung;
+import org.polymap.wbv.model.Revier;
+import org.polymap.wbv.model.Waldbesitzer;
+import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
+
+/**
+ * Waldflächen aller Waldbesitzer.
+ *
+ * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
+ */
+public class Report106c
+        extends WbvReport {
+
+    private static Log      log = LogFactory.getLog( Report106c.class );
+
+    @Scope("org.polymap.wbv.ui")
+    private Context<Revier> revier;
+
+    @Scope("org.polymap.wbv.ui")
+    private Context<String> queryString;
+
+
+    @Override
+    public String getName() {
+        return "WBV 1.06c";
+    }
+
+
+    @Override
+    public JasperReportBuilder build() throws DRException, JRException, IOException {
+        super.build();
+
+        List<Gemarkung> gemarkungen = new ArrayList<Gemarkung>();
+        Map<Gemarkung,List<Flurstueck>> gemarkung2Flurstuecke = new HashMap<Gemarkung,List<Flurstueck>>();
+        Map<Flurstueck,String> flurstuecke2Art = new HashMap<Flurstueck,String>();
+
+        entities.forEach( entity -> {
+            if (entity instanceof Waldbesitzer) {
+                Waldbesitzer wb = (Waldbesitzer)entity;
+                wb.flurstuecke.forEach( flurstueck -> {
+                    Gemarkung gemarkung = flurstueck.gemarkung.get();
+                    gemarkungen.add(gemarkung);
+                    List<Flurstueck> fs = getFlurstueckeForGemarkung( gemarkung2Flurstuecke, gemarkung );
+                    fs.add( flurstueck );
+                    gemarkung2Flurstuecke.put( gemarkung, fs );
+                    flurstuecke2Art.put( flurstueck, getArt(wb.eigentumsArt.get()) );
+                } );
+            }
+        } );
+
+        List<String> arten = new ArrayList<String>();
+        arten.add("LW");
+        arten.add("BW");
+        arten.add("KiW4_2");
+        // TODO
+        // arten.add("KiW\nnach §4/3");                
+        arten.add("PW");
+        arten.add("TW");
+        arten.add("Kow_KoeW");
+        arten.add("ohne_ea");
+
+        Map<String, String> artenLabels = new HashMap<String, String>();
+        artenLabels.put("LW", "LW");
+        artenLabels.put("BW", "BW");
+        artenLabels.put("KiW4_2", "KiW\nnach §4/2");
+        // TODO
+        // artenLabels.put("KiW\nnach §4/3");                
+        artenLabels.put("PW", "PW");
+        artenLabels.put("TW", "TW");
+        artenLabels.put("Kow_KoeW", "Kow/KöW");
+        artenLabels.put("ohne_ea", "ohne EA");
+
+        // datasource
+        JsonBuilder jsonBuilder = new JsonBuilder( gemarkungen ) {
+
+            @Override
+            protected Object buildJson( Object value ) {
+                Object result = super.buildJson( value );
+                //
+                if (value instanceof Gemarkung) {
+                    JSONObject resultObj = (JSONObject)result;
+                    Gemarkung gemarkungObj = (Gemarkung)value;
+                    String gemeinde = gemarkungObj.gemeinde.get();
+                    resultObj.put( "gemeinde", gemeinde );
+                    String gemarkung = gemarkungObj.gemarkung.get();
+                    resultObj.put( "gemarkung", gemarkung );
+                    double totalSum = 0d, sum = 0d;
+                    for (Flurstueck f : gemarkung2Flurstuecke.get( gemarkungObj )) {
+                        if (flurstuecke2Art.get( f ) == null) {
+                            sum += f.flaecheWald.get();
+                        }
+                    }
+                    resultObj.put( "ohne_ea", sum );
+                    for (String art : arten) {
+                        sum = 0d;
+                        for (Flurstueck f : gemarkung2Flurstuecke.get( gemarkungObj )) {
+                            if (flurstuecke2Art.get( f ).equals(art)) {
+                                sum += f.flaecheWald.get();
+                            }
+                        }
+                        resultObj.put( art, sum );
+                        totalSum += sum;
+                    }
+                    resultObj.put( "gesamt", totalSum );
+                }
+                return result;
+            }
+        };
+
+        // report
+        TextColumnBuilder<String> gemeindeColumn = col.column( "Gemeinde", "gemeinde", type.stringType() );
+        TextColumnBuilder<String> gemarkungColumn = col.column( "Gemarkung", "gemarkung", type.stringType() );
+
+        List<TextColumnBuilder<Double>> flaecheColumns = new ArrayList<TextColumnBuilder<Double>>();
+        TextColumnBuilder<Double> flaecheColumn;
+        for (String art : arten) {
+            flaecheColumn = col.column( artenLabels.get( art ), art, type.doubleType() ).setValueFormatter(
+                    new NumberFormatter( 1, 2, 100, 2 ) );
+            flaecheColumns.add( flaecheColumn );
+        }
+        TextColumnBuilder<Double> sumColumn = col.column( "Summe", "gesamt", type.doubleType() ).setValueFormatter(
+                new NumberFormatter( 1, 2, 100, 2 ) );
+
+        ReportTemplateBuilder templateBuilder = template();
+        templateBuilder.setGroupShowColumnHeaderAndFooter( false );
+        templateBuilder.setGroupHeaderLayout( GroupHeaderLayout.VALUE );
+        templateBuilder.setSubtotalLabelPosition( Position.BOTTOM );
+        templateBuilder.setSubtotalStyle( stl.style().setTopBorder( stl.pen1Point() ) );
+        templateBuilder.setGroupStyle( stl.style( stl.style().bold() )
+                .setHorizontalAlignment( HorizontalAlignment.LEFT ) );
+        templateBuilder.setGroupTitleStyle( stl.style( stl.style().bold() ).setHorizontalAlignment(
+                HorizontalAlignment.LEFT ) );
+
+        JasperReportBuilder report = report()
+                .setTemplate( templateBuilder )
+                .setDataSource( new JsonDataSource( jsonBuilder.run() ) )
+
+                .setPageFormat( PageType.A4, PageOrientation.LANDSCAPE )
+                .title( cmp.text( "Flächenverzeichnis nach Gemarkung und EA" ).setStyle( titleStyle ),
+                        cmp.text( "Basis: Waldfläche der Waldbesitzer" ).setStyle( headerStyle ),
+                        cmp.text( "Forstbezirk: Mittelsachsen" ).setStyle( headerStyle ),
+                        cmp.text( "Revier: " + getRevier() + " / Abfrage: \"" + getQuery() + "\"" ).setStyle(
+                                headerStyle ), cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
+                        cmp.text( "" ).setStyle( headerStyle ) ).pageFooter( cmp.pageXofY().setStyle( footerStyle ) )
+                // number of page
+                .setDetailOddRowStyle( highlightRowStyle ).setColumnTitleStyle( columnTitleStyle )
+                .sortBy( gemeindeColumn, gemarkungColumn );
+
+        report.addColumn( gemeindeColumn );
+        report.addColumn( gemarkungColumn );
+        for (TextColumnBuilder<Double> col : flaecheColumns) {
+            report.addColumn( col );
+        }
+        report.addColumn( sumColumn );
+        return report;
+    }
+
+
+    protected String getQuery() {
+        return queryString.get();
+    }
+
+
+    protected String getRevier() {
+        return revier.get().name;
+    }
+
+
+    private String getArt( Waldeigentumsart art ) {
+        if(art == null) {
+            return "ohne_ea";
+        }
+        String artStr = null;
+        switch (art) {
+            case Privat:
+                artStr = "PW";
+                break;
+            case Kirche:
+                artStr = "KiW4_2";
+                // TODO
+                // artStr = "KiW4_3";                
+                break;
+            case L:
+                artStr = "LW";
+                break;
+            case B:
+                artStr = "BW";
+                break;
+            case T:
+                artStr = "TW";
+                break;
+            case Unbekannt:
+                artStr = "ohne_ea";
+                break;
+            default:
+                artStr = "Kow_KoeW";
+                break;
+        }
+        return artStr;
+    }
+
+
+    private List<Flurstueck> getFlurstueckeForGemarkung( Map<Gemarkung,List<Flurstueck>> gemarkung2Flurstuecke,
+            Gemarkung key ) {
+        List<Flurstueck> fs = gemarkung2Flurstuecke.get( key );
+        if (fs == null) {
+            fs = new ArrayList<Flurstueck>();
+            gemarkung2Flurstuecke.put( key, fs );
+        }
+        return fs;
+    }
+}

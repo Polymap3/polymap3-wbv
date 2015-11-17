@@ -15,21 +15,22 @@ package org.polymap.wbv.ui;
 import static com.google.common.collect.ImmutableList.copyOf;
 import static com.google.common.collect.Iterables.transform;
 import static java.util.Arrays.asList;
-import static org.polymap.core.model2.query.Expressions.and;
-import static org.polymap.core.model2.query.Expressions.anyOf;
-import static org.polymap.core.model2.query.Expressions.eq;
-import static org.polymap.core.model2.query.Expressions.id;
-import static org.polymap.core.model2.query.Expressions.the;
+import static org.polymap.model2.query.Expressions.and;
+import static org.polymap.model2.query.Expressions.anyOf;
+import static org.polymap.model2.query.Expressions.eq;
+import static org.polymap.model2.query.Expressions.id;
+import static org.polymap.model2.query.Expressions.the;
 import static org.polymap.wbv.ui.PropertyAdapter.descriptorFor;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.FastDateFormat;
+
 import java.beans.PropertyChangeEvent;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.FastDateFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -40,11 +41,9 @@ import org.eclipse.swt.widgets.Composite;
 
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 
-import org.polymap.core.data.ui.featuretable.FeatureTableViewer;
-import org.polymap.core.data.ui.featuretable.IFeatureTableColumn;
-import org.polymap.core.data.ui.featuretable.IFeatureTableElement;
-import org.polymap.core.model2.query.ResultSet;
-import org.polymap.core.model2.runtime.UnitOfWork;
+import org.polymap.model2.query.ResultSet;
+import org.polymap.model2.runtime.UnitOfWork;
+
 import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
@@ -53,8 +52,10 @@ import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.NumberValidator;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.StringFormField;
+import org.polymap.rhei.table.FeatureTableViewer;
 import org.polymap.rhei.table.FormFeatureTableColumn;
-import org.polymap.rhei.table.ITableFieldValidator;
+import org.polymap.rhei.table.IFeatureTableColumn;
+import org.polymap.rhei.table.IFeatureTableElement;
 
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
@@ -103,7 +104,7 @@ public class FlurstueckTableViewer
 
     
     public FlurstueckTableViewer( UnitOfWork uow, Composite parent, Iterable<Flurstueck> rs ) {
-        super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | */SWT.FULL_SELECTION );
+        super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | */SWT.FULL_SELECTION | SWT.BORDER );
         this.uow = uow;
         
         // listen to column/field changes
@@ -116,7 +117,7 @@ public class FlurstueckTableViewer
         
         try {
             // Gemarkung
-            String propName = Flurstueck.TYPE.gemarkung.getInfo().getName();
+            String propName = Flurstueck.TYPE.gemarkung.info().getName();
             final ColumnLabelProvider lp[] = new ColumnLabelProvider[1];
             addColumn( new FormFeatureTableColumn( descriptorFor( propName, String.class ) )
                 .setWeight( 3, 80 )

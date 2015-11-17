@@ -14,8 +14,7 @@
  */
 package org.polymap.wbv.model.fulltext;
 
-import org.polymap.rhei.fulltext.indexing.FullTextTokenizer;
-import org.polymap.rhei.fulltext.update.UpdateableFullTextIndex;
+import org.polymap.rhei.fulltext.indexing.FulltextTokenizer;
 
 /**
  * Normale whitespace und special chars (.,;:-\\@"'()[]{}) als Token-Delimiter
@@ -25,7 +24,7 @@ import org.polymap.rhei.fulltext.update.UpdateableFullTextIndex;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class WbvTokenizer
-        implements FullTextTokenizer {
+        implements FulltextTokenizer {
 
     @Override
     public boolean isTokenChar( int c ) {

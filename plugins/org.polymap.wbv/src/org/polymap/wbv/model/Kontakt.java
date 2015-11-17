@@ -12,16 +12,14 @@
  */
 package org.polymap.wbv.model;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-
-import javax.annotation.Nullable;
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.Joiner;
 
-import org.polymap.core.model2.Defaults;
-import org.polymap.core.model2.Property;
-import org.polymap.core.model2.Queryable;
-
+import org.polymap.model2.Defaults;
+import org.polymap.model2.Nullable;
+import org.polymap.model2.Property;
+import org.polymap.model2.Queryable;
 import org.polymap.wbv.mdb.ImportColumn;
 import org.polymap.wbv.mdb.ImportTable;
 
@@ -107,7 +105,7 @@ public class Kontakt
      * falls die nicht vorhanden ist: Titel+Vorname+Familienname )
      */
     public String anzeigename() {
-        return !isEmpty( organisation.get() )
+        return !StringUtils.isEmpty( organisation.get() )
                 ? organisation.get()
                 : Joiner.on( ' ' ).skipNulls().join( /*anrede.get(),*/ vorname.get(), name.get() );
     }

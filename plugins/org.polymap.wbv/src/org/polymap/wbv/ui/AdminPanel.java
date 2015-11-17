@@ -24,7 +24,7 @@ import org.supercsv.io.CsvListReader;
 import org.supercsv.io.ICsvListReader;
 import org.supercsv.prefs.CsvPreference;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -32,29 +32,29 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
+
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
+import org.eclipse.rap.rwt.client.ClientFile;
 
-import org.polymap.core.model2.runtime.ValueInitializer;
 import org.polymap.core.operation.OperationSupport;
-import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.security.SecurityUtils;
-import org.polymap.core.ui.upload.IUploadHandler;
-import org.polymap.core.ui.upload.Upload;
+import org.polymap.core.ui.StatusDispatcher;
 
-import org.polymap.rhei.batik.IAppContext;
-import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.PropertyAccessEvent;
-import org.polymap.rhei.batik.app.BatikApplication;
 import org.polymap.rhei.batik.toolkit.ConstraintData;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
+import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 
+import org.polymap.model2.runtime.ValueInitializer;
+import org.polymap.rap.updownload.upload.IUploadHandler;
+import org.polymap.rap.updownload.upload.Upload;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.mdb.WvkImporter;
 import org.polymap.wbv.model.Baumart;
@@ -75,26 +75,18 @@ public class AdminPanel
 
 
     @Override
-    public PanelIdentifier id() {
-        return ID;
+    public boolean wantsToBeShown() {
+        return getSite().getPath().size() == 1;
     }
 
 
     @Override
-    public boolean init( IPanelSite site, IAppContext context ) {
-        super.init( site, context );
+    public void init() {
+        super.init();
 
-        if (site.getPath().size() == 1) {
-            // warten auf login
-            site.setTitle( null );
-            user.addListener( this, new EventFilter<PropertyAccessEvent>() {
-                public boolean apply( PropertyAccessEvent input ) {
-                    return input.getType() == PropertyAccessEvent.TYPE.SET;
-                }
-            });
-            return true;
-        }
-        return false;
+        // warten auf login
+        getSite().setTitle( null );
+        user.addListener( this, ev -> ev.getType() == PropertyAccessEvent.TYPE.SET );
     }
 
     
@@ -118,7 +110,7 @@ public class AdminPanel
     protected void createWkvSection( Composite parent ) {
         IPanelToolkit tk = getSite().toolkit();
         IPanelSection section = tk.createPanelSection( parent, "WKV-Daten: Import (WKV_dat.mdb)" );
-        section.addConstraint( new PriorityConstraint( 5 ), WbvPlugin.MIN_COLUMN_WIDTH );
+        section.addConstraint( new PriorityConstraint( 5 ), new MinWidthConstraint( 400, 1 ) );
 //        section.getBody().setData( WidgetUtil.CUSTOM_VARIANT, DesktopToolkit.CSS_FORM  );
 
         tk.createFlowText( section.getBody(), "Import von WKV-Daten aus einer MS-Access-Datei (WKV_dat.mdb).")
@@ -149,7 +141,7 @@ public class AdminPanel
                     });
                 }
                 catch (Exception e) {
-                    BatikApplication.handleError( "Der Import konnte nicht erfolgreich durchgeführt werden.", e );
+                    StatusDispatcher.handleError( "Der Import konnte nicht erfolgreich durchgeführt werden.", e );
                 }
             }
         });
@@ -176,10 +168,10 @@ public class AdminPanel
 
         IPanelSection formSection = tk.createPanelSection( section, null );
         formSection.addConstraint( new PriorityConstraint( 0 ) );
-        Upload upload = new Upload( formSection.getBody(), SWT.NONE );
+        Upload upload = new Upload( formSection.getBody(), SWT.NONE, Upload.SHOW_PROGRESS );
         upload.setHandler( new IUploadHandler() {
             @Override
-            public void uploadStarted( String name, String contentType, int contentLength, InputStream in ) throws Exception {
+            public void uploadStarted( ClientFile clientFile, InputStream in ) throws Exception {
                 // quoteChar, delimiterChar, endOfLineSymbols
                 CsvPreference prefs = new CsvPreference( '"', ',', "\r\n" );
                 ICsvListReader csv = new CsvListReader( new InputStreamReader( in, "UTF-8" ), prefs );
@@ -206,7 +198,7 @@ public class AdminPanel
                     closeUnitOfWork( Completion.STORE );
                 }
                 catch (Exception e) {
-                    BatikApplication.handleError( "Die Daten konnten nicht korrekt importiert werden.", e );
+                    StatusDispatcher.handleError( "Die Daten konnten nicht korrekt importiert werden.", e );
                 }
                 finally {
                     closeUnitOfWork( Completion.CANCEL );
@@ -233,10 +225,10 @@ public class AdminPanel
 
         IPanelSection formSection = tk.createPanelSection( section, null );
         formSection.addConstraint( new PriorityConstraint( 0 ) );
-        Upload upload = new Upload( formSection.getBody(), SWT.NONE );
+        Upload upload = new Upload( formSection.getBody(), SWT.NONE, Upload.SHOW_PROGRESS );
         upload.setHandler( new IUploadHandler() {
             @Override
-            public void uploadStarted( String name, String contentType, int contentLength, InputStream in ) throws Exception {
+            public void uploadStarted( ClientFile clientFile, InputStream in ) throws Exception {
                 // quoteChar, delimiterChar, endOfLineSymbols
                 CsvPreference prefs = new CsvPreference( '"', ',', "\r\n" );
                 ICsvListReader csv = new CsvListReader( new InputStreamReader( in, "UTF-8" ), prefs );
@@ -274,7 +266,7 @@ public class AdminPanel
                     log.info( "IMPORT: now in store: " + uow().query( Gemarkung.class ).execute().size() );
                 }
                 catch (Exception e) {
-                    BatikApplication.handleError( "Die Daten konnten nicht korrekt importiert werden.", e );
+                    StatusDispatcher.handleError( "Die Daten konnten nicht korrekt importiert werden.", e );
                 }
                 finally {
                     closeUnitOfWork( Completion.CANCEL );

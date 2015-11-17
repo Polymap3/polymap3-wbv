@@ -2,19 +2,24 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: WBV
 Bundle-SymbolicName: org.polymap.wbv;singleton:=true
-Bundle-Version: 1.0.0.qualifier
+Bundle-Version: 1.1.0.qualifier
 Bundle-Activator: org.polymap.wbv.WbvPlugin
 Bundle-Vendor: Polymap GmbH
-Require-Bundle: org.eclipse.core.runtime,
- org.polymap.core;bundle-version="3.1.0",
- org.polymap.core.data;bundle-version="3.2.0",
- org.polymap.core.catalog;bundle-version="3.1.0",
- org.polymap.rhei.form;bundle-version="2.1.0",
- org.polymap.rhei.batik;bundle-version="2.1.0",
- org.polymap.rhei.um;bundle-version="2.1.0",
- org.polymap.rhei.fulltext;bundle-version="2.1.0",
- org.polymap.openlayers.rap.widget;bundle-version="1.0.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Require-Bundle: org.eclipse.osgi.services,
+ org.eclipse.core.runtime,
+ org.polymap.core;bundle-version="4.0.0",
+ org.polymap.core.data;bundle-version="4.0.0",
+ org.polymap.core.mapeditor;bundle-version="4.0.0",
+ org.polymap.rhei.batik;bundle-version="4.0.0",
+ org.polymap.rhei.form;bundle-version="4.0.0",
+ org.polymap.rhei.form.batik;bundle-version="4.0.0",
+ org.polymap.rhei.um;bundle-version="4.0.0",
+ org.polymap.rhei.fulltext;bundle-version="4.0.0",
+ org.polymap.rap.openlayers;bundle-version="2.0.0",
+ org.polymap.rap.updownload;bundle-version="2.0.0",
+ org.polymap.model2;bundle-version="3.0.0",
+ org.polymap.model2.store.recordstore;bundle-version="3.0.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,
  lib/jackcess-2.0.4.jar,
@@ -35,4 +40,5 @@ Bundle-ClassPath: .,
  lib/jcommon-1.0.15.jar,
  lib/jfreechart-1.0.12.jar,
  lib/xml-apis-1.3.02.jar,
- lib/commons-lang3-3.1.jar
+ lib/commons-lang3-3.1.jar,
+ lib/commons-collections-3.2.1.jar

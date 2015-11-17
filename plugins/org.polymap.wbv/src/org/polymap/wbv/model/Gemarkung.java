@@ -15,22 +15,21 @@ package org.polymap.wbv.model;
 
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.google.common.base.Supplier;
-
-import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.Property;
-import org.polymap.core.model2.Queryable;
-import org.polymap.core.model2.runtime.ModelRuntimeException;
-import org.polymap.core.model2.runtime.UnitOfWork;
 import org.polymap.core.runtime.CachedLazyInit;
 import org.polymap.core.runtime.Lazy;
 
 import org.polymap.rhei.field.PicklistFormField;
 
+import org.polymap.model2.Entity;
+import org.polymap.model2.Property;
+import org.polymap.model2.Queryable;
+import org.polymap.model2.runtime.ModelRuntimeException;
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.wbv.mdb.ImportTable;
 import org.polymap.wbv.ui.FlurstueckTableViewer;
 
@@ -48,7 +47,7 @@ public class Gemarkung
     public static Gemarkung         TYPE = null;
 
     /** {@link #label()} -> Gemarkung */
-    public static Lazy<Map<String,Gemarkung>> all = new CachedLazyInit( 1000, new Supplier<Map<String,Gemarkung>>() {
+    public static Lazy<Map<String,Gemarkung>> all = new CachedLazyInit( new Supplier<Map<String,Gemarkung>>() {
         public Map<String,Gemarkung> get() {
             UnitOfWork uow = WbvRepository.instance.get().newUnitOfWork();
             Map<String,Gemarkung> result = new TreeMap();

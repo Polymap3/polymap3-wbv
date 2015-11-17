@@ -18,13 +18,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 
-import com.google.common.base.Supplier;
-
-import org.polymap.core.model2.query.ResultSet;
-import org.polymap.core.model2.runtime.UnitOfWork;
 import org.polymap.core.runtime.CachedLazyInit;
 import org.polymap.core.runtime.Lazy;
+
+import org.polymap.model2.query.ResultSet;
+import org.polymap.model2.runtime.UnitOfWork;
 
 /**
  * Siehe <a href="http://polymap.org/wbv/wiki/Konzept#r4r">Spezifikation</a>.
@@ -40,7 +40,7 @@ public class Revier {
     /**
      * Alle Reviere: Reviername -> {@link Revier}
      */
-    public static Lazy<Map<String,Revier>> all = new CachedLazyInit( 1000, new Supplier<Map<String,Revier>>() {
+    public static Lazy<Map<String,Revier>> all = new CachedLazyInit( new Supplier<Map<String,Revier>>() {
         public Map<String,Revier> get() {
             UnitOfWork uow = WbvRepository.instance.get().newUnitOfWork();
             Map<String,Revier> result = new TreeMap();

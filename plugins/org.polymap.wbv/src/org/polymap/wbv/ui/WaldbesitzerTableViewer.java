@@ -28,27 +28,29 @@ import org.geotools.feature.type.AttributeTypeImpl;
 import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.PropertyDescriptor;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.FastDateFormat;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 
-import org.polymap.core.data.ui.featuretable.DefaultFeatureTableColumn;
-import org.polymap.core.data.ui.featuretable.FeatureTableViewer;
-import org.polymap.core.data.ui.featuretable.IFeatureTableElement;
-import org.polymap.core.model2.runtime.UnitOfWork;
 import org.polymap.core.runtime.event.Event;
 import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
 
+import org.polymap.rhei.table.DefaultFeatureTableColumn;
+import org.polymap.rhei.table.FeatureTableViewer;
+import org.polymap.rhei.table.IFeatureTableElement;
+
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
 import org.polymap.wbv.model.Kontakt;

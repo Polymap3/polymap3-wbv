@@ -14,19 +14,18 @@ package org.polymap.wbv.model;
 
 import com.vividsolutions.jts.geom.MultiPolygon;
 
-import org.polymap.core.model2.Association;
-import org.polymap.core.model2.CollectionProperty;
-import org.polymap.core.model2.Entity;
-import org.polymap.core.model2.Property;
-import org.polymap.core.model2.Queryable;
-import org.polymap.core.model2.store.feature.SRS;
+import org.polymap.model2.Association;
+import org.polymap.model2.CollectionProperty;
+import org.polymap.model2.Entity;
+import org.polymap.model2.Property;
+import org.polymap.model2.Queryable;
 
 /**
  * Siehe <a href="http://polymap.org/wbv/wiki/Konzept#wk7">Spezifikation</a>.
  * 
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-@SRS("EPSG:4326")
+//@SRS("EPSG:4326")
 public class Waldstueck
         extends Entity {
 

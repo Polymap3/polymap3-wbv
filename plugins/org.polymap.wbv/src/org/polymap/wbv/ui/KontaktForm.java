@@ -29,14 +29,15 @@ import org.eclipse.ui.forms.widgets.ColumnLayoutData;
 import org.polymap.core.ui.ColumnLayoutFactory;
 
 import org.polymap.rhei.batik.IPanelSite;
-import org.polymap.rhei.batik.app.FormContainer;
 import org.polymap.rhei.field.EMailAddressValidator;
 import org.polymap.rhei.field.IFormFieldLabel;
 import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.TextFormField;
-import org.polymap.rhei.form.IFormEditorPageSite;
+import org.polymap.rhei.form.DefaultFormPage;
+import org.polymap.rhei.form.IFormPageSite;
+import org.polymap.rhei.form.batik.BatikFormContainer;
 
 import org.polymap.wbv.model.Kontakt;
 
@@ -46,7 +47,7 @@ import org.polymap.wbv.model.Kontakt;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class KontaktForm
-        extends FormContainer {
+        extends DefaultFormPage {
 
     private static Log log = LogFactory.getLog( KontaktForm.class );
     
@@ -65,15 +66,15 @@ public class KontaktForm
     }
 
 
-    @Override
-    public void addFieldListener( IFormFieldListener l ) {
-        super.addFieldListener( l );
-        listeners.add( l );
-    }
+//    @Override
+//    public void addFieldListener( IFormFieldListener l ) {
+//        super.addFieldListener( l );
+//        listeners.add( l );
+//    }
 
 
     @Override
-    public void createFormContent( final IFormEditorPageSite formSite ) {
+    public void createFormContents( final IFormPageSite formSite ) {
         body = formSite.getPageBody();
         if (body.getLayout() == null) {
             body.setLayout( ColumnLayoutFactory.defaults().spacing( 3 ).margins( 10, 10 ).create() );
@@ -83,42 +84,49 @@ public class KontaktForm
         Composite salu = panelSite.toolkit().createComposite( body );
         salu.setLayout( new FillLayout( SWT.HORIZONTAL) );
 
-        new FormFieldBuilder( salu, new PropertyAdapter( kontakt.anrede ) )
-                .setLabel( "Anrede" )
-                .setField( new PicklistFormField( new String[] {"Herr", "Frau", "Firma", "Amt"} )
+        formSite.newFormField( new PropertyAdapter( kontakt.anrede ) )
+                .parent.put( salu )
+                .label.put( "Anrede" )
+                .field.put( new PicklistFormField( new String[] {"Herr", "Frau", "Firma", "Amt"} )
                             .setTextEditable( true )
                             .setForceTextMatch( false ) )
                 //.setValidator( new NotEmptyValidator() )
-                .create().setFocus();
+                .create(); //.setFocus();
 
-        new FormFieldBuilder( salu, new PropertyAdapter( kontakt.vorname ) ).setLabel( IFormFieldLabel.NO_LABEL ).create();
+        formSite.newFormField( new PropertyAdapter( kontakt.vorname ) )
+                .parent.put( salu )
+                .label.put( IFormFieldLabel.NO_LABEL )
+                .create();
         
-        new FormFieldBuilder( body, new PropertyAdapter( kontakt.name ) )
-                .setValidator( new NotEmptyValidator() ).create().setFocus();
+        formSite.newFormField( new PropertyAdapter( kontakt.name ) )
+                .validator.put( new NotEmptyValidator() )
+                .create()
+                .setFocus();
 
 //        if (kontakt instanceof User) {
 //            prop = ((User)kontakt).company();
 //            new FormFieldBuilder( body, new PropertyAdapter( prop ) ).setLabel( i18n.get( prop.name() ) ).create();            
 //        }
         
-        new FormFieldBuilder( body, new PropertyAdapter( kontakt.email ) ).setLabel( "E-Mail" )
-                .setToolTipText( "Die E-Mail-Adresse des kontaktes. Beispiel: info@example.com" )
-                .setValidator( new EMailAddressValidator() )
+        formSite.newFormField( new PropertyAdapter( kontakt.email ) )
+                .label.put( "E-Mail" )
+                .tooltip.put( "Die E-Mail-Adresse des kontaktes. Beispiel: info@example.com" )
+                .validator.put( new EMailAddressValidator().msg.put( "Das ist keine gültige E-Mail-Adresse" ) )
                 .create();
 
-        new FormFieldBuilder( body, new PropertyAdapter( kontakt.telefon1 ) ).setLabel( "Telefon1" ).create();
+        formSite.newFormField( new PropertyAdapter( kontakt.telefon1 ) ).label.put( "Telefon1" ).create();
         
-        new FormFieldBuilder( body, new PropertyAdapter( kontakt.telefon2 ) ).setLabel( "Telefon2" ).create();
+        formSite.newFormField( new PropertyAdapter( kontakt.telefon2 ) ).label.put( "Telefon2" ).create();
         
-        new FormFieldBuilder( body, new PropertyAdapter( kontakt.fax ) ).setLabel( "Fax" ).create();
+        formSite.newFormField( new PropertyAdapter( kontakt.fax ) ).label.put( "Fax" ).create();
         
         // Adresse
-        new AdresseForm( kontakt, panelSite ).createContents( this );
+        new BatikFormContainer( new AdresseForm( kontakt, panelSite ) ).createContents( body );
         
         // Bemerkung 
-        new FormFieldBuilder( body, new PropertyAdapter( kontakt.bemerkung ) )
-                .setField( new TextFormField() )
-                .setToolTipText( "Zusätzliche Informationen zu diesem Kontakt.\nZum Besipiel: 'Besitzer', 'Ansprechpartner', 'Verwalter', 'Erbengemeinschaft'" )
+        formSite.newFormField( new PropertyAdapter( kontakt.bemerkung ) )
+                .field.put( new TextFormField() )
+                .tooltip.put( "Zusätzliche Informationen zu diesem Kontakt.\nZum Besipiel: 'Besitzer', 'Ansprechpartner', 'Verwalter', 'Erbengemeinschaft'" )
                 .create().setLayoutData( new ColumnLayoutData( SWT.DEFAULT, 80 ) );
     }
     

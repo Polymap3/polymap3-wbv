@@ -4,36 +4,45 @@
    <extension
          point="org.eclipse.rap.ui.entrypoint">
       <entrypoint
-            class="org.polymap.rhei.batik.app.BatikApplication"
+            brandingId="org.polymap.wbv.branding"
+            class="org.polymap.rhei.batik.BatikApplication"
             id="org.polymap.wbv.entrypoint"
             path="/wbv">
       </entrypoint>
    </extension>
-   <!--extension
-         point="org.polymap.rhei.form.pageProviders">
-      <pageProvider
-            class="org.polymap.wbv.ui.WaldbesitzerPageProvider"
-            id="org.polymap.wbv.WaldBesitzerPageProvider"
-            name="WaldBesitzer">
-      </pageProvider>
-   </extension-->
    <extension
          point="org.eclipse.rap.ui.branding">
       <branding
-            body="resources/html/body.html"
-            defaultEntrypointId="org.polymap.wbv.entrypoint"
             id="org.polymap.wbv.branding"
-            servletName="wbv"
-            themeId="org.polymap.rhei.batik.theme"
+            themeId="org.polymap.rhei.batik.materialDesign"
             title="WBV">
-         <!--additionalHeaders>
+         <additionalHeaders>
             <link
+                  href="batikres/css/roboto.css"
+                  rel="stylesheet">
+            </link>
+            <!--link
                   href="http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700"
                   rel="stylesheet"
                   type="text/css">
-            <link>
-         </additionalHeaders-->
+            <link-->
+         </additionalHeaders>
       </branding>
+   </extension>
+   <extension
+         point="org.eclipse.rap.ui.themes">
+      <themeContribution
+            file="resources/css/wbv.css"
+            themeId="org.polymap.rhei.batik.theme">
+      </themeContribution>
+   </extension>
+   <extension
+         point="org.polymap.rhei.batik.design">
+      <design
+            class="org.polymap.wbv.ui.WbvAppDesign"
+            id="org.polymap.wbv.design"
+            servletNameMatcher="/wbv">
+      </design>
    </extension>
    <extension
          point="org.polymap.rhei.batik.panels">
@@ -49,13 +58,6 @@
             class="org.polymap.wbv.ui.AdminPanel"
             id="org.polymap.wbv.AdminPanel">
       </panel>
-   </extension>
-   <extension
-         point="org.eclipse.rap.ui.themes">
-      <themeContribution
-            file="resources/css/wbv.css"
-            themeId="org.polymap.rhei.batik.theme">
-      </themeContribution>
    </extension>
 
 </plugin>

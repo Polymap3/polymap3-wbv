@@ -1,6 +1,6 @@
 /* 
  * polymap.org
- * Copyright (C) 2015, Falko Bräutigam. All rights reserved.
+ * Copyright (C) 2014, Falko Bräutigam. All rights reserved.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -14,40 +14,31 @@
  */
 package org.polymap.wbv.model;
 
-import java.util.Date;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import org.polymap.rhei.fulltext.model2.EntityFeatureTransformer;
+
+import org.polymap.model2.Association;
 import org.polymap.model2.Composite;
-import org.polymap.model2.Defaults;
-import org.polymap.model2.Property;
-import org.polymap.model2.Queryable;
 
 /**
  * 
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public class Ereignis
-        extends Composite {
+public class WaldbesitzerFulltextTransformer
+        extends EntityFeatureTransformer {
 
-    private static Log log = LogFactory.getLog( Ereignis.class );
+    private static Log log = LogFactory.getLog( WaldbesitzerFulltextTransformer.class );
 
-    @Queryable
-    @Defaults
-    public Property<String>         text;
-
-    @Queryable
-    @Defaults
-    public Property<String>         titel;
     
-    public Property<Date>           angelegt;
-
-    public Property<String>         angelegtVon;
-    
-    public Property<Date>           geaendert;
-    
-    public Property<String>         geaendertVon;
+    @Override
+    protected void visitAssociation( Association prop ) {
+        Object value = prop.get();
+        if (value instanceof Gemarkung) {
+            processComposite( (Composite)value );
+        }
+    }
     
 }

@@ -15,16 +15,14 @@ package org.polymap.wbv.model;
 
 import java.util.Date;
 
-import javax.annotation.Nullable;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.core.model2.Association;
-import org.polymap.core.model2.Composite;
-import org.polymap.core.model2.Property;
-import org.polymap.core.model2.Queryable;
-
+import org.polymap.model2.Association;
+import org.polymap.model2.Composite;
+import org.polymap.model2.Nullable;
+import org.polymap.model2.Property;
+import org.polymap.model2.Queryable;
 import org.polymap.wbv.mdb.ImportColumn;
 import org.polymap.wbv.mdb.ImportTable;
 

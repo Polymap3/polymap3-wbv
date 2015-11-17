@@ -14,9 +14,6 @@
  */
 package org.polymap.wbv.ui;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -28,11 +25,10 @@ import org.eclipse.ui.forms.widgets.ColumnLayoutData;
 import org.polymap.core.ui.ColumnLayoutFactory;
 
 import org.polymap.rhei.batik.IPanelSite;
-import org.polymap.rhei.batik.app.FormContainer;
-import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.TextFormField;
-import org.polymap.rhei.form.IFormEditorPageSite;
+import org.polymap.rhei.form.DefaultFormPage;
+import org.polymap.rhei.form.IFormPageSite;
 
 import org.polymap.wbv.model.Ereignis;
 
@@ -42,7 +38,7 @@ import org.polymap.wbv.model.Ereignis;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class EreignisForm
-        extends FormContainer {
+        extends DefaultFormPage {
 
     private static Log log = LogFactory.getLog( EreignisForm.class );
     
@@ -52,7 +48,7 @@ public class EreignisForm
     
     private Composite               body;
 
-    private Set<IFormFieldListener> listeners = new HashSet();
+//    private Set<IFormFieldListener> listeners = new HashSet();
 
     
     public EreignisForm( Ereignis ereignis, IPanelSite panelSite ) {
@@ -61,15 +57,15 @@ public class EreignisForm
     }
 
 
-    @Override
-    public void addFieldListener( IFormFieldListener l ) {
-        super.addFieldListener( l );
-        listeners.add( l );
-    }
+//    @Override
+//    public void addFieldListener( IFormFieldListener l ) {
+//        super.addFieldListener( l );
+//        listeners.add( l );
+//    }
 
 
     @Override
-    public void createFormContent( final IFormEditorPageSite formSite ) {
+    public void createFormContents( final IFormPageSite formSite ) {
         body = formSite.getPageBody();
         body.setLayout( ColumnLayoutFactory.defaults().spacing( 3 ).margins( 10, 10 ).create() );
 
@@ -82,13 +78,13 @@ public class EreignisForm
 //                .create();
 
         // Titel
-        new FormFieldBuilder( body, new PropertyAdapter( ereignis.titel ) )
-                .setValidator( new NotEmptyValidator() ).create().setFocus();
+        formSite.newFormField( new PropertyAdapter( ereignis.titel ) )
+                .validator.put( new NotEmptyValidator() ).create().setFocus();
 
         // Text 
-        new FormFieldBuilder( body, new PropertyAdapter( ereignis.text ) )
-                .setField( new TextFormField() )
-                .setLabel( "" )
+        formSite.newFormField( new PropertyAdapter( ereignis.text ) )
+                .field.put( new TextFormField() )
+                .label.put( "" )
                 .create().setLayoutData( new ColumnLayoutData( SWT.DEFAULT, 80 ) );
     }
     
