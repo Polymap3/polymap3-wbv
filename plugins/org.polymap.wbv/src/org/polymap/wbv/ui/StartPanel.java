@@ -76,6 +76,8 @@ import org.polymap.wbv.ui.reports.Report101;
 import org.polymap.wbv.ui.reports.Report102;
 import org.polymap.wbv.ui.reports.Report103;
 import org.polymap.wbv.ui.reports.Report105;
+import org.polymap.wbv.ui.reports.Report106;
+import org.polymap.wbv.ui.reports.Report106a;
 import org.polymap.wbv.ui.reports.Report106b;
 import org.polymap.wbv.ui.reports.Report106c;
 import org.polymap.wbv.ui.reports.WbvReport;
@@ -243,6 +245,8 @@ public class StartPanel
         reportsMap.add( getContext().propagate( new Report102() ) );
         reportsMap.add( getContext().propagate( new Report103() ) );
         reportsMap.add( getContext().propagate( new Report105() ) );
+        reportsMap.add( getContext().propagate( new Report106() ) );
+        reportsMap.add( getContext().propagate( new Report106a() ) );
         reportsMap.add( getContext().propagate( new Report106b() ) );
         reportsMap.add( getContext().propagate( new Report106c() ) );
         
