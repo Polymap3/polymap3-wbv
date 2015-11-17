@@ -102,12 +102,13 @@ public class Kontakt
     
     /**
      * Berechneter Anzeigename. Berechnungsvorschrift: (Organisation des Kontakts,
-     * falls die nicht vorhanden ist: Titel+Vorname+Familienname )
+     * falls die nicht vorhanden ist: Familienname, Vorname )
      */
     public String anzeigename() {
         return !StringUtils.isEmpty( organisation.get() )
                 ? organisation.get()
-                : Joiner.on( ' ' ).skipNulls().join( /*anrede.get(),*/ vorname.get(), name.get() );
+                // Name zuerst wegen Sortierung in Tabellen und Reports
+                : Joiner.on( "" ).skipNulls().join( /*anrede.get(),*/ name.get(), ", ", vorname.get() );
     }
     
 }

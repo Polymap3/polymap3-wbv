@@ -24,38 +24,36 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.sbt;
 import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 import static net.sf.dynamicreports.report.builder.DynamicReports.template;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
-import static net.sf.dynamicreports.report.builder.DynamicReports.variable;
-import static net.sf.dynamicreports.report.builder.DynamicReports.tableOfContentsCustomizer;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import java.io.IOException;
+
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
-import net.sf.dynamicreports.report.base.expression.AbstractSimpleExpression;
 import net.sf.dynamicreports.report.builder.ReportTemplateBuilder;
 import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
 import net.sf.dynamicreports.report.builder.grid.ColumnTitleGroupBuilder;
 import net.sf.dynamicreports.report.builder.group.ColumnGroupBuilder;
 import net.sf.dynamicreports.report.builder.group.Groups;
-import net.sf.dynamicreports.report.builder.tableofcontents.TableOfContentsCustomizerBuilder;
 import net.sf.dynamicreports.report.constant.GroupHeaderLayout;
 import net.sf.dynamicreports.report.constant.HorizontalAlignment;
 import net.sf.dynamicreports.report.constant.LineStyle;
 import net.sf.dynamicreports.report.constant.PageOrientation;
 import net.sf.dynamicreports.report.constant.PageType;
 import net.sf.dynamicreports.report.constant.Position;
-import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.data.JsonDataSource;
 
+import org.json.JSONObject;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.json.JSONObject;
+
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Waldbesitzer;
 
@@ -104,7 +102,7 @@ public class Report101
                     JSONObject resultObj = (JSONObject)result;
                     Flurstueck flurstueck = (Flurstueck)value;
                     Waldbesitzer wb = flurstueck2Waldbesitzer.get( flurstueck );
-                    resultObj.put( "name", calculateName( wb ) );
+                    resultObj.put( "name", wb.besitzer().anzeigename() );
                     resultObj.put( "adresse", calculateAdresse( wb ) );
                     String gemeinde, gemarkung, flstNr;
                     double gesamtFlaeche, waldFlaeche;

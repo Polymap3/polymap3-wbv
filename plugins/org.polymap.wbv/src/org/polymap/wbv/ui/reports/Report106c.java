@@ -22,6 +22,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.template;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
 import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -42,9 +43,12 @@ import net.sf.jasperreports.engine.data.JsonDataSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.json.JSONObject;
+
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.Scope;
+
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
 import org.polymap.wbv.model.Revier;
@@ -196,7 +200,7 @@ public class Report106c
 
         report.addColumn( gemeindeColumn );
         report.addColumn( gemarkungColumn );
-        for (TextColumnBuilder<Double> col : flaecheColumns) {
+        for (@SuppressWarnings("hiding") TextColumnBuilder<Double> col : flaecheColumns) {
             report.addColumn( col );
         }
         report.addColumn( sumColumn );

@@ -55,19 +55,19 @@ public abstract class WaldbesitzerReport
     }
 
 
-    protected String calculateName( Waldbesitzer wb ) {
-        StringBuilder sb = new StringBuilder();
-        String name = wb.besitzer().name.get();
-        String vorname = wb.besitzer().vorname.get();
-        String organisation = wb.besitzer().organisation.get();
-        if (!Strings.isNullOrEmpty( name )) {
-            sb.append( name );
-        }
-        if (!Strings.isNullOrEmpty( vorname )) {
-            sb.append( ", " + vorname );
-        }
-        return sb.toString();
-    }
+//    protected String calculateName( Waldbesitzer wb ) {
+//        StringBuilder sb = new StringBuilder();
+//        String name = wb.besitzer().name.get();
+//        String vorname = wb.besitzer().vorname.get();
+//        String organisation = wb.besitzer().organisation.get();
+//        if (!Strings.isNullOrEmpty( name )) {
+//            sb.append( name );
+//        }
+//        if (!Strings.isNullOrEmpty( vorname )) {
+//            sb.append( ", " + vorname );
+//        }
+//        return sb.toString();
+//    }
 
 
     /**

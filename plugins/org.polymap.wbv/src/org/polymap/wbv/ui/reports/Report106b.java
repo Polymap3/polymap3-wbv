@@ -23,9 +23,6 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 import static net.sf.dynamicreports.report.builder.DynamicReports.template;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -37,11 +34,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.text.NumberFormat;
+
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.ReportTemplateBuilder;
 import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
 import net.sf.dynamicreports.report.builder.grid.ColumnGridComponentBuilder;
-import net.sf.dynamicreports.report.builder.grid.ColumnTitleGroupBuilder;
 import net.sf.dynamicreports.report.builder.subtotal.AggregationSubtotalBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalAlignment;
 import net.sf.dynamicreports.report.constant.PageOrientation;
@@ -55,8 +55,10 @@ import net.sf.jasperreports.engine.data.JRCsvDataSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.Scope;
+
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
@@ -153,11 +155,11 @@ public class Report106b
 
         Double sum;
         Set<Waldbesitzer> wbs;
-        Double durchschnittsFlaeche;
+        //Double durchschnittsFlaeche;
         for (Group group : grouped.values()) {
             for (Entry<Double,List<Flurstueck>> entry : group.flaecheToFlurstuecke.entrySet()) {
                 sum = 0.0d;
-                durchschnittsFlaeche = 0.0d;
+                //durchschnittsFlaeche = 0.0d;
                 wbs = new HashSet<Waldbesitzer>();
                 for (Flurstueck flurstueck : entry.getValue()) {
                     sum += flurstueck.flaecheWald.get();

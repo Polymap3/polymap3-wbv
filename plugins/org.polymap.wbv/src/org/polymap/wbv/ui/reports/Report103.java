@@ -17,7 +17,6 @@ package org.polymap.wbv.ui.reports;
 import static net.sf.dynamicreports.report.builder.DynamicReports.asc;
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
-import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import static net.sf.dynamicreports.report.builder.DynamicReports.grid;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.sbt;
@@ -25,45 +24,40 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 import static net.sf.dynamicreports.report.builder.DynamicReports.template;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
+
+import java.io.IOException;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.ReportTemplateBuilder;
 import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
-import net.sf.dynamicreports.report.builder.component.SubreportBuilder;
 import net.sf.dynamicreports.report.builder.grid.ColumnTitleGroupBuilder;
 import net.sf.dynamicreports.report.builder.group.ColumnGroupBuilder;
 import net.sf.dynamicreports.report.builder.group.Groups;
 import net.sf.dynamicreports.report.constant.GroupHeaderLayout;
 import net.sf.dynamicreports.report.constant.HorizontalAlignment;
-import net.sf.dynamicreports.report.constant.LineStyle;
 import net.sf.dynamicreports.report.constant.PageOrientation;
 import net.sf.dynamicreports.report.constant.PageType;
 import net.sf.dynamicreports.report.constant.Position;
-import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.data.JsonDataSource;
 
+import org.json.JSONObject;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.json.JSONObject;
-import org.polymap.model2.Composite;
+
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.Scope;
+
+import org.polymap.model2.Composite;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
-import org.polymap.wbv.ui.reports.EntityReport.JsonBuilder;
-
-import com.oracle.webservices.internal.api.EnvelopeStyle.Style;
 
 /**
  * Waldflächen aller Waldbesitzer.
@@ -127,7 +121,7 @@ public class Report103
                 if (value instanceof Flurstueck) {
                     JSONObject resultObj = (JSONObject)result;
                     Flurstueck flurstueck = (Flurstueck)value;
-                    resultObj.put( "name", calculateName( wb ) );
+                    resultObj.put( "name", wb.besitzer().anzeigename() );
                     resultObj.put( "adresse", calculateAdresse( wb ) );
                     String gemeinde, gemarkung, flstNr;
                     double gesamtFlaeche, waldFlaeche;
@@ -182,7 +176,7 @@ public class Report103
                         cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
                         cmp.text( "Forstbezirk: Mittelsachsen" ).setStyle( headerStyle ),
                         cmp.text( "Revier: " + getRevier() + " / Abfrage: \"" + getQuery() + "\"" ).setStyle(
-                                headerStyle ), cmp.text( calculateName( firstWb ) ).setStyle( headerStyle ),
+                                headerStyle ), cmp.text( firstWb.besitzer().anzeigename() ).setStyle( headerStyle ),
                         cmp.text( calculateAdresse( firstWb ) ).setStyle( headerStyle ) )
                 .pageFooter( cmp.pageXofY().setStyle( footerStyle ) )
                 // number of page

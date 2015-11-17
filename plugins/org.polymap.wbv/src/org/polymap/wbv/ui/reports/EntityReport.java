@@ -22,18 +22,23 @@ import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+
 import java.util.Collection;
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+
 import org.polymap.core.runtime.UIJob;
+
 import org.polymap.model2.CollectionProperty;
 import org.polymap.model2.Composite;
 import org.polymap.model2.Property;
@@ -69,6 +74,7 @@ public abstract class EntityReport
 
     protected class JsonBuilder {
 
+        @SuppressWarnings("hiding")
         private Iterable<? extends Composite> entities;
 
         private PipedOutputStream             out;

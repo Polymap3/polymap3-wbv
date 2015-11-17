@@ -97,7 +97,7 @@ public class Report102
                     JSONObject resultObj = (JSONObject)result;
                     Flurstueck flurstueck = (Flurstueck)value;
                     Waldbesitzer wb = flurstueck2Waldbesitzer.get( flurstueck );
-                    resultObj.put( "name", calculateName( wb ) );
+                    resultObj.put( "name", wb.besitzer().anzeigename() );
                     String gemeinde, gemarkung, flstNr;
                     double gesamtFlaeche, waldFlaeche;
                     if (flurstueck.gemarkung.isPresent()) {

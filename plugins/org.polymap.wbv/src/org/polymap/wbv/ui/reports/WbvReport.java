@@ -64,18 +64,26 @@ public abstract class WbvReport
     public JasperReportBuilder build() throws DRException, JRException, IOException {
         bold = stl.style().bold();
 
-        titleStyle = stl.style().setHorizontalAlignment( HorizontalAlignment.LEFT ).setFontSize( 20 )
+        titleStyle = stl.style()
+                .setHorizontalAlignment( HorizontalAlignment.LEFT )
+                .setFontSize( 20 )
                 .setPadding( stl.padding().setTop( 10 ).setBottom( 10 ) );
 
-        headerStyle = stl.style().setHorizontalAlignment( HorizontalAlignment.RIGHT )
+        headerStyle = stl.style()
+                .setHorizontalAlignment( HorizontalAlignment.RIGHT )
                 .setPadding( stl.padding().setTop( 0 ).setBottom( 2 ) );
 
-        footerStyle = stl.style().setHorizontalAlignment( HorizontalAlignment.CENTER );
+        footerStyle = stl.style()
+                .setHorizontalAlignment( HorizontalAlignment.CENTER );
 
-        columnTitleStyle = stl.style( bold ).setHorizontalAlignment( HorizontalAlignment.CENTER ).setPadding( 5 )
-                .setBorder( stl.penThin() ).setBackgroundColor( new Color( 240, 240, 248 ) );
+        columnTitleStyle = stl.style( bold )
+                .setHorizontalAlignment( HorizontalAlignment.CENTER )
+                .setPadding( 5 )
+                .setBorder( stl.penThin() )
+                .setBackgroundColor( new Color( 240, 240, 248 ) );
 
-        highlightRowStyle = stl.simpleStyle().setBackgroundColor( new Color( 243, 243, 248 ) );
+        highlightRowStyle = stl.simpleStyle()
+                .setBackgroundColor( new Color( 243, 243, 248 ) );
 
         return null;
     }
