@@ -133,6 +133,17 @@ public class ReportTest {
         executeTest106( entityRepository, wbs, 2 );
     }
 
+    
+    @Test
+    public void test106a() throws Exception {
+        Waldbesitzer wb1 = createWaldbesitzer1();
+        Waldbesitzer wb2 = createWaldbesitzer2();
+        List<Waldbesitzer> wbs = new ArrayList<Waldbesitzer>();
+        wbs.add( wb1 );
+        wbs.add( wb2 );
+        executeTest106a( entityRepository, wbs, 2 );
+    }
+
 
     @Test
     public void test106b() throws Exception {
@@ -272,7 +283,30 @@ public class ReportTest {
         executeTest( entityRepository, wbs, report, "report106_", counter );
     }
 
+    
+    private void executeTest106a( EntityRepository entityRepository, List<Waldbesitzer> wbs, int counter )
+            throws DRException, JRException, IOException, FileNotFoundException {
+        Report106a report = new Report106a() {
 
+            @Override
+            protected EntityRepository getRepository() {
+                return entityRepository;
+            }
+            
+            @Override
+            protected String getQuery() {
+                return "Hedwig";
+            }
+
+            @Override
+            protected String getRevier() {
+                return "Geringswalde";
+            }         
+        };
+        executeTest( entityRepository, wbs, report, "report106a_", counter );
+    }
+
+    
     private void executeTest106b( EntityRepository entityRepository, List<Waldbesitzer> wbs, int counter )
             throws DRException, JRException, IOException, FileNotFoundException {
         Report106b report = new Report106b() {
