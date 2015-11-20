@@ -184,11 +184,15 @@ public abstract class EntityReport
             try {
                 for (String s : strings) {
                     writer.write( s );
-                    System.out.print( s );
+                    if (log.isDebugEnabled()) {
+                        System.out.print( s );
+                    }
                 }
                 writer.write( "\n" );
                 writer.flush();
-                System.out.print( "\n" );
+                if (log.isDebugEnabled()) {
+                    System.out.print( "\n" );
+                }
             }
             catch (IOException e) {
                 throw new RuntimeException( e );
