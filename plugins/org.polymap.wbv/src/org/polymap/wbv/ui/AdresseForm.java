@@ -56,7 +56,7 @@ public class AdresseForm
     public void createFormContents( final IFormPageSite formSite ) {
         body = formSite.getPageBody();
 //        if (body.getLayout() == null) {
-            body.setLayout( ColumnLayoutFactory.defaults().spacing( 3 ).margins( 10, 10 ).columns( 1, 1 ).create() );
+            body.setLayout( ColumnLayoutFactory.defaults().spacing( 3 ).columns( 1, 1 ).create() );
 //        }
 
         formSite.newFormField( new PropertyAdapter( adresse.strasse ) )

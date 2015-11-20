@@ -67,6 +67,7 @@ public abstract class WbvPanel
     
     @Override
     public void init() {
+        super.init();
         // rootUow
         if (rootUow.get() == null) {
             rootUow.set( WbvRepository.instance.get().newUnitOfWork() );

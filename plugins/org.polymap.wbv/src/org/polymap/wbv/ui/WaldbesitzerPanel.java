@@ -48,9 +48,9 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
 import org.polymap.model2.runtime.ValueInitializer;
-import org.polymap.core.runtime.Polymap;
-import org.polymap.core.runtime.event.EventFilter;
+
 import org.polymap.core.runtime.event.EventHandler;
+import org.polymap.core.security.SecurityContext;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
@@ -109,7 +109,7 @@ public class WaldbesitzerPanel
 
     private Map<BatikFormContainer,IFormFieldListener> kForms = new HashMap();
 
-    private Map<EreignisForm,IFormFieldListener> eForms = new HashMap();
+    private Map<BatikFormContainer,IFormFieldListener> eForms = new HashMap();
 
     private WbvMapViewer                  map;
 
@@ -146,8 +146,8 @@ public class WaldbesitzerPanel
         //
         getContext().addListener( this, ev -> 
                 ev.getPanel() == WaldbesitzerPanel.this && 
-                ev.getType() == EventType.LIFECYCLE &&
-                ev.getPanel().site().panelStatus() == PanelStatus.FOCUSED );
+                ev.getType() == EventType.LIFECYCLE /*&&
+                ev.getPanel().site().panelStatus() == PanelStatus.FOCUSED*/ );
         
         statusAdapter = new SubmitStatusManager( this ).setSubmit( Enableable.of( submitAction ) );
     }
@@ -172,40 +172,43 @@ public class WaldbesitzerPanel
     }
 
     
-    @EventHandler
+    @EventHandler( display=true )
     public void activating( PanelChangeEvent ev ) {
-        log.info( "activating()..." );
-        newUnitOfWork();
-        
-        // create new
-        if (wbParam.get() == null) {
-            wb = uow().createEntity( Waldbesitzer.class, null, new ValueInitializer<Waldbesitzer>() {
-                @Override
-                public Waldbesitzer initialize( Waldbesitzer prototype ) throws Exception {
-                    prototype.eigentumsArt.set( Waldeigentumsart.Privat );
-                    prototype.kontakte.createElement( new ValueInitializer<Kontakt>() {
-                        @Override
-                        public Kontakt initialize( Kontakt kontakt ) throws Exception {
-                            //kontakt.name.set( "Beispiel" );
-                            return kontakt;
-                        }
-                    });
-                    // damit die sch** tabelle den ersten Eintrag zeigt
-                    prototype.flurstuecke.createElement( new ValueInitializer<Flurstueck>() {
-                        @Override
-                        public Flurstueck initialize( Flurstueck proto ) throws Exception {
-                            proto.landkreis.set( "Mittelsachsen" );
-                            proto.eingabe.set( new Date() );
-                            return proto;
-                        }
-                    });
-                    return prototype;
-                }
-            });
-        }
-        // re-fetch
-        else {
-            wb = uow().entity( Waldbesitzer.class, wbParam.get().id() );
+        log.info( "panelStatus: " + ev.getPanel().site().panelStatus() );
+        if (ev.getPanel().site().panelStatus() == PanelStatus.FOCUSED) {
+            log.info( "activating()..." );
+            newUnitOfWork();
+
+            // create new
+            if (wbParam.get() == null) {
+                wb = uow().createEntity( Waldbesitzer.class, null, new ValueInitializer<Waldbesitzer>() {
+                    @Override
+                    public Waldbesitzer initialize( Waldbesitzer prototype ) throws Exception {
+                        prototype.eigentumsArt.set( Waldeigentumsart.Privat );
+                        prototype.kontakte.createElement( new ValueInitializer<Kontakt>() {
+                            @Override
+                            public Kontakt initialize( Kontakt kontakt ) throws Exception {
+                                //kontakt.name.set( "Beispiel" );
+                                return kontakt;
+                            }
+                        });
+                        // damit die sch** tabelle den ersten Eintrag zeigt
+                        prototype.flurstuecke.createElement( new ValueInitializer<Flurstueck>() {
+                            @Override
+                            public Flurstueck initialize( Flurstueck proto ) throws Exception {
+                                proto.landkreis.set( "Mittelsachsen" );
+                                proto.eingabe.set( new Date() );
+                                return proto;
+                            }
+                        });
+                        return prototype;
+                    }
+                });
+            }
+            // re-fetch
+            else {
+                wb = uow().entity( Waldbesitzer.class, wbParam.get().id() );
+            }
         }
     }
 
@@ -235,7 +238,7 @@ public class WaldbesitzerPanel
         wbFormContainer.addFieldListener( wbFormListener = new EnableSubmitFormFieldListener( wbFormContainer ) );
 
         // Kontakte
-        final IPanelSection besitzer = tk.createPanelSection( parent, "Besitzer/Kontakte" );
+        final IPanelSection besitzer = tk.createPanelSection( parent, "Besitzer/Kontakte", SWT.NONE );
         besitzer.addConstraint( 
                 WbvPlugin.MIN_COLUMN_WIDTH, 
                 new PriorityConstraint( 1 ) );
@@ -247,7 +250,7 @@ public class WaldbesitzerPanel
         }
 
         // Ereignisse
-        final IPanelSection ereignisse = tk.createPanelSection( parent, "Ereignisse" );
+        final IPanelSection ereignisse = tk.createPanelSection( parent, "Ereignisse", SWT.NONE );
         ereignisse.addConstraint( 
                 WbvPlugin.MIN_COLUMN_WIDTH, 
                 new PriorityConstraint( 0 ) );
@@ -269,9 +272,9 @@ public class WaldbesitzerPanel
                     public Ereignis initialize( Ereignis proto ) throws Exception {
                         //proto.titel.set( "Neu" );
                         proto.angelegt.set( new Date() );
-                        proto.angelegtVon.set( Polymap.instance().getUser().getName() );
+                        proto.angelegtVon.set( SecurityContext.instance().getUser().getName() );
                         proto.geaendert.set( new Date() );
-                        proto.geaendertVon.set( Polymap.instance().getUser().getName() );
+                        proto.geaendertVon.set( SecurityContext.instance().getUser().getName() );
                         return proto;
                     }
                 });
@@ -357,7 +360,7 @@ public class WaldbesitzerPanel
             }
         };
         getContext().propagate( viewer );
-        viewer.getTable().setLayoutData( FormDataFactory.filled().right( 100, -33 ).height( 250 ).create() );
+        viewer.getTable().setLayoutData( FormDataFactory.filled().right( 100, -33 ).height( 250 ).width( 300 ).create() );
         
         // addBtn
         final Button addBtn = tk.createButton( parent, "+", SWT.PUSH );
@@ -415,6 +418,7 @@ public class WaldbesitzerPanel
         final Section section = tk.createSection( parent, kontakt.anzeigename(), TREE_NODE | Section.SHORT_TITLE_BAR | Section.FOCUS_TITLE );
         //section.setFont( JFaceResources.getFontRegistry().getBold( JFaceResources.DEFAULT_FONT ) );
         ((Composite)section.getClient()).setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
+        section.setExpanded( false );
 
         // KontaktForm
         KontaktForm form = new KontaktForm( kontakt, getSite() );
@@ -492,9 +496,11 @@ public class WaldbesitzerPanel
 
         // form
         final EreignisForm form = new EreignisForm( ereignis, getSite() );
-        form.createContents( tk.createComposite( (Composite)section.getClient() ) );
+        BatikFormContainer formContainer = new BatikFormContainer( form );
+        formContainer.createContents( (Composite)section.getClient() );
+//        form.createContents( tk.createComposite( (Composite)section.getClient() ) );
 
-        form.addFieldListener( new IFormFieldListener() {
+        formContainer.addFieldListener( new IFormFieldListener() {
             public void fieldChange( FormFieldEvent ev ) {
                 if (ev.getEventCode() == VALUE_CHANGE) {
                     if (ev.getFieldName().equals( ereignis.titel.info().getName() )
@@ -504,14 +510,14 @@ public class WaldbesitzerPanel
                     }
                     
                     ereignis.geaendert.set( new Date() );
-                    ereignis.geaendertVon.set( Polymap.instance().getUser().getName() );
+                    ereignis.geaendertVon.set( SecurityContext.instance().getUser().getName() );
                 }
             }
         });
         
-        EnableSubmitFormFieldListener listener = new EnableSubmitFormFieldListener( form );
-        form.addFieldListener( listener );
-        eForms.put( form, listener );
+        EnableSubmitFormFieldListener listener = new EnableSubmitFormFieldListener( formContainer );
+        formContainer.addFieldListener( listener );
+        eForms.put( formContainer, listener );
 
         return section;
     }
@@ -526,7 +532,7 @@ public class WaldbesitzerPanel
         @Override
         public void createFormContents( IFormPageSite site ) {
             Composite body = site.getPageBody();
-            body.setLayout( ColumnLayoutFactory.defaults().spacing( 3 ).margins( 10, 10 ).columns( 1, 1 ).create() );
+            body.setLayout( ColumnLayoutFactory.defaults().spacing( 3 ).margins( 0, 0 ).columns( 1, 1 ).create() );
 
             assert wb != null;
 

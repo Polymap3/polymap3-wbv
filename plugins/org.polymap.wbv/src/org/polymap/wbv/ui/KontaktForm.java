@@ -75,10 +75,11 @@ public class KontaktForm
 
     @Override
     public void createFormContents( final IFormPageSite formSite ) {
+        super.createFormContents( formSite );
         body = formSite.getPageBody();
-        if (body.getLayout() == null) {
-            body.setLayout( ColumnLayoutFactory.defaults().spacing( 3 ).margins( 10, 10 ).create() );
-        }
+//        if (body.getLayout() == null) {
+            body.setLayout( ColumnLayoutFactory.defaults().spacing( 3 ).margins( 0, 0 ).create() );
+//        }
 
         // fields
         Composite salu = panelSite.toolkit().createComposite( body );

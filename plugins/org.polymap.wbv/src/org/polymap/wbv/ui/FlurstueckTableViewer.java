@@ -56,6 +56,7 @@ import org.polymap.rhei.table.FeatureTableViewer;
 import org.polymap.rhei.table.FormFeatureTableColumn;
 import org.polymap.rhei.table.IFeatureTableColumn;
 import org.polymap.rhei.table.IFeatureTableElement;
+import org.polymap.rhei.table.ITableFieldValidator;
 
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;

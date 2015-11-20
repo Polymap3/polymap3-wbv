@@ -74,7 +74,7 @@ public class WaldbesitzerTableViewer
 
     public WaldbesitzerTableViewer( UnitOfWork uow, Composite parent,
             Iterable<Waldbesitzer> rs, int style ) {
-        super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | SWT.FULL_SELECTION | */SWT.NONE );
+        super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | SWT.FULL_SELECTION | */style );
         this.uow = uow;
         try {
             addColumn( new NameColumn() ).sort( SWT.DOWN );

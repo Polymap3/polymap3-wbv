@@ -13,6 +13,7 @@
 package org.polymap.wbv.ui;
 
 import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,15 +22,18 @@ import java.util.TreeMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.eclipse.core.runtime.Status;
+
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
+
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.UrlLauncher;
 import org.eclipse.rap.rwt.service.SettingStore;
-import org.eclipse.rap.rwt.widgets.ExternalBrowser;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -38,6 +42,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
+
 import org.polymap.core.mapeditor.ContextMenuSite;
 import org.polymap.core.mapeditor.IContextMenuContribution;
 import org.polymap.core.mapeditor.IContextMenuProvider;
@@ -45,8 +50,10 @@ import org.polymap.core.runtime.i18n.IMessages;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.core.ui.UIUtils;
+
 import org.polymap.model2.query.Expressions;
 import org.polymap.rap.updownload.download.DownloadService;
+
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.PanelIdentifier;
@@ -63,6 +70,7 @@ import org.polymap.rhei.fulltext.ui.FulltextProposal;
 import org.polymap.rhei.table.FeatureTableFilterBar;
 import org.polymap.rhei.um.ui.LoginPanel;
 import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
+
 import org.polymap.wbv.Messages;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Flurstueck;
@@ -125,13 +133,13 @@ public class StartPanel
         // welcome
         getSite().setTitle( i18n.get( "loginTitle" ) );
         IPanelToolkit tk = getSite().toolkit();
-        IPanelSection welcome = tk.createPanelSection( parent, "Willkommen" /*i18n.get( "loginTitle" )*/ );
+        IPanelSection welcome = tk.createPanelSection( parent, "Hinweise" /*i18n.get( "loginTitle" )*/ );
         welcome.addConstraint( new PriorityConstraint( 10 ), WbvPlugin.MIN_COLUMN_WIDTH );
         String t = i18n.get( "welcomeText" );
         tk.createFlowText( welcome.getBody(), t );
 
         // login
-        IPanelSection section = tk.createPanelSection( parent, null );
+        IPanelSection section = tk.createPanelSection( parent, "Anmelden", SWT.BORDER );
         section.addConstraint( new PriorityConstraint( 0 ), WbvPlugin.MIN_COLUMN_WIDTH );
 
         LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), user ) {
@@ -191,9 +199,9 @@ public class StartPanel
                 }
             }
         };
-        loginForm.setShowRegisterLink( false );
         loginForm.setShowStoreCheck( true );
-        loginForm.setShowLostLink( true );
+        //loginForm.setShowRegisterLink( false );
+        //loginForm.setShowLostLink( true );
         new BatikFormContainer( loginForm ).createContents( section );
     }
     
@@ -213,7 +221,7 @@ public class StartPanel
 //        log.info( "Query result: " + all.size() );
         
         Composite tableLayout = body;  //tk.createComposite( body );
-        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( uow(), tableLayout, Collections.EMPTY_LIST, SWT.NONE );
+        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( uow(), tableLayout, Collections.EMPTY_LIST, SWT.BORDER );
         getContext().propagate( viewer );
         // waldbesitzer öffnen
         viewer.addSelectionChangedListener( new ISelectionChangedListener() {
@@ -261,7 +269,9 @@ public class StartPanel
                         report.setEntities( viewer.getInput() ).setOutputType( OutputType.PDF );
                         String url = DownloadService.registerContent( report );
 
-                        ExternalBrowser.open( "download_window", url, ExternalBrowser.NAVIGATION_BAR | ExternalBrowser.STATUS );
+                        UrlLauncher launcher = RWT.getClient().getService( UrlLauncher.class );
+                        launcher.openURL( url );
+                        //ExternalBrowser.open( "download_window", url, ExternalBrowser.NAVIGATION_BAR | ExternalBrowser.STATUS );
                         reports.select( 0 );
                     }
                 }

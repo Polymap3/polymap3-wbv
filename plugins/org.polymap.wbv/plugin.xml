@@ -21,11 +21,10 @@
                   href="batikres/css/roboto.css"
                   rel="stylesheet">
             </link>
-            <!--link
-                  href="http://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700"
-                  rel="stylesheet"
-                  type="text/css">
-            <link-->
+            <link
+                  href="batikres/css/md/flowtext.css"
+                  rel="stylesheet">
+            </link>
          </additionalHeaders>
       </branding>
    </extension>
@@ -33,7 +32,7 @@
          point="org.eclipse.rap.ui.themes">
       <themeContribution
             file="resources/css/wbv.css"
-            themeId="org.polymap.rhei.batik.theme">
+            themeId="org.polymap.rhei.batik.materialDesign">
       </themeContribution>
    </extension>
    <extension
