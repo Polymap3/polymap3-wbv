@@ -17,7 +17,6 @@ package org.polymap.wbv.ui.reports;
 import static net.sf.dynamicreports.report.builder.DynamicReports.asc;
 import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
-import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 import static net.sf.dynamicreports.report.builder.DynamicReports.grid;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.sbt;
@@ -41,7 +40,6 @@ import net.sf.dynamicreports.report.builder.group.ColumnGroupBuilder;
 import net.sf.dynamicreports.report.builder.group.Groups;
 import net.sf.dynamicreports.report.constant.GroupHeaderLayout;
 import net.sf.dynamicreports.report.constant.HorizontalAlignment;
-import net.sf.dynamicreports.report.constant.LineStyle;
 import net.sf.dynamicreports.report.constant.PageOrientation;
 import net.sf.dynamicreports.report.constant.PageType;
 import net.sf.dynamicreports.report.constant.Position;
@@ -55,6 +53,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.polymap.core.model2.Composite;
+
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Waldbesitzer;
 
@@ -63,15 +62,15 @@ import org.polymap.wbv.model.Waldbesitzer;
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public class Report101
+public class Report102
         extends WaldbesitzerReport {
 
-    private static Log log = LogFactory.getLog( Report101.class );
+    private static Log log = LogFactory.getLog( Report102.class );
 
 
     @Override
     public String getName() {
-        return "WBV 1.01";
+        return "WBV 1.02";
     }
 
 
@@ -104,7 +103,6 @@ public class Report101
                     Flurstueck flurstueck = (Flurstueck)value;
                     Waldbesitzer wb = flurstueck2Waldbesitzer.get( flurstueck );
                     resultObj.put( "name", wb.besitzer().anzeigename() );
-                    resultObj.put( "adresse", calculateAdresse( wb ) );
                     String gemeinde, gemarkung, flstNr;
                     double gesamtFlaeche, waldFlaeche;
                     if (flurstueck.gemarkung.get() != null) {
@@ -122,41 +120,32 @@ public class Report101
                 }
                 return result;
             }
-
         };
 
         // report
-        TextColumnBuilder<String> nameColumn = col.column( "Waldbesitzer", "name", type.stringType() ).setStyle(
-                stl.style().bold() );
         TextColumnBuilder<String> gemeindeColumn = col.column( "Gemeinde", "gemeinde", type.stringType() ).setStyle(
-                stl.style().bold().setBottomBorder( stl.pen1Point() ) );
+                stl.style().bold() );
         TextColumnBuilder<String> gemarkungColumn = col.column( "Gemarkung", "gemarkung", type.stringType() ).setStyle(
-                stl.style().bold().setBottomBorder( stl.pen1Point() ) );
+                stl.style().bold() );
         TextColumnBuilder<String> flstnrColumn = col.column( "Flst-Nr", "flst_nr", type.stringType() ).setStyle(
                 stl.style().bold() );
         TextColumnBuilder<Double> gesamtFlaecheColumn = col.column( "Gesamtfläche", "gesamtFlaeche", type.doubleType() )
                 .setValueFormatter( nf );
         TextColumnBuilder<Double> waldFlaecheColumn = col.column( "davon Wald", "flaecheWaldAnteilig",
                 type.doubleType() ).setValueFormatter( nf );
+        TextColumnBuilder<String> nameColumn = col.column( "Waldbesitzer", "name", type.stringType() );
 
-        ColumnTitleGroupBuilder titleGroup1 = grid
-                .titleGroup( "Waldbesitzer Gemeinde \n                       Gemarkung", nameColumn, gemeindeColumn,
-                        gemarkungColumn );
+        ColumnTitleGroupBuilder titleGroup1 = grid.titleGroup( "Gemeinde \n       Gemarkung", gemeindeColumn,
+                gemarkungColumn );
 
-        ColumnGroupBuilder nameGroupBuilder = Groups
-                .group( nameColumn )
-                .footer( cmp.line() )
-                .setPadding( 5 )
-                .addHeaderComponent(
-                        cmp.text( field( "adresse", String.class ) ).setStyle(
-                                stl.style( stl.pen().setLineWidth( 1f ).setLineStyle( LineStyle.SOLID ) ) ) );
-        ColumnGroupBuilder gemeindeGroupBuilder = Groups.group( gemeindeColumn ).setPadding( 5 );
-        ColumnGroupBuilder gemarkungGroupBuilder = Groups.group( gemarkungColumn ).setPadding( 5 );
+        ColumnGroupBuilder gemeindeGroupBuilder = Groups.group( gemeindeColumn ).setPadding( 5 ).footer( cmp.line() );
+        ColumnGroupBuilder gemarkungGroupBuilder = Groups.group( gemarkungColumn ).setPadding( 5 ).footer( cmp.line() );
 
         ReportTemplateBuilder templateBuilder = template();
         templateBuilder.setGroupShowColumnHeaderAndFooter( false );
         templateBuilder.setGroupHeaderLayout( GroupHeaderLayout.VALUE );
         templateBuilder.setSubtotalLabelPosition( Position.BOTTOM );
+        templateBuilder.setSubtotalStyle( stl.style( stl.style().bold() ) );
         templateBuilder.setGroupStyle( stl.style( stl.style().bold() )
                 .setHorizontalAlignment( HorizontalAlignment.LEFT ) );
         templateBuilder.setGroupTitleStyle( stl.style( stl.style().bold() ).setHorizontalAlignment(
@@ -167,24 +156,19 @@ public class Report101
                 .setDataSource( new JsonDataSource( jsonBuilder.run() ) )
 
                 .setPageFormat( PageType.A4, PageOrientation.PORTRAIT )
-                .title( cmp.text( "Waldflächen der Waldbesitzer" ).setStyle( titleStyle ),
+                .title( cmp.text( "Flurstücksweise Anzeige mit Waldbesitzer" ).setStyle( titleStyle ),
                         cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
                         cmp.text( "" ).setStyle( headerStyle ) )
                 .pageFooter( cmp.pageXofY().setStyle( footerStyle ) )
                 // number of page
                 .setDetailOddRowStyle( highlightRowStyle )
                 .setColumnTitleStyle( columnTitleStyle )
-                .addGroup( nameGroupBuilder )
                 .addGroup( gemeindeGroupBuilder )
                 .addGroup( gemarkungGroupBuilder )
-                .columns( flstnrColumn, gesamtFlaecheColumn, waldFlaecheColumn )
-                .columnGrid( titleGroup1, flstnrColumn, gesamtFlaecheColumn, waldFlaecheColumn )
-                .subtotalsAtGroupHeader( nameGroupBuilder, sbt.sum( gesamtFlaecheColumn ).setValueFormatter( nf ),
+                .columns( flstnrColumn, gesamtFlaecheColumn, waldFlaecheColumn, nameColumn )
+                .columnGrid( titleGroup1, flstnrColumn, gesamtFlaecheColumn, waldFlaecheColumn, nameColumn )
+                .subtotalsAtGroupFooter( gemarkungGroupBuilder, sbt.sum( gesamtFlaecheColumn ).setValueFormatter( nf ),
                         sbt.sum( waldFlaecheColumn ).setValueFormatter( nf ) )
-                .subtotalsAtGroupHeader( gemeindeGroupBuilder, sbt.sum( gesamtFlaecheColumn ).setValueFormatter( nf ),
-                        sbt.sum( waldFlaecheColumn ).setValueFormatter( nf ) )
-                .subtotalsAtGroupHeader( gemarkungGroupBuilder, sbt.sum( gesamtFlaecheColumn ).setValueFormatter( nf ),
-                        sbt.sum( waldFlaecheColumn ).setValueFormatter( nf ) )
-                .sortBy( asc( nameColumn ) );
+                .sortBy( asc( gemeindeColumn ), asc( gemarkungColumn ) );
     }
 }

@@ -16,6 +16,7 @@ package org.polymap.wbv.model;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -47,14 +48,16 @@ public class Gemarkung
     
     public static Gemarkung         TYPE = null;
 
-    /** {@link #label()} -> Gemarkung */
+    /** 
+     * abbreviate( {@link #label()}, 30 ) -> Gemarkung 
+     */
     public static Lazy<Map<String,Gemarkung>> all = new CachedLazyInit( 1000, new Supplier<Map<String,Gemarkung>>() {
         public Map<String,Gemarkung> get() {
             UnitOfWork uow = WbvRepository.instance.get().newUnitOfWork();
             Map<String,Gemarkung> result = new TreeMap();
             for (Gemarkung gmk : uow.query( Gemarkung.class ).execute()) {
                 try {
-                    result.put( gmk.label(), gmk );
+                    result.put( StringUtils.abbreviate( gmk.label(), 30 ), gmk );
                 }
                 catch (ModelRuntimeException e) {
                     log.warn( "Gemarkung ohne Namen: " + gmk );

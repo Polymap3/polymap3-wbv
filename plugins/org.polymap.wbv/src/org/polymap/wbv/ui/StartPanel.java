@@ -82,8 +82,14 @@ import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.WbvRepository;
 import org.polymap.wbv.ui.reports.DownloadableReport;
-import org.polymap.wbv.ui.reports.Report105;
 import org.polymap.wbv.ui.reports.DownloadableReport.OutputType;
+import org.polymap.wbv.ui.reports.Report101;
+import org.polymap.wbv.ui.reports.Report102;
+import org.polymap.wbv.ui.reports.Report103;
+import org.polymap.wbv.ui.reports.Report105;
+import org.polymap.wbv.ui.reports.Report106;
+import org.polymap.wbv.ui.reports.Report106b;
+import org.polymap.wbv.ui.reports.Report106c;
 import org.polymap.wbv.ui.reports.WbvReport;
 
 /**
@@ -244,14 +250,20 @@ public class StartPanel
 
         // reports
         final List<WbvReport> reportsMap = new ArrayList();
-//        reportsMap.add( getContext().propagate( new Report101() ) );
+        reportsMap.add( getContext().propagate( new Report101() ) );
+        reportsMap.add( getContext().propagate( new Report102() ) );
+        reportsMap.add( getContext().propagate( new Report103() ) );
         reportsMap.add( getContext().propagate( new Report105() ) );
+        reportsMap.add( getContext().propagate( new Report106() ) );
+        reportsMap.add( getContext().propagate( new Report106b() ) );
+        reportsMap.add( getContext().propagate( new Report106c() ) );
         
         final Combo reports = new Combo( tableSection.getBody(), SWT.BORDER | SWT.READ_ONLY );
         reports.add( "Auswertung wählen..." );
         for (DownloadableReport report : reportsMap) {
             reports.add( report.getName() );
         }
+        reports.setVisibleItemCount( 8 );
         reports.select( 0 );
         reports.addSelectionListener( new SelectionAdapter() {
             @Override
