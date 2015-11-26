@@ -230,7 +230,7 @@ public class WaldbesitzerPanel
         tk = getSite().toolkit();
 
         // Basisdaten
-        IPanelSection basis = tk.createPanelSection( parent, "Basisdaten", IPanelSection.EXPANDABLE );
+        IPanelSection basis = tk.createPanelSection( parent, "Basisdaten", IPanelSection.EXPANDABLE, SWT.BORDER );
         basis.addConstraint( WbvPlugin.MIN_COLUMN_WIDTH, new PriorityConstraint( 100 ) );
         
         wbFormContainer = new BatikFormContainer( new WaldbesitzerForm() );
