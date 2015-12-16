@@ -62,16 +62,13 @@ public class Waldbesitzer
    
     public enum Waldeigentumsart {
         Staat_Sachsen( "Staatswald", "Freistaat Sachsen" ),
-        Staat_Bund( "Staatswald", "BRD" ),
+        Staat_Bund( "Staatswald", "Bund" ),
         Körperschaft_Kommune( "Körperschaftswald", "Kommunen" ),
-        Körperschaft_ZVB( "Körperschaftswald", "Zweckverbände" ),
-        Kirche( "Kirchenwald", null ),
+        Körperschaft_ZVB( "Körperschaftswald", "Sonstige" ),
+        Kirche42( "Kirchenwald nach § 4/2", null ),
+        Kirche43( "Kirchenwald nach § 4/3", null ),
         Privat( "Privatwald", null ),
-        /** Nach dem Import kein bekannter Wert */
-        T( "Nicht bestimmt (Code: T)", null ),
-        B( "Nicht bestimmt (Code: B)", null ),
-        A( "Nicht bestimmt (Code: A)", null ),
-        L( "Nicht bestimmt (Code: L)", null ),
+        BVVG( "BVVG", null ),
         Unbekannt( "Unbekannt", null );
         
         private String      name;
