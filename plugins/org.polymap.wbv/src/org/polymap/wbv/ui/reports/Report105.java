@@ -34,10 +34,7 @@ import net.sf.jasperreports.engine.data.JsonDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONObject;
-import org.polymap.rhei.batik.Context;
-import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.wbv.model.Flurstueck;
-import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 
 /**
@@ -49,12 +46,6 @@ public class Report105
         extends WaldbesitzerReport {
 
     private static Log      log = LogFactory.getLog( Report105.class );
-
-    @Context(scope="org.polymap.wbv.ui")
-    private ContextProperty<Revier> revier;
-
-    @Context(scope="org.polymap.wbv.ui")
-    private ContextProperty<String> queryString;
 
 
     @Override
@@ -78,7 +69,9 @@ public class Report105
                     Waldbesitzer wb = (Waldbesitzer)value;
                     double flaeche = 0;
                     for (Flurstueck fs : wb.flurstuecke) {
-                        flaeche += fs.flaecheWald.get();
+                        if (fs != null && fs.flaecheWald.get() != null) {
+                            flaeche += fs.flaecheWald.get();
+                        }
                     }
                     ((JSONObject)result).put( "gesamtWald", flaeche );
                 }
@@ -97,7 +90,7 @@ public class Report105
                 .setPageFormat( PageType.A4, PageOrientation.PORTRAIT )
                 .title( cmp.text( "Waldflächen der Waldbesitzer" ).setStyle( titleStyle ),
                         cmp.text( "Forstbezirk: Mittelsachsen" ).setStyle( headerStyle ),
-                        cmp.text( "Revier: " + revier.get().name + " / Abfrage: \"" + queryString.get() + "\"" )
+                        cmp.text( "Revier: " + getRevier() + " / Abfrage: \"" + getQuery() + "\"" )
                                 .setStyle( headerStyle ),
                         // cmp.text( "Abfrage: \"" + queryString.get() + "\""
                         // ).setStyle( headerStyle ),

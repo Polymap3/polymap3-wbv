@@ -52,10 +52,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.polymap.core.model2.Composite;
 
-import org.polymap.rhei.batik.Context;
-import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.wbv.model.Flurstueck;
-import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 
 /**
@@ -67,12 +64,6 @@ public class Report106
         extends WbvReport {
 
     private static Log      log = LogFactory.getLog( Report106.class );
-
-    @Context(scope="org.polymap.wbv.ui")
-    private ContextProperty<Revier> revier;
-
-    @Context(scope="org.polymap.wbv.ui")
-    private ContextProperty<String> queryString;
 
 
     @Override
@@ -219,16 +210,6 @@ public class Report106
                 .subtotalsAtSummary( sbt.sum( waldbesitzerAnzahlColumn) )
                 .subtotalsAtSummary( sbt.sum( gesamtflaecheColumn).setValueFormatter( haNumberFormatter ) )
                 .subtotalsAtSummary( sbt.sum( durchschnittsflaecheColumn).setValueFormatter( haNumberFormatter ) );
-    }
-
-
-    protected String getQuery() {
-        return queryString.get();
-    }
-
-
-    protected String getRevier() {
-        return revier.get().name;
     }
 
 

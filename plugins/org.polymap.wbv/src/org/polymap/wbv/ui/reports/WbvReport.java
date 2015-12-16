@@ -22,6 +22,14 @@ import java.awt.Color;
 import java.io.IOException;
 import java.text.NumberFormat;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.polymap.rhei.batik.Context;
+import org.polymap.rhei.batik.ContextProperty;
+
+import org.polymap.wbv.model.Revier;
+
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractValueFormatter;
 import net.sf.dynamicreports.report.builder.style.SimpleStyleBuilder;
@@ -30,9 +38,6 @@ import net.sf.dynamicreports.report.constant.HorizontalAlignment;
 import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRException;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 /**
  * Mostly style templates for WBV. 
@@ -56,6 +61,23 @@ public abstract class WbvReport
 
     protected StyleBuilder              headerStyle;
     
+    @Context(scope="org.polymap.wbv.ui")
+    protected ContextProperty<Revier>   revier;
+
+    @Context(scope="org.polymap.wbv.ui")
+    protected ContextProperty<String>   queryString;
+
+
+    protected String getQuery() {
+        return queryString.get();
+    }
+
+
+    protected String getRevier() {
+        Revier result = revier.get();
+        return result != null ? result.name : "Alle";
+    }
+
 
     /**
      * Creates template styles. Sub-classes should invoke this super implementation

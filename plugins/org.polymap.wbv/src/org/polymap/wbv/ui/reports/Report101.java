@@ -49,6 +49,7 @@ import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.data.JsonDataSource;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.apache.commons.logging.Log;
@@ -100,25 +101,29 @@ public class Report101
                 Object result = super.buildJson( value );
                 //
                 if (value instanceof Flurstueck) {
-                    JSONObject resultObj = (JSONObject)result;
-                    Flurstueck flurstueck = (Flurstueck)value;
-                    Waldbesitzer wb = flurstueck2Waldbesitzer.get( flurstueck );
-                    resultObj.put( "name", wb.besitzer().anzeigename() );
-                    resultObj.put( "adresse", calculateAdresse( wb ) );
-                    String gemeinde, gemarkung, flstNr;
-                    double gesamtFlaeche, waldFlaeche;
-                    if (flurstueck.gemarkung.get() != null) {
-                        gemeinde = flurstueck.gemarkung.get().gemeinde.get();
-                        resultObj.put( "gemeinde", gemeinde );
-                        gemarkung = flurstueck.gemarkung.get().gemarkung.get();
-                        resultObj.put( "gemarkung", gemarkung );
+                    try {
+                        JSONObject resultObj = (JSONObject)result;
+                        Flurstueck flurstueck = (Flurstueck)value;
+                        Waldbesitzer wb = flurstueck2Waldbesitzer.get( flurstueck );
+                        resultObj.put( "name", besitzerName( wb ) );
+                        resultObj.put( "adresse", calculateAdresse( wb ) );
+                        if (flurstueck.gemarkung.get() != null) {
+                            String gemeinde = flurstueck.gemarkung.get().gemeinde.get();
+                            resultObj.put( "gemeinde", gemeinde );
+                            String gemarkung = flurstueck.gemarkung.get().gemarkung.get();
+                            resultObj.put( "gemarkung", gemarkung );
+                        }
+                        String flstNr = flurstueck.zaehlerNenner.get();
+                        resultObj.put( "flst_nr", flstNr );
+                        Double gesamtFlaeche = flurstueck.flaeche.get();
+                        Double waldFlaeche = flurstueck.flaecheWald.get();
+                        resultObj.put( "gesamtFlaeche", gesamtFlaeche != null ? gesamtFlaeche.doubleValue() : 0d );
+                        resultObj.put( "flaecheWaldAnteilig", waldFlaeche != null ? waldFlaeche.doubleValue() : 0d );
                     }
-                    flstNr = flurstueck.zaehlerNenner.get();
-                    resultObj.put( "flst_nr", flstNr );
-                    gesamtFlaeche = flurstueck.flaeche.get();
-                    waldFlaeche = flurstueck.flaecheWald.get();
-                    resultObj.put( "gesamtFlaeche", gesamtFlaeche );
-                    resultObj.put( "flaecheWaldAnteilig", waldFlaeche );
+                    catch (JSONException e) {
+                        // don't break the entire run
+                        log.warn( "", e );
+                    }
                 }
                 return result;
             }

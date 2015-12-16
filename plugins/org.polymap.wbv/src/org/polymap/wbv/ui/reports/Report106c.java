@@ -66,12 +66,6 @@ public class Report106c
 
     private static Log      log = LogFactory.getLog( Report106c.class );
 
-    @Context(scope="org.polymap.wbv.ui")
-    private ContextProperty<Revier> revier;
-
-    @Context(scope="org.polymap.wbv.ui")
-    private ContextProperty<String> queryString;
-
 
     @Override
     public String getName() {
@@ -206,16 +200,6 @@ public class Report106c
         }
         report.addColumn( sumColumn );
         return report;
-    }
-
-
-    protected String getQuery() {
-        return queryString.get();
-    }
-
-
-    protected String getRevier() {
-        return revier.get().name;
     }
 
 

@@ -109,7 +109,8 @@ public class Kontakt
     public String anzeigename() {
         return !isEmpty( organisation.get() )
                 ? organisation.get()
-                : Joiner.on( ' ' ).skipNulls().join( /*anrede.get(),*/ vorname.get(), name.get() );
+                // Name zuerst wegen Sortierung in Tabellen und Reports
+                : Joiner.on( "" ).skipNulls().join( /*anrede.get(),*/ name.get(), ", ", vorname.get() );
     }
     
 }

@@ -26,7 +26,6 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -156,7 +155,7 @@ public abstract class EntityReport
          * @return
          */
         protected Object buildJson( Object value ) {
-            log.info( StringUtils.rightPad( "", indent += 4 ) + value );
+            //log.info( StringUtils.rightPad( "", indent += 4 ) + value );
             if (value == null) {
                 return "null";
             }
@@ -218,11 +217,11 @@ public abstract class EntityReport
             try {
                 for (String s : strings) {
                     writer.write( s );
-                    System.out.print( s );
+                    //System.out.print( s );
                 }
                 writer.write( "\n" );
                 writer.flush();
-                System.out.print( "\n" );
+                //System.out.print( "\n" );
             }
             catch (IOException e) {
                 throw new RuntimeException( e );

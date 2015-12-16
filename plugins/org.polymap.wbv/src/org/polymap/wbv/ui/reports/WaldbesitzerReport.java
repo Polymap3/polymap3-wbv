@@ -18,13 +18,14 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.field;
 
 import java.util.List;
 
-import net.sf.dynamicreports.report.builder.expression.AbstractComplexExpression;
-import net.sf.dynamicreports.report.definition.ReportParameters;
-
-import org.polymap.wbv.model.Waldbesitzer;
-
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+
+import org.polymap.wbv.model.Kontakt;
+import org.polymap.wbv.model.Waldbesitzer;
+
+import net.sf.dynamicreports.report.builder.expression.AbstractComplexExpression;
+import net.sf.dynamicreports.report.definition.ReportParameters;
 
 /**
  * 
@@ -32,26 +33,38 @@ import com.google.common.base.Strings;
  */
 public abstract class WaldbesitzerReport
         extends WbvReport {
+    
+    protected String besitzerName( Waldbesitzer wb ) {
+        Kontakt besitzer = wb.besitzer();
+        return besitzer != null ? besitzer.anzeigename() : "(kein Besitzer festgelegt)";
+    }
 
+    
     protected String calculateAdresse( Waldbesitzer wb ) {
-        String strasse = wb.besitzer().strasse.get();
-        String ortsteil = wb.besitzer().ortsteil.get();
-        String plz = wb.besitzer().plz.get();
-        String ort = wb.besitzer().ort.get();
-        StringBuilder sb = new StringBuilder();
-        if (!Strings.isNullOrEmpty(ortsteil)) {
-            sb.append( " OT " + ortsteil + ", " );
+        Kontakt besitzer = wb.besitzer();
+        if (besitzer == null) {
+            return "(kein Besitzer festgelegt)";
         }
-        if (!Strings.isNullOrEmpty(strasse)) {
-            sb.append( strasse + ", " );
+        else {
+            String strasse = besitzer.strasse.get();
+            String ortsteil = besitzer.ortsteil.get();
+            String plz = besitzer.plz.get();
+            String ort = besitzer.ort.get();
+            StringBuilder sb = new StringBuilder();
+            if (!Strings.isNullOrEmpty(ortsteil)) {
+                sb.append( " OT " + ortsteil + ", " );
+            }
+            if (!Strings.isNullOrEmpty(strasse)) {
+                sb.append( strasse + ", " );
+            }
+            if (!Strings.isNullOrEmpty(plz)) {
+                sb.append( plz + " " );
+            }
+            if (!Strings.isNullOrEmpty(ort)) {
+                sb.append( ort );
+            }
+            return sb.toString();
         }
-        if (!Strings.isNullOrEmpty(plz)) {
-            sb.append( plz + " " );
-        }
-        if (!Strings.isNullOrEmpty(ort)) {
-            sb.append( ort );
-        }
-        return sb.toString();
     }
 
 
