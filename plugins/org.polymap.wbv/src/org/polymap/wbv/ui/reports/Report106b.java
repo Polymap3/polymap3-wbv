@@ -58,10 +58,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.polymap.core.model2.Composite;
 
-import org.polymap.rhei.batik.Context;
-import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.wbv.model.Flurstueck;
-import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
 
@@ -305,19 +302,16 @@ public class Report106b
 
 
     private String getArt( Waldeigentumsart art ) {
-        String artStr = null;
-        switch (art) {
+        switch (art
+                ) {
             case Privat:
-                artStr = "Privatwald";
-                break;
-            case Kirche:
-                artStr = "Kirchenwald";
-                break;
+                return "Privatwald";
+            case Kirche42:
+            case Kirche43:
+                return "Kirchenwald";
             default:
-                artStr = "Körperschaftswald";
-                break;
+                return "Körperschaftswald";
         }
-        return artStr;
     }
 
 

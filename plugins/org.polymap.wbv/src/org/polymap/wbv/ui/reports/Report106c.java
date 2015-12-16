@@ -48,11 +48,8 @@ import org.polymap.core.model2.Composite;
 
 import org.json.JSONObject;
 
-import org.polymap.rhei.batik.Context;
-import org.polymap.rhei.batik.ContextProperty;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
-import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
 
@@ -90,7 +87,7 @@ public class Report106c
                     List<Flurstueck> fs = getFlurstueckeForGemarkung( gemarkung2Flurstuecke, gemarkung );
                     fs.add( flurstueck );
                     gemarkung2Flurstuecke.put( gemarkung, fs );
-                    flurstuecke2Art.put( flurstueck, getArt(wb.eigentumsArt.get()) );
+                    flurstuecke2Art.put( flurstueck, getArt( wb.eigentumsArt.get() ) );
                 }
             }
         }
@@ -204,36 +201,25 @@ public class Report106c
 
 
     private String getArt( Waldeigentumsart art ) {
-        if(art == null) {
+        if (art == null) {
             return "ohne_ea";
         }
-        String artStr = null;
         switch (art) {
-            case Privat:
-                artStr = "PW";
-                break;
-            case Kirche:
-                artStr = "KiW4_2";
-                // TODO
-                // artStr = "KiW4_3";                
-                break;
-            case L:
-                artStr = "LW";
-                break;
-            case B:
-                artStr = "BW";
-                break;
-            case T:
-                artStr = "TW";
-                break;
-            case Unbekannt:
-                artStr = "ohne_ea";
-                break;
-            default:
-                artStr = "Kow_KoeW";
-                break;
+            case Privat:    return "PW";
+            case Kirche42:  return "KiW4_2";
+            case Kirche43:  return "KiW4_3";
+//            case :
+//                artStr = "LW";
+//                break;
+//            case BV:
+//                artStr = "BW";
+//                break;
+//            case T:
+//                artStr = "TW";
+//                break;
+            case Unbekannt: return "ohne_ea";
+            default:        return "ohne_ea";  // "Kow_KoeW";
         }
-        return artStr;
     }
 
 
