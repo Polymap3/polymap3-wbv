@@ -128,12 +128,13 @@ public class WvkImporter
                         String ea = (String)finalRow.get( "WBS_EA" );
                         switch (ea != null ? ea : "null") {
                             case "P": proto.eigentumsArt.set( Waldeigentumsart.Privat ); break;
-                            case "K42": proto.eigentumsArt.set( Waldeigentumsart.Kirche ); break;
+                            case "K42": proto.eigentumsArt.set( Waldeigentumsart.Kirche42 ); break;
+                            case "K43": proto.eigentumsArt.set( Waldeigentumsart.Kirche43 ); break;
                             case "C": proto.eigentumsArt.set( Waldeigentumsart.Körperschaft_Kommune ); break;
-                            case "T": proto.eigentumsArt.set( Waldeigentumsart.T ); break;
-                            case "B": proto.eigentumsArt.set( Waldeigentumsart.B ); break;
-                            case "A": proto.eigentumsArt.set( Waldeigentumsart.A ); break;
-                            case "L": proto.eigentumsArt.set( Waldeigentumsart.L ); break;
+                            case "T": proto.eigentumsArt.set( Waldeigentumsart.BVVG ); break;
+                            case "B": proto.eigentumsArt.set( Waldeigentumsart.Staat_Bund ); break;
+                            case "A": proto.eigentumsArt.set( Waldeigentumsart.Körperschaft_ZVB ); break;
+                            case "L": proto.eigentumsArt.set( Waldeigentumsart.Staat_Sachsen ); break;
                             default : {
                                 log.warn( "Unbekannte Eigentumsart: " + ea );
                                 proto.eigentumsArt.set( Waldeigentumsart.Unbekannt );

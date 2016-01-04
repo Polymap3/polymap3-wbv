@@ -24,12 +24,13 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 import static net.sf.dynamicreports.report.builder.DynamicReports.template;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import java.io.IOException;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.ReportTemplateBuilder;
@@ -46,9 +47,12 @@ import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.data.JsonDataSource;
 
+import org.json.JSONObject;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.json.JSONObject;
+
+import org.polymap.model2.Composite;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Waldbesitzer;
 
@@ -74,17 +78,17 @@ public class Report102
         super.build();
 
         List<Flurstueck> flurstuecke = new ArrayList<Flurstueck>();
-        Map<Flurstueck,Waldbesitzer> flurstueck2Waldbesitzer = new HashMap<Flurstueck,Waldbesitzer>();
+        final Map<Flurstueck,Waldbesitzer> flurstueck2Waldbesitzer = new HashMap<Flurstueck,Waldbesitzer>();
 
-        entities.forEach( entity -> {
+        for (Composite entity : entities) {
             if (entity instanceof Waldbesitzer) {
                 Waldbesitzer wb = (Waldbesitzer)entity;
-                wb.flurstuecke.forEach( flurstueck -> {
+                for (Flurstueck flurstueck : wb.flurstuecke) {
                     flurstuecke.add( flurstueck );
                     flurstueck2Waldbesitzer.put( flurstueck, wb );
-                } );
+                }
             }
-        } );
+        };
 
         // datasource
         JsonBuilder jsonBuilder = new JsonBuilder( flurstuecke ) {
@@ -97,21 +101,19 @@ public class Report102
                     JSONObject resultObj = (JSONObject)result;
                     Flurstueck flurstueck = (Flurstueck)value;
                     Waldbesitzer wb = flurstueck2Waldbesitzer.get( flurstueck );
-                    resultObj.put( "name", wb.besitzer().anzeigename() );
-                    String gemeinde, gemarkung, flstNr;
-                    double gesamtFlaeche, waldFlaeche;
-                    if (flurstueck.gemarkung.isPresent()) {
-                        gemeinde = flurstueck.gemarkung.get().gemeinde.get();
+                    resultObj.put( "name", besitzerName( wb ) );
+                    if (flurstueck.gemarkung.get() != null) {
+                        String gemeinde = flurstueck.gemarkung.get().gemeinde.get();
                         resultObj.put( "gemeinde", gemeinde );
-                        gemarkung = flurstueck.gemarkung.get().gemarkung.get();
+                        String gemarkung = flurstueck.gemarkung.get().gemarkung.get();
                         resultObj.put( "gemarkung", gemarkung );
                     }
-                    flstNr = flurstueck.zaehlerNenner.get();
+                    String flstNr = flurstueck.zaehlerNenner.get();
                     resultObj.put( "flst_nr", flstNr );
-                    gesamtFlaeche = flurstueck.flaeche.get();
-                    waldFlaeche = flurstueck.flaecheWald.get();
-                    resultObj.put( "gesamtFlaeche", gesamtFlaeche );
-                    resultObj.put( "flaecheWaldAnteilig", waldFlaeche );
+                    Double gesamtFlaeche = flurstueck.flaeche.get();
+                    Double waldFlaeche = flurstueck.flaecheWald.get();
+                    resultObj.put( "gesamtFlaeche", gesamtFlaeche != null ? gesamtFlaeche.doubleValue() : 0d );
+                    resultObj.put( "flaecheWaldAnteilig", waldFlaeche != null ? waldFlaeche.doubleValue() : 0d );
                 }
                 return result;
             }

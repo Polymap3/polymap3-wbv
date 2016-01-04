@@ -58,5 +58,17 @@
             id="org.polymap.wbv.AdminPanel">
       </panel>
    </extension>
+   <extension
+         id="org.polymap.wbv.app"
+         point="org.eclipse.core.runtime.applications">
+      <application
+            cardinality="singleton-global"
+            thread="main"
+            visible="true">
+         <run
+               class="org.polymap.wbv.WbvApplication">
+         </run>
+      </application>
+   </extension>
 
 </plugin>

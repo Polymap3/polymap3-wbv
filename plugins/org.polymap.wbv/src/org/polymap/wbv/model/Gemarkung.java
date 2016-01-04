@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Supplier;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -46,14 +47,16 @@ public class Gemarkung
     
     public static Gemarkung         TYPE = null;
 
-    /** {@link #label()} -> Gemarkung */
+    /** 
+     * abbreviate( {@link #label()}, 30 ) -> Gemarkung 
+     */
     public static Lazy<Map<String,Gemarkung>> all = new CachedLazyInit( new Supplier<Map<String,Gemarkung>>() {
         public Map<String,Gemarkung> get() {
             UnitOfWork uow = WbvRepository.instance.get().newUnitOfWork();
             Map<String,Gemarkung> result = new TreeMap();
             for (Gemarkung gmk : uow.query( Gemarkung.class ).execute()) {
                 try {
-                    result.put( gmk.label(), gmk );
+                    result.put( StringUtils.abbreviate( gmk.label(), 30 ), gmk );
                 }
                 catch (ModelRuntimeException e) {
                     log.warn( "Gemarkung ohne Namen: " + gmk );

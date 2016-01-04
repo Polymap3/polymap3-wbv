@@ -21,6 +21,14 @@ import java.io.IOException;
 import java.text.NumberFormat;
 import java.util.Locale;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.polymap.rhei.batik.Context;
+import org.polymap.rhei.batik.Scope;
+
+import org.polymap.wbv.model.Revier;
+
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractValueFormatter;
 import net.sf.dynamicreports.report.builder.style.SimpleStyleBuilder;
@@ -30,9 +38,6 @@ import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 /**
  * Mostly style templates for WBV.
  *
@@ -41,19 +46,36 @@ import org.apache.commons.logging.LogFactory;
 public abstract class WbvReport
         extends EntityReport {
 
-    private static Log           log = LogFactory.getLog( WbvReport.class );
+    private static Log log = LogFactory.getLog( WbvReport.class );
 
-    protected StyleBuilder       bold;
+    protected StyleBuilder          bold;
 
-    protected StyleBuilder       titleStyle;
+    protected StyleBuilder          titleStyle;
 
-    protected StyleBuilder       columnTitleStyle;
+    protected StyleBuilder          columnTitleStyle;
 
-    protected StyleBuilder       footerStyle;
+    protected StyleBuilder          footerStyle;
 
-    protected SimpleStyleBuilder highlightRowStyle;
+    protected StyleBuilder          headerStyle;
+    
+    protected SimpleStyleBuilder    highlightRowStyle;
 
-    protected StyleBuilder       headerStyle;
+    @Scope( "org.polymap.wbv.ui" )
+    protected Context<Revier>       revier;
+
+    @Scope( "org.polymap.wbv.ui" )
+    protected Context<String>       queryString;
+
+
+    protected String getQuery() {
+        return queryString.get();
+    }
+
+
+    protected String getRevier() {
+        Revier result = revier.get();
+        return result != null ? result.name : "Alle";
+    }
 
 
     /**

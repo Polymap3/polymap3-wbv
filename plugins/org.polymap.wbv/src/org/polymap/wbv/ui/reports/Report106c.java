@@ -21,13 +21,24 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 import static net.sf.dynamicreports.report.builder.DynamicReports.template;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
-import java.io.IOException;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import java.io.IOException;
+
+import org.json.JSONObject;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.polymap.model2.Composite;
+import org.polymap.wbv.model.Flurstueck;
+import org.polymap.wbv.model.Gemarkung;
+import org.polymap.wbv.model.Waldbesitzer;
+import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.ReportTemplateBuilder;
@@ -41,20 +52,6 @@ import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.data.JsonDataSource;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import org.json.JSONObject;
-
-import org.polymap.rhei.batik.Context;
-import org.polymap.rhei.batik.Scope;
-
-import org.polymap.wbv.model.Flurstueck;
-import org.polymap.wbv.model.Gemarkung;
-import org.polymap.wbv.model.Revier;
-import org.polymap.wbv.model.Waldbesitzer;
-import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
-
 /**
  * Waldflächen aller Waldbesitzer.
  *
@@ -64,12 +61,6 @@ public class Report106c
         extends WbvReport {
 
     private static Log      log = LogFactory.getLog( Report106c.class );
-
-    @Scope("org.polymap.wbv.ui")
-    private Context<Revier> revier;
-
-    @Scope("org.polymap.wbv.ui")
-    private Context<String> queryString;
 
 
     @Override
@@ -83,24 +74,24 @@ public class Report106c
         super.build();
 
         List<Gemarkung> gemarkungen = new ArrayList<Gemarkung>();
-        Map<Gemarkung,List<Flurstueck>> gemarkung2Flurstuecke = new HashMap<Gemarkung,List<Flurstueck>>();
-        Map<Flurstueck,String> flurstuecke2Art = new HashMap<Flurstueck,String>();
+        final Map<Gemarkung,List<Flurstueck>> gemarkung2Flurstuecke = new HashMap<Gemarkung,List<Flurstueck>>();
+        final Map<Flurstueck,String> flurstuecke2Art = new HashMap<Flurstueck,String>();
 
-        entities.forEach( entity -> {
+        for (Composite entity : entities) {
             if (entity instanceof Waldbesitzer) {
                 Waldbesitzer wb = (Waldbesitzer)entity;
-                wb.flurstuecke.forEach( flurstueck -> {
+                for (Flurstueck flurstueck : wb.flurstuecke) {
                     Gemarkung gemarkung = flurstueck.gemarkung.get();
                     gemarkungen.add(gemarkung);
                     List<Flurstueck> fs = getFlurstueckeForGemarkung( gemarkung2Flurstuecke, gemarkung );
                     fs.add( flurstueck );
                     gemarkung2Flurstuecke.put( gemarkung, fs );
-                    flurstuecke2Art.put( flurstueck, getArt(wb.eigentumsArt.get()) );
-                } );
+                    flurstuecke2Art.put( flurstueck, getArt( wb.eigentumsArt.get() ) );
+                }
             }
-        } );
+        }
 
-        List<String> arten = new ArrayList<String>();
+        final List<String> arten = new ArrayList<String>();
         arten.add("LW");
         arten.add("BW");
         arten.add("KiW4_2");
@@ -208,47 +199,26 @@ public class Report106c
     }
 
 
-    protected String getQuery() {
-        return queryString.get();
-    }
-
-
-    protected String getRevier() {
-        return revier.get().name;
-    }
-
-
     private String getArt( Waldeigentumsart art ) {
-        if(art == null) {
+        if (art == null) {
             return "ohne_ea";
         }
-        String artStr = null;
         switch (art) {
-            case Privat:
-                artStr = "PW";
-                break;
-            case Kirche:
-                artStr = "KiW4_2";
-                // TODO
-                // artStr = "KiW4_3";                
-                break;
-            case L:
-                artStr = "LW";
-                break;
-            case B:
-                artStr = "BW";
-                break;
-            case T:
-                artStr = "TW";
-                break;
-            case Unbekannt:
-                artStr = "ohne_ea";
-                break;
-            default:
-                artStr = "Kow_KoeW";
-                break;
+            case Privat:    return "PW";
+            case Kirche42:  return "KiW4_2";
+            case Kirche43:  return "KiW4_3";
+//            case :
+//                artStr = "LW";
+//                break;
+//            case BV:
+//                artStr = "BW";
+//                break;
+//            case T:
+//                artStr = "TW";
+//                break;
+            case Unbekannt: return "ohne_ea";
+            default:        return "ohne_ea";  // "Kow_KoeW";
         }
-        return artStr;
     }
 
 

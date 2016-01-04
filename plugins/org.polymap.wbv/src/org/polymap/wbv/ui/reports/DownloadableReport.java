@@ -150,7 +150,9 @@ public abstract class DownloadableReport
         protected void runWithException( IProgressMonitor monitor ) throws Exception {
             try {
                 JasperReportBuilder report = build();
-                report.toJrXml( System.out );
+                if (log.isDebugEnabled()) {
+                    report.toJrXml( System.out );
+                }
 
                 outputType.create( report, out );
                 out.flush();

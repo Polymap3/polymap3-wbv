@@ -31,6 +31,15 @@ import java.util.List;
 
 import java.io.IOException;
 
+import org.json.JSONObject;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.polymap.model2.Composite;
+import org.polymap.wbv.model.Flurstueck;
+import org.polymap.wbv.model.Waldbesitzer;
+
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.ReportTemplateBuilder;
 import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
@@ -46,19 +55,6 @@ import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.data.JsonDataSource;
 
-import org.json.JSONObject;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import org.polymap.rhei.batik.Context;
-import org.polymap.rhei.batik.Scope;
-
-import org.polymap.model2.Composite;
-import org.polymap.wbv.model.Flurstueck;
-import org.polymap.wbv.model.Revier;
-import org.polymap.wbv.model.Waldbesitzer;
-
 /**
  * Waldflächen aller Waldbesitzer.
  *
@@ -68,13 +64,6 @@ public class Report103
         extends WaldbesitzerReport {
 
     private static Log      log = LogFactory.getLog( Report103.class );
-
-    @Scope("org.polymap.wbv.ui")
-    private Context<Revier> revier;
-
-    @Scope("org.polymap.wbv.ui")
-    private Context<String> queryString;
-
 
     @Override
     public String getName() {
@@ -104,9 +93,7 @@ public class Report103
         Composite entity = iter.next();
         if (entity instanceof Waldbesitzer) {
             firstWb = (Waldbesitzer)entity;
-            firstWb.flurstuecke.forEach( flurstueck -> {
-                flurstuecke.add( flurstueck );
-            } );
+            flurstuecke.addAll( firstWb.flurstuecke );
         }
 
         final Waldbesitzer wb = firstWb;
@@ -121,22 +108,20 @@ public class Report103
                 if (value instanceof Flurstueck) {
                     JSONObject resultObj = (JSONObject)result;
                     Flurstueck flurstueck = (Flurstueck)value;
-                    resultObj.put( "name", wb.besitzer().anzeigename() );
+                    resultObj.put( "name", besitzerName( wb ) );
                     resultObj.put( "adresse", calculateAdresse( wb ) );
-                    String gemeinde, gemarkung, flstNr;
-                    double gesamtFlaeche, waldFlaeche;
-                    if (flurstueck.gemarkung.isPresent()) {
-                        gemeinde = flurstueck.gemarkung.get().gemeinde.get();
+                    if (flurstueck.gemarkung.get() != null) {
+                        String gemeinde = flurstueck.gemarkung.get().gemeinde.get();
                         resultObj.put( "gemeinde", gemeinde );
-                        gemarkung = flurstueck.gemarkung.get().gemarkung.get();
+                        String gemarkung = flurstueck.gemarkung.get().gemarkung.get();
                         resultObj.put( "gemarkung", gemarkung );
                     }
-                    flstNr = flurstueck.zaehlerNenner.get();
+                    String flstNr = flurstueck.zaehlerNenner.get();
                     resultObj.put( "flst_nr", flstNr );
-                    gesamtFlaeche = flurstueck.flaeche.get();
-                    waldFlaeche = flurstueck.flaecheWald.get();
-                    resultObj.put( "gesamtFlaeche", gesamtFlaeche );
-                    resultObj.put( "flaecheWaldAnteilig", waldFlaeche );
+                    Double gesamtFlaeche = flurstueck.flaeche.get();
+                    Double waldFlaeche = flurstueck.flaecheWald.get();
+                    resultObj.put( "gesamtFlaeche", gesamtFlaeche != null ? gesamtFlaeche.doubleValue() : 0d );
+                    resultObj.put( "flaecheWaldAnteilig", waldFlaeche != null ? waldFlaeche.doubleValue() : 0d );
                     resultObj.put( "nutzungsart", "" );
                     resultObj.put( "forstort", "" );
                     resultObj.put( "nutzungsflaeche", "" );
@@ -176,7 +161,7 @@ public class Report103
                         cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
                         cmp.text( "Forstbezirk: Mittelsachsen" ).setStyle( headerStyle ),
                         cmp.text( "Revier: " + getRevier() + " / Abfrage: \"" + getQuery() + "\"" ).setStyle(
-                                headerStyle ), cmp.text( firstWb.besitzer().anzeigename() ).setStyle( headerStyle ),
+                                headerStyle ), cmp.text( besitzerName( firstWb ) ).setStyle( headerStyle ),
                         cmp.text( calculateAdresse( firstWb ) ).setStyle( headerStyle ) )
                 .pageFooter( cmp.pageXofY().setStyle( footerStyle ) )
                 // number of page
@@ -197,13 +182,4 @@ public class Report103
         return report;
     }
 
-
-    protected String getQuery() {
-        return queryString.get();
-    }
-
-
-    protected String getRevier() {
-        return revier.get().name;
-    }
 }

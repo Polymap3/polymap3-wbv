@@ -38,6 +38,14 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.text.NumberFormat;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.polymap.model2.Composite;
+import org.polymap.wbv.model.Flurstueck;
+import org.polymap.wbv.model.Waldbesitzer;
+import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
+
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.ReportTemplateBuilder;
 import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
@@ -53,17 +61,6 @@ import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.data.JRCsvDataSource;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import org.polymap.rhei.batik.Context;
-import org.polymap.rhei.batik.Scope;
-
-import org.polymap.wbv.model.Flurstueck;
-import org.polymap.wbv.model.Revier;
-import org.polymap.wbv.model.Waldbesitzer;
-import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
-
 /**
  * Waldflächen aller Waldbesitzer.
  *
@@ -73,12 +70,6 @@ public class Report106b
         extends WbvReport {
 
     private static Log      log = LogFactory.getLog( Report106b.class );
-
-    @Scope("org.polymap.wbv.ui")
-    private Context<Revier> revier;
-
-    @Scope("org.polymap.wbv.ui")
-    private Context<String> queryString;
 
 
     @Override
@@ -127,10 +118,10 @@ public class Report106b
         flaechenGruppe.add( 1d );
         flaechenGruppe.add( 0d );
 
-        entities.forEach( entity -> {
+        for (Composite entity : entities) {
             if (entity instanceof Waldbesitzer) {
                 Waldbesitzer wb = (Waldbesitzer)entity;
-                wb.flurstuecke.forEach( flurstueck -> {
+                for (Flurstueck flurstueck : wb.flurstuecke) {
                     Group group = grouped.get( getArt( wb.eigentumsArt.get() ) );
                     group.flurstuecke.add( flurstueck );
                     List<Flurstueck> fs = null;
@@ -149,9 +140,9 @@ public class Report106b
                         }
                     }
                     group.flurstueck2Waldbesitzer.put( flurstueck, wb );
-                } );
+                }
             }
-        } );
+        }
 
         Double sum;
         Set<Waldbesitzer> wbs;
@@ -309,30 +300,17 @@ public class Report106b
     }
 
 
-    protected String getQuery() {
-        return queryString.get();
-    }
-
-
-    protected String getRevier() {
-        return revier.get().name;
-    }
-
-
     private String getArt( Waldeigentumsart art ) {
-        String artStr = null;
-        switch (art) {
+        switch (art
+                ) {
             case Privat:
-                artStr = "Privatwald";
-                break;
-            case Kirche:
-                artStr = "Kirchenwald";
-                break;
+                return "Privatwald";
+            case Kirche42:
+            case Kirche43:
+                return "Kirchenwald";
             default:
-                artStr = "Körperschaftswald";
-                break;
+                return "Körperschaftswald";
         }
-        return artStr;
     }
 
 
