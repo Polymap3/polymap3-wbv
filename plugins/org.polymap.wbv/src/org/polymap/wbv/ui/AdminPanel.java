@@ -52,6 +52,7 @@ import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.rap.updownload.upload.IUploadHandler;
 import org.polymap.rap.updownload.upload.Upload;
@@ -60,6 +61,7 @@ import org.polymap.wbv.mdb.WvkImporter;
 import org.polymap.wbv.model.Baumart;
 import org.polymap.wbv.model.Gemarkung;
 import org.polymap.wbv.model.Revier;
+import org.polymap.wbv.model.WbvRepository;
 
 /**
  * 
@@ -122,21 +124,21 @@ public class AdminPanel
             @Override
             public void widgetSelected( SelectionEvent ev ) {
                 try {
-                    newUnitOfWork();
+                    UnitOfWork uow = WbvRepository.newUnitOfWork();
                     getSite().setStatus( new Status( IStatus.ERROR, WbvPlugin.ID, "Import läuft...") );
 
-                    WvkImporter op = new WvkImporter( uow() );
+                    WvkImporter op = new WvkImporter( uow );
                     OperationSupport.instance().execute( op, true, false, new JobChangeAdapter() {
                         @Override
                         public void done( IJobChangeEvent jev ) {
                             if (jev.getResult().isOK()) {
-                                closeUnitOfWork( Completion.STORE );
+                                uow.commit();
                                 getSite().setStatus( new Status( IStatus.OK, WbvPlugin.ID, "Import war erfolgreich." ) );
                             }
                             else {
-                                closeUnitOfWork( Completion.CANCEL );                                
                                 getSite().setStatus( new Status( IStatus.ERROR, WbvPlugin.ID, jev.getResult().getMessage() ) );
                             }
+                            uow.close();
                         }
                     });
                 }
@@ -175,12 +177,12 @@ public class AdminPanel
                 // quoteChar, delimiterChar, endOfLineSymbols
                 CsvPreference prefs = new CsvPreference( '"', ',', "\r\n" );
                 ICsvListReader csv = new CsvListReader( new InputStreamReader( in, "UTF-8" ), prefs );
-                try {
-                    newUnitOfWork();
-
+                try (
+                    UnitOfWork uow = WbvRepository.newUnitOfWork();
+                ){
                     for (List<String> l = csv.read(); l != null; l = csv.read()) {
                         final String[] line = l.toArray( new String[l.size()] );
-                        uow().createEntity( Baumart.class, null, new ValueInitializer<Baumart>() {
+                        uow.createEntity( Baumart.class, null, new ValueInitializer<Baumart>() {
                             @Override
                             public Baumart initialize( Baumart proto ) throws Exception {
                                 proto.kategorie.set( line[0] );
@@ -195,13 +197,10 @@ public class AdminPanel
                             }
                         });
                     }
-                    closeUnitOfWork( Completion.STORE );
+                    uow.commit();
                 }
                 catch (Exception e) {
                     StatusDispatcher.handleError( "Die Daten konnten nicht korrekt importiert werden.", e );
-                }
-                finally {
-                    closeUnitOfWork( Completion.CANCEL );
                 }
             }
         });
@@ -232,12 +231,12 @@ public class AdminPanel
                 // quoteChar, delimiterChar, endOfLineSymbols
                 CsvPreference prefs = new CsvPreference( '"', ',', "\r\n" );
                 ICsvListReader csv = new CsvListReader( new InputStreamReader( in, "UTF-8" ), prefs );
-                try {
-                    newUnitOfWork();
-                    
+                try (
+                    UnitOfWork uow = WbvRepository.newUnitOfWork();
+                ){
                     // aktuelle Gemarkung Entities löschen
-                    for (Gemarkung gmk : uow().query( Gemarkung.class ).execute()) {
-                        uow().removeEntity( gmk );
+                    for (Gemarkung gmk : uow.query( Gemarkung.class ).execute()) {
+                        uow.removeEntity( gmk );
                     }
 
                     // neue importieren
@@ -249,7 +248,7 @@ public class AdminPanel
                             log.warn( "Skipping header line: " + Arrays.toString( line ) );
                             continue;
                         }
-                        uow().createEntity( Gemarkung.class, id, new ValueInitializer<Gemarkung>() {
+                        uow.createEntity( Gemarkung.class, id, new ValueInitializer<Gemarkung>() {
                             @Override
                             public Gemarkung initialize( Gemarkung proto ) throws Exception {
                                 proto.gemarkung.set( line[1] );
@@ -261,15 +260,12 @@ public class AdminPanel
                         });
                         Revier.all.clear();
                     }
-                    log.info( "IMPORT: CSV lines: " + count + ", now in store: " + uow().query( Gemarkung.class ).execute().size() );
-                    closeUnitOfWork( Completion.STORE );
-                    log.info( "IMPORT: now in store: " + uow().query( Gemarkung.class ).execute().size() );
+                    log.info( "IMPORT: CSV lines: " + count + ", now in store: " + uow.query( Gemarkung.class ).execute().size() );
+                    uow.commit();
+                    log.info( "IMPORT: now in store: " + uow.query( Gemarkung.class ).execute().size() );
                 }
                 catch (Exception e) {
                     StatusDispatcher.handleError( "Die Daten konnten nicht korrekt importiert werden.", e );
-                }
-                finally {
-                    closeUnitOfWork( Completion.CANCEL );
                 }
             }
         });

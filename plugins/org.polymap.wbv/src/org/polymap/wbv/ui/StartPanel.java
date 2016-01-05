@@ -52,6 +52,7 @@ import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.core.ui.UIUtils;
 
 import org.polymap.model2.query.Expressions;
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.rap.updownload.download.DownloadService;
 
 import org.polymap.rhei.batik.Context;
@@ -104,6 +105,8 @@ public class StartPanel
 
     private static final IMessages          i18n = Messages.forPrefix( "StartPanel" );
     
+    private UnitOfWork                      uow = WbvRepository.unitOfWork();
+
     /** */
     private Context<Revier>                 revier;
     
@@ -125,7 +128,7 @@ public class StartPanel
     @Override
     public void createContents( Composite parent ) {
         getSite().setTitle( "Login" );
-        getSite().setPreferredWidth( 400 ); // table viewer
+        getSite().setPreferredWidth( 500 ); // table viewer
         createLoginContents( parent );
     }
     
@@ -210,19 +213,11 @@ public class StartPanel
     protected void createMainContents( Composite parent ) {
         IPanelToolkit tk = getSite().toolkit();
 
-//        // results table
-//        IPanelSection tableSection = tk.createPanelSection( parent, "Waldbesitzer" );
-//        tableSection.addConstraint( new PriorityConstraint( 10 ), WbvPlugin.MIN_COLUMN_WIDTH );
-//        tableSection.getBody().setLayout( FormLayoutFactory.defaults().spacing( 5 ).create() );
-
         Composite body = parent;
         body.setLayout( FormLayoutFactory.defaults().spacing( 5 ).margins( 0, 10 ).create() );
         
-//        ResultSet<Waldbesitzer> all = uow().query( Waldbesitzer.class ).execute();
-//        log.info( "Query result: " + all.size() );
-        
         Composite tableLayout = body;  //tk.createComposite( body );
-        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( uow(), tableLayout, Collections.EMPTY_LIST, SWT.BORDER );
+        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( uow, tableLayout, Collections.EMPTY_LIST, SWT.BORDER );
         getContext().propagate( viewer );
         // waldbesitzer öffnen
         viewer.addSelectionChangedListener( new ISelectionChangedListener() {
@@ -288,8 +283,8 @@ public class StartPanel
         FeatureTableFilterBar filterBar = new FeatureTableFilterBar( viewer, body );
 
         // searchField
-        FulltextIndex fulltext = WbvRepository.instance.get().fulltextIndex();
-        EntitySearchField search = new EntitySearchField<Waldbesitzer>( body, fulltext, uow(), Waldbesitzer.class ) {
+        FulltextIndex fulltext = WbvRepository.fulltextIndex();
+        EntitySearchField search = new EntitySearchField<Waldbesitzer>( body, fulltext, uow, Waldbesitzer.class ) {
             @Override
             protected void doSearch( String _queryString ) throws Exception {
                 super.doSearch( _queryString );
@@ -298,8 +293,8 @@ public class StartPanel
             @Override
             protected void doRefresh() {
                 if (revier.get() != null) {
-                    Waldbesitzer wb = Expressions.template( Waldbesitzer.class, WbvRepository.instance.get().repo() );
-                    Flurstueck fl = Expressions.template( Flurstueck.class, WbvRepository.instance.get().repo() );
+                    Waldbesitzer wb = Expressions.template( Waldbesitzer.class, WbvRepository.repo() );
+                    Flurstueck fl = Expressions.template( Flurstueck.class, WbvRepository.repo() );
                     
                     List<Gemarkung> gemarkungen = revier.get().gemarkungen;
                     Gemarkung[] revierGemarkungen = gemarkungen.toArray( new Gemarkung[gemarkungen.size()] );

@@ -13,6 +13,7 @@
 package org.polymap.wbv.ui;
 
 import static org.eclipse.ui.forms.widgets.ExpandableComposite.TREE_NODE;
+import static org.polymap.rhei.batik.app.SvgImageRegistryHelper.WHITE24;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,7 +38,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
@@ -47,6 +47,7 @@ import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.model2.runtime.ValueInitializer;
 
 import org.polymap.core.runtime.event.EventHandler;
@@ -56,6 +57,7 @@ import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.core.ui.StatusDispatcher;
 
+import org.polymap.rhei.batik.BatikPlugin;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.IPanelSite.PanelStatus;
@@ -65,8 +67,8 @@ import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.app.Enableable;
 import org.polymap.rhei.batik.app.SubmitStatusManager;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
-import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
+import org.polymap.rhei.batik.toolkit.md.MdToolkit;
 import org.polymap.rhei.field.FormFieldEvent;
 import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.PicklistFormField;
@@ -81,6 +83,7 @@ import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
+import org.polymap.wbv.model.WbvRepository;
 
 /**
  * Dieses Panel zeigt einen {@link Waldbesitzer} und erlaubt es dessen Properties zu
@@ -93,70 +96,49 @@ public class WaldbesitzerPanel
         extends WbvPanel
         implements IPanel {
 
-    private static Log                    log = LogFactory.getLog( WaldbesitzerPanel.class );
+    private static Log log = LogFactory.getLog( WaldbesitzerPanel.class );
 
-    public static final PanelIdentifier   ID  = new PanelIdentifier( "wbv", "waldbesitzer" );
+    public static final PanelIdentifier ID  = new PanelIdentifier( "wbv", "waldbesitzer" );
 
-    private Context<Waldbesitzer>         wbParam;
+    /** Der aktuell selektierte {@link Waldbesitzer}. */
+    private Context<Waldbesitzer>       selected;
+
+    private UnitOfWork                  uow;
     
-    private Waldbesitzer                  wb;
+    private Waldbesitzer                wb;
 
-    private IPanelToolkit                 tk;
+    private MdToolkit                   tk;
 
-    private BatikFormContainer            wbFormContainer;
+    private BatikFormContainer          wbFormContainer;
 
-    private IFormFieldListener            wbFormListener;
+    private IFormFieldListener          wbFormListener;
 
     private Map<BatikFormContainer,IFormFieldListener> kForms = new HashMap();
 
     private Map<BatikFormContainer,IFormFieldListener> eForms = new HashMap();
 
-    private WbvMapViewer                  map;
+    private WbvMapViewer                map;
 
-    private Action                        submitAction;
-    
-    private SubmitStatusManager           statusAdapter;
+    private Button                      submitBtn;
+
+    private SubmitStatusManager         statusAdapter;
 
 
     @Override
     public void init() {
         super.init();
-
-//        // submit tool
-//        submitAction = new Action( "Übernehmen" ) {
-//            public void run() {
-//                try {
-//                    wbFormContainer.submit( false );
-//                    for (BatikFormContainer formContainer : kForms.keySet()) {
-//                        formContainer.submit( false );
-//                    }
-//                    closeUnitOfWork( Completion.STORE );
-//                    getContext().closePanel( getSite().getPath() );
-//                }
-//                catch (Exception e) {
-//                    StatusDispatcher.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );
-//                }
-//            }
-//        };
-//        submitAction.setToolTipText( "Änderungen in die Datenbank übernehmen" );
-//        submitAction.setEnabled( false );
-//        submitAction.setDescription( IPanelSite.SUBMIT );
-//        getSite().addToolbarAction( submitAction );
-
-        //
+        
+        uow = WbvRepository.unitOfWork().newUnitOfWork();
+                
         getContext().addListener( this, ev -> 
                 ev.getPanel() == WaldbesitzerPanel.this && 
                 ev.getType() == EventType.LIFECYCLE /*&&
                 ev.getPanel().site().panelStatus() == PanelStatus.FOCUSED*/ );
-        
-        statusAdapter = new SubmitStatusManager( this ).setSubmit( Enableable.of( submitAction ) );
     }
 
 
     @Override
     public void dispose() {
-        // wenn vorher commit, dann schadet das nicht; ansonsten neue Entity verwerfen
-        closeUnitOfWork( Completion.CANCEL );
         wb = null;
         
         if (wbFormListener != null) {
@@ -177,11 +159,10 @@ public class WaldbesitzerPanel
         log.info( "panelStatus: " + ev.getPanel().site().panelStatus() );
         if (ev.getPanel().site().panelStatus() == PanelStatus.FOCUSED) {
             log.info( "activating()..." );
-            newUnitOfWork();
 
             // create new
-            if (wbParam.get() == null) {
-                wb = uow().createEntity( Waldbesitzer.class, null, new ValueInitializer<Waldbesitzer>() {
+            if (selected.get() == null) {
+                wb = uow.createEntity( Waldbesitzer.class, null, new ValueInitializer<Waldbesitzer>() {
                     @Override
                     public Waldbesitzer initialize( Waldbesitzer prototype ) throws Exception {
                         prototype.eigentumsArt.set( Waldeigentumsart.Privat );
@@ -207,14 +188,31 @@ public class WaldbesitzerPanel
             }
             // re-fetch
             else {
-                wb = uow().entity( Waldbesitzer.class, wbParam.get().id() );
+                wb = uow.entity( selected.get() );
             }
         }
     }
 
     
     protected void enableSubmit( boolean enable, String msg ) {
-        submitAction.setEnabled( submitAction.isEnabled() || enable );
+        submitBtn.setVisible( true );
+        submitBtn.setEnabled( submitBtn.isEnabled() || enable );
+    }
+
+    
+    protected void submit() {
+        try {
+            wbFormContainer.submit( null );
+            for (BatikFormContainer formContainer : kForms.keySet()) {
+                formContainer.submit( null );
+            }
+            uow.commit();
+            uow.close();
+            getContext().closePanel( getSite().getPath() );
+        }
+        catch (Exception e) {
+            StatusDispatcher.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );
+        }
     }
     
     
@@ -227,7 +225,19 @@ public class WaldbesitzerPanel
         
         String title = StringUtils.abbreviate( wb.besitzer().anzeigename(), 20 );
         getSite().setTitle( title.length() > 1 ? title : "Neu" );
-        tk = getSite().toolkit();
+        tk = (MdToolkit)site().toolkit();
+
+        // submit FAB
+        submitBtn = tk.createFab( BatikPlugin.images().svgImage( "check.svg", WHITE24 ), SWT.TOP|SWT.RIGHT );
+        submitBtn.setToolTipText( "Änderungen in die Datenbank übernehmen" );
+        submitBtn.setEnabled( false );
+        submitBtn.addSelectionListener( new SelectionAdapter() {
+            @Override
+            public void widgetSelected( SelectionEvent ev ) {
+                submit();
+            }
+        });
+        statusAdapter = new SubmitStatusManager( this ).setSubmit( Enableable.of( submitBtn ) );
 
         // Basisdaten
         IPanelSection basis = tk.createPanelSection( parent, "Basisdaten", IPanelSection.EXPANDABLE, SWT.BORDER );
@@ -253,7 +263,7 @@ public class WaldbesitzerPanel
         final IPanelSection ereignisse = tk.createPanelSection( parent, "Ereignisse", SWT.NONE );
         ereignisse.addConstraint( 
                 WbvPlugin.MIN_COLUMN_WIDTH, 
-                new PriorityConstraint( 0 ) );
+                new PriorityConstraint( -10 ) );
         ereignisse.getBody().setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
 
         final Composite liste = tk.createComposite( ereignisse.getBody() );
@@ -343,7 +353,7 @@ public class WaldbesitzerPanel
     protected void createFlurstueckSection( Composite parent ) {
         parent.setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
 
-        final FlurstueckTableViewer viewer = new FlurstueckTableViewer( uow(), parent, wb.flurstuecke ) {
+        final FlurstueckTableViewer viewer = new FlurstueckTableViewer( uow, parent, wb.flurstuecke ) {
             @Override
             protected void fieldChange( PropertyChangeEvent ev ) {
                 IStatus status = null;
@@ -399,8 +409,8 @@ public class WaldbesitzerPanel
         removeBtn.addSelectionListener( new SelectionAdapter() {
             @Override
             public void widgetSelected( SelectionEvent ev ) {
-                Flurstueck selected = Iterables.getOnlyElement( viewer.getSelected(), null );
-                boolean success = wb.flurstuecke.remove( selected );
+                Flurstueck selectedFs = Iterables.getOnlyElement( viewer.getSelected(), null );
+                boolean success = wb.flurstuecke.remove( selectedFs );
 //                log.info( wb.toString() );
 //                log.info( "Flurstücke: " + Iterables.toString( wb.flurstuecke ) );
                 if (!success) {

@@ -121,7 +121,7 @@ public class FlurstueckTableViewer
             String propName = Flurstueck.TYPE.gemarkung.info().getName();
             final ColumnLabelProvider lp[] = new ColumnLabelProvider[1];
             addColumn( new FormFeatureTableColumn( descriptorFor( propName, String.class ) )
-                .setWeight( 3, 80 )
+                .setWeight( 2, 80 )
                 .setLabelProvider( lp[0] = new ColumnLabelProvider() {
                     @Override
                     public String getText( Object elm ) {
@@ -175,7 +175,7 @@ public class FlurstueckTableViewer
 
             // Bemerkung
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.bemerkung ) )
-                .setWeight( 2, 120 )
+                .setWeight( 4, 120 )
 //                .setLabelProvider( new ColumnLabelProvider() {
 //                    @Override
 //                    public String getText( Object elm ) {

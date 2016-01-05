@@ -42,7 +42,7 @@ public class Revier {
      */
     public static Lazy<Map<String,Revier>> all = new CachedLazyInit( new Supplier<Map<String,Revier>>() {
         public Map<String,Revier> get() {
-            UnitOfWork uow = WbvRepository.instance.get().newUnitOfWork();
+            UnitOfWork uow = WbvRepository.newUnitOfWork();
             Map<String,Revier> result = new TreeMap();
             ResultSet<Gemarkung> gmks = uow.query( Gemarkung.class ).execute();
             for (Gemarkung gemarkung : gmks) {

@@ -52,7 +52,7 @@ public class Gemarkung
      */
     public static Lazy<Map<String,Gemarkung>> all = new CachedLazyInit( new Supplier<Map<String,Gemarkung>>() {
         public Map<String,Gemarkung> get() {
-            UnitOfWork uow = WbvRepository.instance.get().newUnitOfWork();
+            UnitOfWork uow = WbvRepository.newUnitOfWork();
             Map<String,Gemarkung> result = new TreeMap();
             for (Gemarkung gmk : uow.query( Gemarkung.class ).execute()) {
                 try {

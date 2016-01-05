@@ -232,7 +232,7 @@ public abstract class EntityReport
 
 
     protected EntityRepository getRepository() {
-        return WbvRepository.instance.get().repo();
+        return WbvRepository.repo();
     }
 
 
