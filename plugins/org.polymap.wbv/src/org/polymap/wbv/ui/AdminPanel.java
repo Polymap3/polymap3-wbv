@@ -44,8 +44,10 @@ import org.polymap.core.security.SecurityContext;
 import org.polymap.core.security.SecurityUtils;
 import org.polymap.core.ui.StatusDispatcher;
 
+import org.polymap.rhei.batik.BatikPlugin;
 import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.PanelIdentifier;
+import org.polymap.rhei.batik.app.SvgImageRegistryHelper;
 import org.polymap.rhei.batik.toolkit.ConstraintData;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
@@ -82,7 +84,8 @@ public class AdminPanel
         if (parent instanceof StartPanel) {
             site().title.set( "" );
             site().tooltip.set( "Administration und Import" );
-            site().icon.set( WbvPlugin.instance().imageForName( "icons/cog.png" ) ); //$NON-NLS-1$
+            //site().icon.set( WbvPlugin.instance().imageForName( "icons/cog.png" ) ); //$NON-NLS-1$
+            site().icon.set( BatikPlugin.images().svgImage( "settings.svg", SvgImageRegistryHelper.WHITE24 ) );
             
             
 //            user.addListener( AdminPanel.this, ev -> ev.getType() == PropertyAccessEvent.TYPE.SET );
