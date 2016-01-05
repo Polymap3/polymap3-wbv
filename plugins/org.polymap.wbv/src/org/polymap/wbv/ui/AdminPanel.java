@@ -40,12 +40,12 @@ import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.rap.rwt.client.ClientFile;
 
 import org.polymap.core.operation.OperationSupport;
-import org.polymap.core.runtime.event.EventHandler;
+import org.polymap.core.security.SecurityContext;
 import org.polymap.core.security.SecurityUtils;
 import org.polymap.core.ui.StatusDispatcher;
 
+import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.PanelIdentifier;
-import org.polymap.rhei.batik.PropertyAccessEvent;
 import org.polymap.rhei.batik.toolkit.ConstraintData;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
@@ -78,34 +78,45 @@ public class AdminPanel
 
     @Override
     public boolean wantsToBeShown() {
-        return getSite().getPath().size() == 1;
-    }
-
-
-    @Override
-    public void init() {
-        super.init();
-
-        // warten auf login
-        getSite().setTitle( null );
-        user.addListener( this, ev -> ev.getType() == PropertyAccessEvent.TYPE.SET );
-    }
-
-    
-    @EventHandler( display=true )
-    protected void userLoggedIn( PropertyAccessEvent ev ) {
-        if (SecurityUtils.isAdmin()) {
-            getSite().setTitle( "Administration" );
-            getSite().setIcon( WbvPlugin.instance().imageForName( "icons/cog.png" ) ); //$NON-NLS-1$
+        IPanel parent = getContext().getPanel( getSite().getPath().removeLast( 1 ) );
+        if (parent instanceof StartPanel) {
+            site().title.set( "" );
+            site().tooltip.set( "Administration und Import" );
+            site().icon.set( WbvPlugin.instance().imageForName( "icons/cog.png" ) ); //$NON-NLS-1$
+            
+            
+//            user.addListener( AdminPanel.this, ev -> ev.getType() == PropertyAccessEvent.TYPE.SET );
+            return true;
         }
+        return false;
     }
+
+
+//    @Override
+//    public void dispose() {
+//        user.removeListener( AdminPanel.this );
+//    }
+//
+//
+//    @EventHandler( display=true )
+//    protected void userLoggedIn( PropertyAccessEvent ev ) {
+//        if (SecurityUtils.isAdmin()) {
+//            site().title.set( "Admin/Import" );
+//            //site().icon.set( WbvPlugin.instance().imageForName( "icons/cog.png" ) ); //$NON-NLS-1$
+//        }
+//    }
 
     
     @Override
     public void createContents( Composite parent ) {
-        createWkvSection( parent );
-        createBaumartenSection( parent );
-        createGemarkungSection( parent );
+        if (!SecurityContext.instance().isLoggedIn() || !SecurityUtils.isAdmin()) {
+            site().toolkit().createFlowText( parent, "Dieser Bereich ist nur für **Administratoren** zugänglich." );
+        }
+        else {
+            createWkvSection( parent );
+            createBaumartenSection( parent );
+            createGemarkungSection( parent );
+        }
     }
     
     

@@ -146,7 +146,6 @@ public class WbvRepository {
     public static FulltextIndex fulltextIndex() {
         return new FullQueryProposalDecorator(
                new LowerCaseTokenFilter( fulltextIndex ) );
-
     }
 
 

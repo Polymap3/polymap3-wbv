@@ -168,7 +168,7 @@ public class StartPanel
             @Override
             protected boolean login( String name, String passwd ) {
                 if (super.login( name, passwd )) {
-                    getSite().setTitle( i18n.get( "title" ) );
+                    site().title.set( i18n.get( "title" ) );
                     //getSite().setIcon( WbvPlugin.instance().imageForName( "icons/house.png" ) ); //$NON-NLS-1$
                     getSite().setStatus( new Status( Status.OK, WbvPlugin.ID, "Erfolgreich angemeldet als: <b>" + name + "</b>" ) );
                     
