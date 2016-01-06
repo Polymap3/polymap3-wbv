@@ -79,6 +79,7 @@ public class EreignisForm
 
         // Titel
         formSite.newFormField( new PropertyAdapter( ereignis.titel ) )
+                .label.put( "Betrifft" )
                 .validator.put( new NotEmptyValidator() ).create().setFocus();
 
         // Text 

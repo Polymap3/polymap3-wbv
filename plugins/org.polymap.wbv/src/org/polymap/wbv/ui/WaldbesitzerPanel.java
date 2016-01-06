@@ -116,6 +116,8 @@ public class WaldbesitzerPanel
     private Map<BatikFormContainer,IFormFieldListener> kForms = new HashMap();
 
     private Map<BatikFormContainer,IFormFieldListener> eForms = new HashMap();
+    
+    private List<IFormFieldListener>    eFormListeners = new ArrayList();
 
     private WbvMapViewer                map;
 
@@ -204,6 +206,9 @@ public class WaldbesitzerPanel
         try {
             wbFormContainer.submit( null );
             for (BatikFormContainer formContainer : kForms.keySet()) {
+                formContainer.submit( null );
+            }
+            for (BatikFormContainer formContainer : eForms.keySet()) {
                 formContainer.submit( null );
             }
             uow.commit();
@@ -499,7 +504,7 @@ public class WaldbesitzerPanel
 
 
     protected Section createEreignisSection( final Composite parent, final Ereignis ereignis ) {
-        String titel = WbvPlugin.df.format( ereignis.geaendert.get() ) +  " - " + ereignis.titel.get();
+        String titel = WbvPlugin.df.format( ereignis.geaendert.get() ) +  " -- " + ereignis.titel.get();
         final Section section = tk.createSection( parent, titel, TREE_NODE | Section.SHORT_TITLE_BAR | Section.FOCUS_TITLE );
         section.setToolTipText( ereignis.geaendertVon.get() );
         //((Composite)section.getClient()).setLayout( new FillLayout() );
@@ -510,7 +515,7 @@ public class WaldbesitzerPanel
         formContainer.createContents( (Composite)section.getClient() );
 //        form.createContents( tk.createComposite( (Composite)section.getClient() ) );
 
-        formContainer.addFieldListener( new IFormFieldListener() {
+        IFormFieldListener l = new IFormFieldListener() {
             public void fieldChange( FormFieldEvent ev ) {
                 if (ev.getEventCode() == VALUE_CHANGE) {
                     if (ev.getFieldName().equals( ereignis.titel.info().getName() )
@@ -523,7 +528,9 @@ public class WaldbesitzerPanel
                     ereignis.geaendertVon.set( SecurityContext.instance().getUser().getName() );
                 }
             }
-        });
+        };
+        formContainer.addFieldListener( l );
+        eFormListeners.add( l );
         
         EnableSubmitFormFieldListener listener = new EnableSubmitFormFieldListener( formContainer );
         formContainer.addFieldListener( listener );
