@@ -155,8 +155,9 @@ public class StartPanel
 
                 String cookieRevier = settings.getAttribute( WbvPlugin.ID + ".revier" );
                 Revier preSelected = cookieRevier != null ? Revier.all.get().get( cookieRevier ) : null;
+                
                 site.newFormField( new PlainValuePropertyAdapter( "revier", preSelected ) )
-                        .field.put( new PicklistFormField( Revier.all.get() ) )
+                        .field.put( new PicklistFormField( reviere ) )
                         .label.put( i18n.get( "revier" ) )
                         .tooltip.put( i18n.get( "revierTip" ) )
                         .create();
