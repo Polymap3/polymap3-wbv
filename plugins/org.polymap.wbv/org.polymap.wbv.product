@@ -3,7 +3,7 @@
 
 <product name="WBV" uid="org.polymap.wbv.product" application="org.polymap.wbv.app" useFeatures="false" includeLaunchers="false">
 
-   <configIni>
+   <configIni use="">
    </configIni>
 
    <launcherArgs>
@@ -22,14 +22,7 @@
    <plugins>
       <plugin id="com.ibm.icu.base"/>
       <plugin id="javax.servlet"/>
-      <plugin id="net.refractions.udig.catalog"/>
-      <plugin id="net.refractions.udig.catalog.rasterings"/>
-      <plugin id="net.refractions.udig.catalog.shp"/>
-      <plugin id="net.refractions.udig.catalog.ui"/>
-      <plugin id="net.refractions.udig.catalog.wfs"/>
-      <plugin id="net.refractions.udig.catalog.wms"/>
-      <plugin id="net.refractions.udig.core"/>
-      <plugin id="net.refractions.udig.ui"/>
+      <plugin id="javax.xml"/>
       <plugin id="org.apache.felix.gogo.runtime"/>
       <plugin id="org.apache.felix.gogo.shell"/>
       <plugin id="org.eclipse.core.commands"/>
@@ -52,7 +45,6 @@
       <plugin id="org.eclipse.equinox.preferences"/>
       <plugin id="org.eclipse.equinox.registry"/>
       <plugin id="org.eclipse.equinox.security"/>
-      <plugin id="org.eclipse.equinox.servletbridge.extensionbundle" fragment="true"/>
       <plugin id="org.eclipse.equinox.util"/>
       <plugin id="org.eclipse.help"/>
       <plugin id="org.eclipse.jetty.continuation"/>
@@ -70,30 +62,26 @@
       <plugin id="org.eclipse.rap.rwt.de" fragment="true"/>
       <plugin id="org.eclipse.rap.rwt.osgi"/>
       <plugin id="org.eclipse.rap.ui"/>
-      <plugin id="org.eclipse.rap.ui.cheatsheets"/>
       <plugin id="org.eclipse.rap.ui.forms"/>
-      <plugin id="org.eclipse.rap.ui.navigator"/>
       <plugin id="org.eclipse.rap.ui.views"/>
       <plugin id="org.eclipse.rap.ui.workbench"/>
-      <plugin id="org.eclipse.rwt.widgets.codemirror"/>
       <plugin id="org.polymap.core"/>
       <plugin id="org.polymap.core.catalog"/>
       <plugin id="org.polymap.core.data"/>
-      <plugin id="org.polymap.core.libs"/>
+      <plugin id="org.polymap.core.data.rs"/>
       <plugin id="org.polymap.core.mapeditor"/>
-      <plugin id="org.polymap.core.model"/>
       <plugin id="org.polymap.core.project"/>
-      <plugin id="org.polymap.core.style"/>
-      <plugin id="org.polymap.openlayers.rap.widget"/>
+      <plugin id="org.polymap.core.recordstore"/>
+      <plugin id="org.polymap.model2"/>
+      <plugin id="org.polymap.model2.store.recordstore"/>
+      <plugin id="org.polymap.rap.openlayers"/>
+      <plugin id="org.polymap.rap.updownload"/>
       <plugin id="org.polymap.rhei.batik"/>
-      <plugin id="org.polymap.rhei.data"/>
       <plugin id="org.polymap.rhei.form"/>
+      <plugin id="org.polymap.rhei.form.batik"/>
       <plugin id="org.polymap.rhei.fulltext"/>
       <plugin id="org.polymap.rhei.um"/>
-      <plugin id="org.polymap.service"/>
-      <plugin id="org.polymap.service.geoserver"/>
       <plugin id="org.polymap.wbv"/>
-      <plugin id="qi4j-core"/>
    </plugins>
 
    <configurations>
@@ -102,7 +90,6 @@
       <plugin id="org.eclipse.equinox.http.jetty" autoStart="true" startLevel="4" />
       <plugin id="org.eclipse.equinox.http.registry" autoStart="true" startLevel="4" />
       <plugin id="org.eclipse.rap.rwt.osgi" autoStart="true" startLevel="5" />
-      <plugin id="org.polymap.service" autoStart="true" startLevel="5" />
       <plugin id="org.polymap.wbv" autoStart="true" startLevel="5" />
       <property name="org.eclipse.equinox.http.jetty.context.sessioninactiveinterval" value="7200" />
    </configurations>
