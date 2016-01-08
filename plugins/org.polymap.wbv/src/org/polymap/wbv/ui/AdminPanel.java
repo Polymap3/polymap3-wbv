@@ -33,8 +33,6 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
 
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.rap.rwt.client.ClientFile;
@@ -53,6 +51,7 @@ import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
+import org.polymap.rhei.batik.toolkit.Snackbar.Appearance;
 
 import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.model2.runtime.ValueInitializer;
@@ -124,22 +123,21 @@ public class AdminPanel
     
     
     protected void createWkvSection( Composite parent ) {
-        IPanelToolkit tk = getSite().toolkit();
-        IPanelSection section = tk.createPanelSection( parent, "WKV-Daten: Import (WKV_dat.mdb)" );
+        IPanelSection section = tk().createPanelSection( parent, "WKV-Daten: Import (WKV_dat.mdb)" );
         section.addConstraint( new PriorityConstraint( 5 ), new MinWidthConstraint( 400, 1 ) );
 //        section.getBody().setData( WidgetUtil.CUSTOM_VARIANT, DesktopToolkit.CSS_FORM  );
 
-        tk.createFlowText( section.getBody(), "Import von WKV-Daten aus einer MS-Access-Datei (WKV_dat.mdb).")
+        tk().createFlowText( section.getBody(), "Import von WKV-Daten aus einer MS-Access-Datei (WKV_dat.mdb).")
                 .setLayoutData( new ConstraintData( new PriorityConstraint( 1 ) ) );
 
-        IPanelSection formSection = tk.createPanelSection( section, null );
+        IPanelSection formSection = tk().createPanelSection( section, null );
         formSection.addConstraint( new PriorityConstraint( 0 ) );
-        tk.createButton( formSection.getBody(), "Import starten..." ).addSelectionListener( new SelectionAdapter() {
+        tk().createButton( formSection.getBody(), "Import starten..." ).addSelectionListener( new SelectionAdapter() {
             @Override
             public void widgetSelected( SelectionEvent ev ) {
                 try {
                     UnitOfWork uow = WbvRepository.newUnitOfWork();
-                    getSite().setStatus( new Status( IStatus.ERROR, WbvPlugin.ID, "Import läuft...") );
+                    site().toolkit().createSnackbar( Appearance.FlyIn, "Import läuft..." );
 
                     WvkImporter op = new WvkImporter( uow );
                     OperationSupport.instance().execute( op, true, false, new JobChangeAdapter() {
@@ -147,10 +145,10 @@ public class AdminPanel
                         public void done( IJobChangeEvent jev ) {
                             if (jev.getResult().isOK()) {
                                 uow.commit();
-                                getSite().setStatus( new Status( IStatus.OK, WbvPlugin.ID, "Import war erfolgreich." ) );
+                                site().toolkit().createSnackbar( Appearance.FlyIn, "Import war erfolgreich." );
                             }
                             else {
-                                getSite().setStatus( new Status( IStatus.ERROR, WbvPlugin.ID, jev.getResult().getMessage() ) );
+                                site().toolkit().createSnackbar( Appearance.FlyIn, jev.getResult().getMessage() );
                             }
                             uow.close();
                         }

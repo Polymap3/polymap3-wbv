@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014, Falko Bräutigam. All rights reserved.
+ * Copyright (C) 2014-2016, Falko Bräutigam. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -38,9 +38,9 @@ import com.google.common.base.Function;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
-
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 
+import org.polymap.model2.Entity;
 import org.polymap.model2.query.ResultSet;
 import org.polymap.model2.runtime.UnitOfWork;
 
@@ -49,6 +49,7 @@ import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
 
 import org.polymap.rhei.field.NotEmptyValidator;
+import org.polymap.rhei.field.NullValidator;
 import org.polymap.rhei.field.NumberValidator;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.StringFormField;
@@ -71,7 +72,7 @@ import org.polymap.wbv.ui.CompositesFeatureContentProvider.FeatureTableElement;
 public class FlurstueckTableViewer
         extends FeatureTableViewer {
 
-    private static Log                  log  = LogFactory.getLog( FlurstueckTableViewer.class );
+    private static Log log  = LogFactory.getLog( FlurstueckTableViewer.class );
 
     private static final FastDateFormat df   = FastDateFormat.getInstance( "dd.MM.yyyy" );
 
@@ -105,8 +106,10 @@ public class FlurstueckTableViewer
 
     
     public FlurstueckTableViewer( UnitOfWork uow, Composite parent, Iterable<Flurstueck> rs ) {
-        super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | */SWT.FULL_SELECTION | SWT.BORDER );
+        super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | SWT.FULL_SELECTION |*/ SWT.BORDER );
         this.uow = uow;
+
+        suppressSelection();
         
         // listen to column/field changes
         EventManager.instance().subscribe( this, new EventFilter<PropertyChangeEvent>() {
@@ -134,7 +137,12 @@ public class FlurstueckTableViewer
                         return gmk != null ? gmk.label() : "(kein Gemarkung)";
                     }
                 })
-                .setEditing( new PicklistFormField( Gemarkung.all.get() ), null )
+                .setEditing( new PicklistFormField( Gemarkung.all.get() ), new NullValidator() {
+                    @Override
+                    public Object transform2Model( Object fieldValue ) throws Exception {
+                        return fieldValue != null ? uow.entity( (Entity)fieldValue ) : null; // adopt entity to local uow
+                    }
+                })
                 .setSortable( new Comparator<IFeatureTableElement>() {
                     public int compare( IFeatureTableElement e1, IFeatureTableElement e2 ) {
                         String l1 = lp[0].getText( e1 );
@@ -150,7 +158,7 @@ public class FlurstueckTableViewer
                 .setHeader( "Nummer" )
                 .setLabelProvider( new NotEmptyValidator() {
                     public Object transform2Field( Object modelValue ) throws Exception {
-                        log.info( "Column: " + modelValue );
+                        log.info( "Nummer: " + modelValue );
                         return super.transform2Field( modelValue );
                     }
                 })

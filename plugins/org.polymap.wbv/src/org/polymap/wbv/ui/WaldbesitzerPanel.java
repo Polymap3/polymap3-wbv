@@ -64,11 +64,10 @@ import org.polymap.rhei.batik.IPanelSite.PanelStatus;
 import org.polymap.rhei.batik.PanelChangeEvent;
 import org.polymap.rhei.batik.PanelChangeEvent.EventType;
 import org.polymap.rhei.batik.PanelIdentifier;
-import org.polymap.rhei.batik.app.Enableable;
-import org.polymap.rhei.batik.app.SubmitStatusManager;
+import org.polymap.rhei.batik.app.MultiStatusManager;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
-import org.polymap.rhei.batik.toolkit.md.MdToolkit;
+import org.polymap.rhei.batik.toolkit.Snackbar.Appearance;
 import org.polymap.rhei.field.FormFieldEvent;
 import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.PicklistFormField;
@@ -107,8 +106,6 @@ public class WaldbesitzerPanel
     
     private Waldbesitzer                wb;
 
-    private MdToolkit                   tk;
-
     private BatikFormContainer          wbFormContainer;
 
     private IFormFieldListener          wbFormListener;
@@ -123,7 +120,7 @@ public class WaldbesitzerPanel
 
     private Button                      submitBtn;
 
-    private SubmitStatusManager         statusAdapter;
+    private MultiStatusManager          statusAdapter;
 
 
     @Override
@@ -196,12 +193,6 @@ public class WaldbesitzerPanel
     }
 
     
-    protected void enableSubmit( boolean enable, String msg ) {
-        submitBtn.setVisible( true );
-        submitBtn.setEnabled( submitBtn.isEnabled() || enable );
-    }
-
-    
     protected void submit() {
         try {
             wbFormContainer.submit( null );
@@ -230,22 +221,33 @@ public class WaldbesitzerPanel
         
         String title = StringUtils.abbreviate( wb.besitzer().anzeigename(), 20 );
         getSite().setTitle( title.length() > 1 ? title : "Neu" );
-        tk = (MdToolkit)site().toolkit();
 
         // submit FAB
-        submitBtn = tk.createFab( BatikPlugin.images().svgImage( "check.svg", WHITE24 ), SWT.TOP|SWT.RIGHT );
+        submitBtn = tk().createFab( BatikPlugin.images().svgImage( "check.svg", WHITE24 ), SWT.TOP|SWT.RIGHT );
         submitBtn.setToolTipText( "Änderungen in die Datenbank übernehmen" );
-        submitBtn.setEnabled( false );
+        submitBtn.setVisible( false );
         submitBtn.addSelectionListener( new SelectionAdapter() {
             @Override
             public void widgetSelected( SelectionEvent ev ) {
                 submit();
             }
         });
-        statusAdapter = new SubmitStatusManager( this ).setSubmit( Enableable.of( submitBtn ) );
+        statusAdapter = new MultiStatusManager() {
+            private IStatus previousStatus;
+            @Override
+            protected void doUpdateUI( IStatus highestSeverity ) {
+                if (!highestSeverity.isOK() && (previousStatus == null || previousStatus.isOK())) {
+                    log.info( "severity: " + highestSeverity );
+                    tk().createSnackbar( Appearance.FadeIn, highestSeverity.getMessage() );
+                }
+                submitBtn.setVisible( true );
+                submitBtn.setEnabled( highestSeverity.isOK() && highestSeverity != Status.OK_STATUS );
+                previousStatus = highestSeverity;
+            }
+        };
 
         // Basisdaten
-        IPanelSection basis = tk.createPanelSection( parent, "Basisdaten", IPanelSection.EXPANDABLE, SWT.BORDER );
+        IPanelSection basis = tk().createPanelSection( parent, "Basisdaten", IPanelSection.EXPANDABLE, SWT.BORDER );
         basis.addConstraint( WbvPlugin.MIN_COLUMN_WIDTH, new PriorityConstraint( 100 ) );
         
         wbFormContainer = new BatikFormContainer( new WaldbesitzerForm() );
@@ -253,7 +255,7 @@ public class WaldbesitzerPanel
         wbFormContainer.addFieldListener( wbFormListener = new EnableSubmitFormFieldListener( wbFormContainer ) );
 
         // Kontakte
-        final IPanelSection besitzer = tk.createPanelSection( parent, "Besitzer/Kontakte", SWT.NONE );
+        final IPanelSection besitzer = tk().createPanelSection( parent, "Besitzer/Kontakte", SWT.NONE );
         besitzer.addConstraint( 
                 WbvPlugin.MIN_COLUMN_WIDTH, 
                 new PriorityConstraint( 1 ) );
@@ -265,18 +267,18 @@ public class WaldbesitzerPanel
         }
 
         // Ereignisse
-        final IPanelSection ereignisse = tk.createPanelSection( parent, "Ereignisse", SWT.NONE );
+        final IPanelSection ereignisse = tk().createPanelSection( parent, "Ereignisse", SWT.NONE );
         ereignisse.addConstraint( 
                 WbvPlugin.MIN_COLUMN_WIDTH, 
                 new PriorityConstraint( -10 ) );
         ereignisse.getBody().setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
 
-        final Composite liste = tk.createComposite( ereignisse.getBody() );
+        final Composite liste = tk().createComposite( ereignisse.getBody() );
         liste.setLayoutData( FormDataFactory.filled().right( 100, -30 ).clearBottom().create() );
         liste.setLayout( ColumnLayoutFactory.defaults().spacing( 0 ).columns( 1, 1 ).create() );
         
         // addBtn
-        Button addBtn = tk.createButton( ereignisse.getBody(), "+", SWT.PUSH );
+        Button addBtn = tk().createButton( ereignisse.getBody(), "+", SWT.PUSH );
         addBtn.setToolTipText( "Ein Ereignis hinzufügen" );
         addBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( 0 ).create() );
         addBtn.addSelectionListener( new SelectionAdapter() {
@@ -307,7 +309,7 @@ public class WaldbesitzerPanel
         });
         //
         if (wb.ereignisse.isEmpty()) {
-            tk.createLabel( liste, "Noch keine Ereignisse." );
+            tk().createLabel( liste, "Noch keine Ereignisse." );
         }
         else {
             List<Ereignis> reversed = new ArrayList( wb.ereignisse );
@@ -318,7 +320,7 @@ public class WaldbesitzerPanel
         }
 
         // Flurstücke
-        final IPanelSection flurstuecke = tk.createPanelSection( parent, "Flurstücke" );
+        final IPanelSection flurstuecke = tk().createPanelSection( parent, "Flurstücke" );
         flurstuecke.addConstraint( 
                 WbvPlugin.MIN_COLUMN_WIDTH, 
                 new PriorityConstraint( 0 ) );
@@ -366,7 +368,7 @@ public class WaldbesitzerPanel
                     status = Status.OK_STATUS;
                 }
                 else if (!isValid()) {
-                    status = new Status( IStatus.ERROR, WbvPlugin.ID, "Etwas stimmt noch nicht" );
+                    status = new Status( IStatus.ERROR, WbvPlugin.ID, "Eine Eingabe ist nicht korrekt." );
                 }
                 else {
                     status = new Status( IStatus.OK, WbvPlugin.ID, "Alle Eingaben sind in Ordnung" );
@@ -378,7 +380,7 @@ public class WaldbesitzerPanel
         viewer.getTable().setLayoutData( FormDataFactory.filled().right( 100, -33 ).height( 250 ).width( 300 ).create() );
         
         // addBtn
-        final Button addBtn = tk.createButton( parent, "+", SWT.PUSH );
+        final Button addBtn = tk().createButton( parent, "+", SWT.PUSH );
         addBtn.setToolTipText( "Ein neues Flurstück anlegen" );
         addBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( 0 ).create() );
         addBtn.addSelectionListener( new SelectionAdapter() {
@@ -401,7 +403,7 @@ public class WaldbesitzerPanel
         });
 
         // removeBtn
-        final Button removeBtn = tk.createButton( parent, "-", SWT.PUSH );
+        final Button removeBtn = tk().createButton( parent, "-", SWT.PUSH );
         removeBtn.setToolTipText( "Das markierte Flurstück löschen" );
         removeBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( addBtn ).create() );
         removeBtn.setEnabled( false );
@@ -430,7 +432,7 @@ public class WaldbesitzerPanel
     
     
     protected Section createKontaktSection( final Composite parent, final Kontakt kontakt ) {
-        final Section section = tk.createSection( parent, kontakt.anzeigename(), TREE_NODE | Section.SHORT_TITLE_BAR | Section.FOCUS_TITLE );
+        final Section section = tk().createSection( parent, kontakt.anzeigename(), TREE_NODE | Section.SHORT_TITLE_BAR | Section.FOCUS_TITLE );
         //section.setFont( JFaceResources.getFontRegistry().getBold( JFaceResources.DEFAULT_FONT ) );
         ((Composite)section.getClient()).setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
         section.setExpanded( false );
@@ -460,7 +462,7 @@ public class WaldbesitzerPanel
         kForms.put( formContainer, listener );
         
         // addBtn
-        Button addBtn = tk.createButton( (Composite)section.getClient(), "+", SWT.PUSH );
+        Button addBtn = tk().createButton( (Composite)section.getClient(), "+", SWT.PUSH );
         addBtn.setToolTipText( "Einen neuen Kontakt hinzufügen" );
         addBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( 0 ).create() );
         addBtn.addSelectionListener( new SelectionAdapter() {
@@ -484,7 +486,7 @@ public class WaldbesitzerPanel
         // removeBtn
         Button removeBtn = null;
         if (kontakt != wb.besitzer()) {
-            removeBtn = tk.createButton( (Composite)section.getClient(), "-", SWT.PUSH );
+            removeBtn = tk().createButton( (Composite)section.getClient(), "-", SWT.PUSH );
             removeBtn.setToolTipText( "Diesen Kontakt löschen" );
             removeBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( addBtn ).create() );
             removeBtn.addSelectionListener( new SelectionAdapter() {
@@ -505,7 +507,7 @@ public class WaldbesitzerPanel
 
     protected Section createEreignisSection( final Composite parent, final Ereignis ereignis ) {
         String titel = WbvPlugin.df.format( ereignis.geaendert.get() ) +  " -- " + ereignis.titel.get();
-        final Section section = tk.createSection( parent, titel, TREE_NODE | Section.SHORT_TITLE_BAR | Section.FOCUS_TITLE );
+        final Section section = tk().createSection( parent, titel, TREE_NODE | Section.SHORT_TITLE_BAR | Section.FOCUS_TITLE );
         section.setToolTipText( ereignis.geaendertVon.get() );
         //((Composite)section.getClient()).setLayout( new FillLayout() );
 
@@ -589,7 +591,7 @@ public class WaldbesitzerPanel
                     status = Status.OK_STATUS;
                 }
                 else if (!form.isValid()) {
-                    status = new Status( IStatus.ERROR, WbvPlugin.ID, "Etwas stimmt noch nicht" );
+                    status = new Status( IStatus.ERROR, WbvPlugin.ID, "Eine Eingabe ist nicht korrekt." );
                 }
                 else {
                     status = new Status( IStatus.OK, WbvPlugin.ID, "Alle Eingaben sind in Ordnung" );

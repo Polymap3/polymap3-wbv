@@ -23,8 +23,6 @@ import java.util.TreeMap;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.eclipse.core.runtime.Status;
-
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.ContributionItem;
@@ -56,11 +54,10 @@ import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.rap.updownload.download.DownloadService;
 
 import org.polymap.rhei.batik.Context;
-import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
-import org.polymap.rhei.batik.toolkit.IPanelToolkit;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
+import org.polymap.rhei.batik.toolkit.Snackbar.Appearance;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.PlainValuePropertyAdapter;
 import org.polymap.rhei.form.IFormPageSite;
@@ -96,8 +93,7 @@ import org.polymap.wbv.ui.reports.WbvReport;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class StartPanel
-        extends WbvPanel
-        implements IPanel {
+        extends WbvPanel {
 
     private static Log log = LogFactory.getLog( StartPanel.class );
 
@@ -136,14 +132,16 @@ public class StartPanel
     protected void createLoginContents( final Composite parent ) {
         // welcome
         getSite().setTitle( i18n.get( "loginTitle" ) );
-        IPanelToolkit tk = getSite().toolkit();
-        IPanelSection welcome = tk.createPanelSection( parent, "Hinweise" /*i18n.get( "loginTitle" )*/ );
+        IPanelSection welcome = tk().createPanelSection( parent, "Hinweise" /*i18n.get( "loginTitle" )*/ );
         welcome.addConstraint( new PriorityConstraint( 10 ), WbvPlugin.MIN_COLUMN_WIDTH );
         String t = i18n.get( "welcomeText" );
-        tk.createFlowText( welcome.getBody(), t );
+        tk().createFlowText( welcome.getBody(), t );
+
+//        tk().createSnackbar( Appearance.FadeIn, "Snackbar!", 
+//                new ActionItem( null ).text.put( "Apply" ) );
 
         // login
-        IPanelSection section = tk.createPanelSection( parent, "Anmelden", SWT.BORDER );
+        IPanelSection section = tk().createPanelSection( parent, "Anmelden", SWT.BORDER );
         section.addConstraint( new PriorityConstraint( 0 ), WbvPlugin.MIN_COLUMN_WIDTH );
 
         LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), user ) {
@@ -169,9 +167,7 @@ public class StartPanel
             protected boolean login( String name, String passwd ) {
                 if (super.login( name, passwd )) {
                     site().title.set( i18n.get( "title" ) );
-                    //getSite().setIcon( WbvPlugin.instance().imageForName( "icons/house.png" ) ); //$NON-NLS-1$
-                    getSite().setStatus( new Status( Status.OK, WbvPlugin.ID, "Erfolgreich angemeldet als: <b>" + name + "</b>" ) );
-                    
+                                        
                     getContext().setUserName( username );
                     
                     // Revier
@@ -198,7 +194,7 @@ public class StartPanel
                     return true;
                 }
                 else {
-                    getSite().setStatus( new Status( Status.ERROR, WbvPlugin.ID, "Nutzername oder Passwort nicht korrekt." ) );
+                    site().toolkit().createSnackbar( Appearance.FadeIn, "Nutzername oder Passwort ist nicht korrekt." );
                     return false;
                 }
             }
@@ -211,8 +207,6 @@ public class StartPanel
     
     
     protected void createMainContents( Composite parent ) {
-        IPanelToolkit tk = getSite().toolkit();
-
         Composite body = parent;
         body.setLayout( FormLayoutFactory.defaults().spacing( 5 ).margins( 0, 10 ).create() );
         
@@ -231,7 +225,7 @@ public class StartPanel
         });
 
         // waldbesitzer anlegen
-        Button createBtn = tk.createButton( body, "Neu", SWT.PUSH );
+        Button createBtn = tk().createButton( body, "Neu", SWT.PUSH );
         createBtn.setToolTipText( "Einen neuen Waldbesitzer anlegen" );
         createBtn.addSelectionListener( new SelectionAdapter() {
             @Override

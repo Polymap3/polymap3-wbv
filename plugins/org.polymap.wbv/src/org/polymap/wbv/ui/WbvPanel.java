@@ -1,6 +1,6 @@
 /* 
  * polymap.org
- * Copyright (C) 2014, Falko Bräutigam. All rights reserved.
+ * Copyright (C) 2014-2016, Falko Bräutigam. All rights reserved.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -22,13 +22,10 @@ import org.polymap.core.security.UserPrincipal;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.IPanel;
-import org.polymap.model2.runtime.UnitOfWork;
+import org.polymap.rhei.batik.toolkit.md.MdToolkit;
 
 /**
- * Basisklasse für andere Panels. Es kann eine "nested" {@link UnitOfWork} pro Panel
- * initialisiert werden. Über {@link #uow()} ist die {@link UnitOfWork} für das Panel
- * erreichbar. Panels können und sollten dann ihre Änderungen mit einem Commit
- * abschliessen.
+ * Basisklasse für andere Panels.
  * 
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
@@ -38,92 +35,11 @@ public abstract class WbvPanel
 
     private static Log log = LogFactory.getLog( WbvPanel.class );
 
-//    public static enum Completion {
-//        /** Commit the locally started UnitOfWork -> modifications are not send to store. */
-//        COMMIT,
-//        /** Commit all UnitOfWorks down to the root -> modificatiosn are persistently stored. */
-//        STORE,
-//        /** Revert my UnitOfWork. */
-//        CANCEL
-//    }
-//    
-//    private Context<UnitOfWork>         rootUow;
-//    
-//    private UnitOfWork                  uow;
-//
-//    private UnitOfWork                  parentUow;
-
     protected Context<UserPrincipal>    user;
+
     
-    
-    
-//    @Override
-//    public void init() {
-//        super.init();
-//        // rootUow
-//        if (rootUow.get() == null) {
-//            rootUow.set( WbvRepository.instance.get().newUnitOfWork() );
-//        }
-//        // parentUow
-//        PanelPath myPath = getSite().getPath();
-//        if (myPath.size() == 1) {
-//            parentUow = rootUow.get();
-//        }
-//        else {
-//            WbvPanel parentPanel = (WbvPanel)getOnlyElement( getContext().findPanels( Panels.is( myPath.removeLast( 1 ) ) ) ); 
-//            parentUow = parentPanel.uow();
-//        }
-//        // uow
-//        uow = parentUow;
-//    }
-//
-//
-//    /**
-//     * The UnitOfWork for this panel. Call {@link #newUnitOfWork()} before first
-//     * access to {@link #uow} to create a separate, nested UnitOfWork for this panel.
-//     */
-//    protected UnitOfWork uow() {
-//        return uow;
-//    }
-//
-//
-//    /**
-//     * Creates a new, nested {@link UnitOfWork} for this panel.
-//     * <p/>
-//     * Care must be taken when working with {@link Context} variables.
-//     * Entities have to be re-fetched from the local/nested UnitOfWork to make sure
-//     * that their state is properly handled by the local UnitOfWork.
-//     */
-//    protected void newUnitOfWork() {
-//        assert uow == parentUow : "newUnitOfWork() must be called only once per page.";
-//        uow = parentUow.newUnitOfWork();
-//        log.debug( getClass().getSimpleName() + ": new UOW: " + uow.getClass().getSimpleName() );
-//    }
-//
-//    
-//    protected void closeUnitOfWork( Completion completion ) {
-//        if (completion == COMMIT) {
-//            assert uow != parentUow : "No UnitOfWork started locally for this panel.";
-//            uow.commit();
-//            uow.close();
-//            uow = parentUow;
-//        }
-//        else if (completion == STORE) {
-//            assert parentUow == rootUow.get();
-//            if (uow != parentUow) {
-//                closeUnitOfWork( COMMIT );
-//            }
-//            parentUow.commit();
-//        }
-//        else if (completion == Completion.CANCEL) {
-//            if (uow != parentUow) {
-//                uow.close();
-//                uow = parentUow;
-//            }
-//            else {
-//                log.warn( "No UnitOfWork this panel currently." );
-//            }
-//        }
-//    }
+    protected MdToolkit tk() {
+        return (MdToolkit)site().toolkit();    
+    }
     
 }
