@@ -410,7 +410,8 @@ public class WaldbesitzerPanel
         viewer.addSelectionChangedListener( new ISelectionChangedListener() {
             @Override
             public void selectionChanged( SelectionChangedEvent ev ) {
-                removeBtn.setEnabled( !viewer.getSelected().isEmpty() );
+                // FIXME selection is disabled for viewer 
+               // removeBtn.setEnabled( !viewer.getSelected().isEmpty() );
             }
         });
         removeBtn.addSelectionListener( new SelectionAdapter() {
@@ -418,8 +419,6 @@ public class WaldbesitzerPanel
             public void widgetSelected( SelectionEvent ev ) {
                 Flurstueck selectedFs = Iterables.getOnlyElement( viewer.getSelected(), null );
                 boolean success = wb.flurstuecke.remove( selectedFs );
-//                log.info( wb.toString() );
-//                log.info( "Flurstücke: " + Iterables.toString( wb.flurstuecke ) );
                 if (!success) {
                     StatusDispatcher.handleError( "Eintrag konnte nicht gelöscht werden.", null );
                 }
@@ -591,7 +590,7 @@ public class WaldbesitzerPanel
                     status = Status.OK_STATUS;
                 }
                 else if (!form.isValid()) {
-                    status = new Status( IStatus.ERROR, WbvPlugin.ID, "Eine Eingabe ist nicht korrekt." );
+                    status = new Status( IStatus.ERROR, WbvPlugin.ID, "Eingaben sind nicht vollständig/korrekt." );
                 }
                 else {
                     status = new Status( IStatus.OK, WbvPlugin.ID, "Alle Eingaben sind in Ordnung" );
