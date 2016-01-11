@@ -91,7 +91,7 @@ public class Gemarkung
     public Property<String>             revier;
 
     public String label() {
-        return gemeinde.get() + "/" + gemarkung.get();
+        return gemarkung.get() + "/" + gemeinde.get();
     }
 
     

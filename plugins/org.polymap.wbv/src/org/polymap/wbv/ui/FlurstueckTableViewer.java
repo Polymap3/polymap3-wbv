@@ -134,7 +134,7 @@ public class FlurstueckTableViewer
                     public String getToolTipText( Object elm ) {
                         Flurstueck entity = FeatureTableElement.entity( elm );
                         Gemarkung gmk = entity.gemarkung.get();
-                        return gmk != null ? (gmk.gemarkung.get()+"/"+gmk.gemeinde.get()) : "(kein Gemarkung)";
+                        return gmk != null ? gmk.label() : "(kein Gemarkung)";
                     }
                 })
                 .setEditing( new PicklistFormField( Gemarkung.all.get() ), new NullValidator() {
