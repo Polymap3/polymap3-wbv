@@ -50,6 +50,7 @@ import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.core.ui.UIUtils;
 
 import org.polymap.model2.query.Expressions;
+import org.polymap.model2.query.ResultSet;
 import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.rap.updownload.download.DownloadService;
 
@@ -131,7 +132,8 @@ public class StartPanel
     
     protected void createLoginContents( final Composite parent ) {
         // welcome
-        getSite().setTitle( i18n.get( "loginTitle" ) );
+        site().title.set( i18n.get( "loginTitle" ) );
+        
         IPanelSection welcome = tk().createPanelSection( parent, "Hinweise" /*i18n.get( "loginTitle" )*/ );
         welcome.addConstraint( new PriorityConstraint( 10 ), WbvPlugin.MIN_COLUMN_WIDTH );
         String t = i18n.get( "welcomeText" );
@@ -167,8 +169,6 @@ public class StartPanel
             @Override
             protected boolean login( String name, String passwd ) {
                 if (super.login( name, passwd )) {
-                    site().title.set( i18n.get( "title" ) );
-                                        
                     getContext().setUserName( username );
                     
                     // Revier
@@ -208,6 +208,8 @@ public class StartPanel
     
     
     protected void createMainContents( Composite parent ) {
+        site().title.set( i18n.get( "title", "--" ) );
+        
         Composite body = parent;
         body.setLayout( FormLayoutFactory.defaults().spacing( 5 ).margins( 0, 10 ).create() );
         
@@ -298,11 +300,15 @@ public class StartPanel
                 }
                 // SelectionEvent nach refresh() verhindern
                 viewer.clearSelection();
-                viewer.setInput( query.execute() );
+                
+                ResultSet<Waldbesitzer> results = query.execute();
+                viewer.setInput( results );
+                
+                site().title.set( i18n.get( "title", results.size() ) );
             }
         };
-        search.searchOnEnter.set( false );
-        search.getText().setText( "Hedwig" );
+//        search.searchOnEnter.set( false );
+//        search.getText().setText( "Hedwig" );
 
         search.searchOnEnter.set( true );
         search.getText().setFocus();
