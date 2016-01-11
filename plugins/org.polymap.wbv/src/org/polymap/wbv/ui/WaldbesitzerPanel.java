@@ -155,9 +155,9 @@ public class WaldbesitzerPanel
     
     @EventHandler( display=true )
     public void activating( PanelChangeEvent ev ) {
-        log.info( "panelStatus: " + ev.getPanel().site().panelStatus() );
+        log.debug( "panelStatus: " + ev.getPanel().site().panelStatus() );
         if (ev.getPanel().site().panelStatus() == PanelStatus.FOCUSED) {
-            log.info( "activating()..." );
+            log.debug( "activating()..." );
 
             // create new
             if (selected.get() == null) {
@@ -214,7 +214,6 @@ public class WaldbesitzerPanel
     
     @Override
     public void createContents( Composite parent ) {
-        log.info( "createContents()..." );
         while (wb == null) {
             try { Thread.sleep( 100 ); } catch (InterruptedException e) {}
         }

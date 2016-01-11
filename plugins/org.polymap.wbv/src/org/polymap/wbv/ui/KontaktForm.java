@@ -87,19 +87,20 @@ public class KontaktForm
 
         formSite.newFormField( new PropertyAdapter( kontakt.anrede ) )
                 .parent.put( salu )
-                .label.put( "Anrede" )
+                .label.put( "Anrede / Name*" )
                 .field.put( new PicklistFormField( new String[] {"Herr", "Frau", "Firma", "Amt"} )
                             .setTextEditable( true )
                             .setForceTextMatch( false ) )
                 //.setValidator( new NotEmptyValidator() )
-                .create(); //.setFocus();
+                .create();
 
-        formSite.newFormField( new PropertyAdapter( kontakt.vorname ) )
+        formSite.newFormField( new PropertyAdapter( kontakt.name ) )
                 .parent.put( salu )
                 .label.put( IFormFieldLabel.NO_LABEL )
+                .tooltip.put( "Name des Waldbesitzers, inklusive Titel" )
                 .create();
         
-        formSite.newFormField( new PropertyAdapter( kontakt.name ) )
+        formSite.newFormField( new PropertyAdapter( kontakt.vorname ) )
                 .validator.put( new NotEmptyValidator() )
                 .create()
                 .setFocus();
