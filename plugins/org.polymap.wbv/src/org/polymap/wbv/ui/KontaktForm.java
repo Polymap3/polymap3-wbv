@@ -14,9 +14,6 @@
  */
 package org.polymap.wbv.ui;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -26,16 +23,18 @@ import org.eclipse.swt.widgets.Composite;
 
 import org.eclipse.ui.forms.widgets.ColumnLayoutData;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+
 import org.polymap.core.ui.ColumnLayoutFactory;
 
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.field.EMailAddressValidator;
 import org.polymap.rhei.field.IFormFieldLabel;
 import org.polymap.rhei.field.IFormFieldListener;
-import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.TextFormField;
 import org.polymap.rhei.form.DefaultFormPage;
+import org.polymap.rhei.form.IFormPage2;
 import org.polymap.rhei.form.IFormPageSite;
 import org.polymap.rhei.form.batik.BatikFormContainer;
 
@@ -47,7 +46,8 @@ import org.polymap.wbv.model.Kontakt;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class KontaktForm
-        extends DefaultFormPage {
+        extends DefaultFormPage
+        implements IFormPage2 {
 
     private static Log log = LogFactory.getLog( KontaktForm.class );
     
@@ -57,7 +57,7 @@ public class KontaktForm
     
     private Composite               body;
 
-    private Set<IFormFieldListener> listeners = new HashSet();
+    private BatikFormContainer      adresseForm;
 
     
     public KontaktForm( Kontakt kontakt, IPanelSite panelSite ) {
@@ -65,12 +65,33 @@ public class KontaktForm
         this.panelSite = panelSite;
     }
 
+    public void addAdresseFieldListener( IFormFieldListener l ) {
+        adresseForm.addFieldListener( l );
+    }
 
-//    @Override
-//    public void addFieldListener( IFormFieldListener l ) {
-//        super.addFieldListener( l );
-//        listeners.add( l );
-//    }
+    @Override
+    public boolean isDirty() {
+        return adresseForm.isDirty();
+    }
+
+    @Override
+    public boolean isValid() {
+        return adresseForm.isValid();
+    }
+
+    @Override
+    public void doLoad( IProgressMonitor monitor ) throws Exception {
+        //throw new RuntimeException( "not yet implemented." );
+    }
+
+    @Override
+    public void doSubmit( IProgressMonitor monitor ) throws Exception {
+        adresseForm.submit( monitor );
+    }
+
+    @Override
+    public void dispose() {
+    }
 
 
     @Override
@@ -101,7 +122,7 @@ public class KontaktForm
                 .create();
         
         formSite.newFormField( new PropertyAdapter( kontakt.vorname ) )
-                .validator.put( new NotEmptyValidator() )
+                //.validator.put( new NotEmptyValidator() )
                 .create()
                 .setFocus();
 
@@ -123,12 +144,13 @@ public class KontaktForm
         formSite.newFormField( new PropertyAdapter( kontakt.fax ) ).label.put( "Fax" ).create();
         
         // Adresse
-        new BatikFormContainer( new AdresseForm( kontakt, panelSite ) ).createContents( body );
+        adresseForm = new BatikFormContainer( new AdresseForm( kontakt, panelSite ) );
+        adresseForm.createContents( body );
         
         // Bemerkung 
         formSite.newFormField( new PropertyAdapter( kontakt.bemerkung ) )
                 .field.put( new TextFormField() )
-                .tooltip.put( "Zusätzliche Informationen zu diesem Kontakt.\nZum Besipiel: 'Besitzer', 'Ansprechpartner', 'Verwalter', 'Erbengemeinschaft'" )
+                .tooltip.put( "Zusätzliche Informationen zu diesem Kontakt.\nZum Beispiel: 'Besitzer', 'Ansprechpartner', 'Verwalter', 'Erbengemeinschaft'" )
                 .create().setLayoutData( new ColumnLayoutData( SWT.DEFAULT, 80 ) );
     }
     

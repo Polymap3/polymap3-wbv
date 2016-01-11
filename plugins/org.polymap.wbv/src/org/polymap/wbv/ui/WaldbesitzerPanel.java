@@ -440,7 +440,6 @@ public class WaldbesitzerPanel
         BatikFormContainer formContainer = new BatikFormContainer( form );
         formContainer.createContents( (Composite)section.getClient() );
         formContainer.getContents().setLayoutData( FormDataFactory.filled().right( 100, -33 ).create() );
-
         
         // FIXME this listener gets soon GCed
         // after porting KontaktForm to page the hackish hard reference is no longer there
@@ -457,6 +456,7 @@ public class WaldbesitzerPanel
         
         EnableSubmitFormFieldListener listener = new EnableSubmitFormFieldListener( formContainer );
         formContainer.addFieldListener( listener );
+        form.addAdresseFieldListener( listener );
         kForms.put( formContainer, listener );
         
         // addBtn
