@@ -28,8 +28,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.google.common.collect.Iterables;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -37,9 +35,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
-
-import org.eclipse.jface.viewers.ISelectionChangedListener;
-import org.eclipse.jface.viewers.SelectionChangedEvent;
 
 import org.eclipse.ui.forms.widgets.ColumnLayoutData;
 import org.eclipse.ui.forms.widgets.Section;
@@ -102,7 +97,7 @@ public class WaldbesitzerPanel
     /** Der aktuell selektierte {@link Waldbesitzer}. */
     private Context<Waldbesitzer>       selected;
 
-    private UnitOfWork                  uow;
+    private Context<UnitOfWork>         uow;
     
     private Waldbesitzer                wb;
 
@@ -126,8 +121,10 @@ public class WaldbesitzerPanel
     @Override
     public void init() {
         super.init();
-        
-        uow = WbvRepository.unitOfWork().newUnitOfWork();
+        site().preferredWidth.set( 550 );
+ 
+        assert !uow.isPresent();
+        uow.set( WbvRepository.unitOfWork().newUnitOfWork() );
                 
         getContext().addListener( this, ev -> 
                 ev.getPanel() == WaldbesitzerPanel.this && 
@@ -139,6 +136,7 @@ public class WaldbesitzerPanel
     @Override
     public void dispose() {
         wb = null;
+        uow.set( null );
         
         if (wbFormListener != null) {
             wbFormContainer.removeFieldListener( wbFormListener );
@@ -161,7 +159,7 @@ public class WaldbesitzerPanel
 
             // create new
             if (selected.get() == null) {
-                wb = uow.createEntity( Waldbesitzer.class, null, new ValueInitializer<Waldbesitzer>() {
+                wb = uow.get().createEntity( Waldbesitzer.class, null, new ValueInitializer<Waldbesitzer>() {
                     @Override
                     public Waldbesitzer initialize( Waldbesitzer prototype ) throws Exception {
                         prototype.eigentumsArt.set( Waldeigentumsart.Privat );
@@ -187,8 +185,11 @@ public class WaldbesitzerPanel
             }
             // re-fetch
             else {
-                wb = uow.entity( selected.get() );
+                wb = uow.get().entity( selected.get() );
             }
+            // make sure that this panel (and subsequent panels) are working with
+            // entity of our uow()
+            selected.set( wb );
         }
     }
 
@@ -202,9 +203,10 @@ public class WaldbesitzerPanel
             for (BatikFormContainer formContainer : eForms.keySet()) {
                 formContainer.submit( null );
             }
-            uow.commit();
-            uow.close();
-            getContext().closePanel( getSite().getPath() );
+            uow.get().commit();
+            
+            tk().createSnackbar( Appearance.FadeIn, "Änderungen wurden gespeichert" );
+            //getContext().closePanel( getSite().getPath() );
         }
         catch (Exception e) {
             StatusDispatcher.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );
@@ -359,7 +361,7 @@ public class WaldbesitzerPanel
     protected void createFlurstueckSection( Composite parent ) {
         parent.setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
 
-        final FlurstueckTableViewer viewer = new FlurstueckTableViewer( uow, parent, wb.flurstuecke ) {
+        final FlurstueckTableViewer viewer = new FlurstueckTableViewer( site(), parent ) {
             @Override
             protected void fieldChange( PropertyChangeEvent ev ) {
                 IStatus status = null;
@@ -375,7 +377,6 @@ public class WaldbesitzerPanel
                 statusAdapter.updateStatusOf( this, status );
             }
         };
-        getContext().propagate( viewer );
         viewer.getTable().setLayoutData( FormDataFactory.filled().right( 100, -33 ).height( 250 ).width( 300 ).create() );
         
         // addBtn
@@ -398,32 +399,6 @@ public class WaldbesitzerPanel
                 //viewer.reveal( new CompositesFeatureContentProvider.FeatureTableElement( newElm ) );
                 viewer.selectElement( String.valueOf( newElm.hashCode() ), true, true );
                 //statusAdapter.updateStatusOf( this, new Status( IStatus.OK, WbvPlugin.ID, "Alle Eingaben sind korrekt." ) );
-            }
-        });
-
-        // removeBtn
-        final Button removeBtn = tk().createButton( parent, "-", SWT.PUSH );
-        removeBtn.setToolTipText( "Das markierte Flurstück löschen" );
-        removeBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( addBtn ).create() );
-        removeBtn.setEnabled( false );
-        viewer.addSelectionChangedListener( new ISelectionChangedListener() {
-            @Override
-            public void selectionChanged( SelectionChangedEvent ev ) {
-                // FIXME selection is disabled for viewer 
-               // removeBtn.setEnabled( !viewer.getSelected().isEmpty() );
-            }
-        });
-        removeBtn.addSelectionListener( new SelectionAdapter() {
-            @Override
-            public void widgetSelected( SelectionEvent ev ) {
-                Flurstueck selectedFs = Iterables.getOnlyElement( viewer.getSelected(), null );
-                boolean success = wb.flurstuecke.remove( selectedFs );
-                if (!success) {
-                    StatusDispatcher.handleError( "Eintrag konnte nicht gelöscht werden.", null );
-                }
-                //viewer.setInput( wb.flurstuecke );
-                viewer.refresh( true );
-                statusAdapter.updateStatusOf( this, new Status( IStatus.OK, WbvPlugin.ID, "Alle Eingaben sind korrekt." ) );
             }
         });
     }

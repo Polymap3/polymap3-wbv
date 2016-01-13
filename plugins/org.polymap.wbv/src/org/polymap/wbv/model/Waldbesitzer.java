@@ -14,7 +14,6 @@ package org.polymap.wbv.model;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import com.google.common.collect.Iterables;
 
 import org.polymap.model2.CollectionProperty;
@@ -121,10 +120,17 @@ public class Waldbesitzer
     public CollectionProperty<Ereignis> ereignisse;
     
 
+    /** Aktuellen, nicht gelöschte Flurstücke.  */
+    public Iterable<Flurstueck> flurstuecke() {
+        return Iterables.filter( flurstuecke, fst -> !fst.geloescht.get() );
+    }
+    
+    
     public Kontakt besitzer() {
         return Iterables.get( kontakte, besitzerIndex.get(), null );
     }
 
+    
     /**
      * Andere Seite der {@link Waldstueck#waldbesitzer} Assoziation.
      */

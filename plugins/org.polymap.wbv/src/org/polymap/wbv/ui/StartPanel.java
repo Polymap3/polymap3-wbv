@@ -213,8 +213,7 @@ public class StartPanel
         Composite body = parent;
         body.setLayout( FormLayoutFactory.defaults().spacing( 5 ).margins( 0, 10 ).create() );
         
-        Composite tableLayout = body;  //tk.createComposite( body );
-        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( uow, tableLayout, Collections.EMPTY_LIST, SWT.BORDER );
+        final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( uow, body, Collections.EMPTY_LIST, SWT.BORDER );
         getContext().propagate( viewer );
         // waldbesitzer öffnen
         viewer.addSelectionChangedListener( new ISelectionChangedListener() {

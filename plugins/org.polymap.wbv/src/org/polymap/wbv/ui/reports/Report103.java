@@ -93,7 +93,7 @@ public class Report103
         Composite entity = iter.next();
         if (entity instanceof Waldbesitzer) {
             firstWb = (Waldbesitzer)entity;
-            flurstuecke.addAll( firstWb.flurstuecke );
+            flurstuecke.addAll( firstWb.flurstuecke() );
         }
 
         final Waldbesitzer wb = firstWb;

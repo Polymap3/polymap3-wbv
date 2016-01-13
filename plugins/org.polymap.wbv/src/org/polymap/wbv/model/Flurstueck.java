@@ -20,6 +20,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.polymap.model2.Association;
 import org.polymap.model2.Composite;
+import org.polymap.model2.Defaults;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
 import org.polymap.model2.Queryable;
@@ -60,7 +61,11 @@ public class Flurstueck
 //   17|FL_MEAnteil                    (LONG 4)                  
 //   18|FL_LK                          (TEXT 200)                
 //   19|FL_GEMAFLUR                    (TEXT 200)
-    
+
+    @Queryable
+    @Defaults
+    public Property<Boolean>            geloescht;
+
     /**
      * Im Import leider Flurstücke ohne Gemarkung, deshalb {@link Nullable}. Id ist
      * Gemarkungsschlüssel.

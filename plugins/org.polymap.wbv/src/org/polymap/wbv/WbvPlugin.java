@@ -14,7 +14,6 @@
  */
 package org.polymap.wbv;
 
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
@@ -23,11 +22,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.service.http.HttpService;
 import org.osgi.service.http.NamespaceException;
 import org.osgi.util.tracker.ServiceTracker;
-
-import org.eclipse.swt.graphics.Image;
-
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.jface.resource.ImageRegistry;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
@@ -40,6 +34,7 @@ import org.polymap.core.security.StandardConfiguration;
 import org.polymap.core.security.UserPrincipal;
 import org.polymap.core.ui.StatusDispatcher;
 
+import org.polymap.rhei.batik.app.SvgImageRegistryHelper;
 import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.fulltext.FulltextPlugin;
 import org.polymap.rhei.fulltext.FulltextPlugin.ErrorHandler;
@@ -65,7 +60,7 @@ public class WbvPlugin
 	private static WbvPlugin               instance;
 	
     private static DefaultSessionContextProvider contextProvider;
-
+    
     static {
         System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.core.data.feature.recordstore", "debug" );
         System.setProperty( "org.apache.commons.logging.simplelog.log.org.polymap.core.runtime.recordstore.lucene", "debug" );
@@ -80,12 +75,20 @@ public class WbvPlugin
     	return instance;
     }
 
+    
+    public static SvgImageRegistryHelper images() {
+        return instance().images;
+    }
 
     
     // instance *******************************************
     
+
     private ServiceTracker          httpServiceTracker;
 
+    private SvgImageRegistryHelper  images;               
+
+    
     public WbvPlugin() {
         contextProvider = new DefaultSessionContextProvider();
         SessionContext.addProvider( contextProvider );
@@ -95,8 +98,10 @@ public class WbvPlugin
 	public void start( BundleContext context ) throws Exception {
 		super.start( context );
 		instance = this;
+		
+		images = new SvgImageRegistryHelper( this );
+		
         // register HTTP resource
-
 		httpServiceTracker = new ServiceTracker( context, HttpService.class.getName(), null ) {
             public Object addingService( ServiceReference reference ) {
                 HttpService httpService = (HttpService)super.addingService( reference );                
@@ -136,24 +141,12 @@ public class WbvPlugin
 	
 	public void stop( BundleContext context ) throws Exception {
 	    httpServiceTracker = Closer.create().runAndClose( () -> httpServiceTracker.close() ).setNull();
+	    images = null;
 		super.stop( context );
         instance = null;
 	}
 
 
-	public Image imageForName( String resName ) {
-        ImageRegistry images = getImageRegistry();
-        Image image = images.get( resName );
-        if (image == null || image.isDisposed()) {
-            URL res = getBundle().getResource( resName );
-            assert res != null : "Image resource not found: " + resName;
-            images.put( resName, ImageDescriptor.createFromURL( res ) );
-            image = images.get( resName );
-        }
-        return image;
-    }
-
-	
     /**
      * 
      */

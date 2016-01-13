@@ -57,6 +57,10 @@
             class="org.polymap.wbv.ui.AdminPanel"
             id="org.polymap.wbv.AdminPanel">
       </panel>
+      <panel
+            class="org.polymap.wbv.ui.WaldbesitzerWaehlenPanel"
+            id="org.polymap.wbv.WaldbesitzerWaehlenPanel">
+      </panel>
    </extension>
    <extension
          id="org.polymap.wbv.app"

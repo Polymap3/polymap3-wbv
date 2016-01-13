@@ -37,6 +37,7 @@ import org.apache.commons.logging.LogFactory;
 import com.google.common.base.Function;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
 
@@ -48,17 +49,27 @@ import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
 
+import org.polymap.rhei.batik.BatikApplication;
+import org.polymap.rhei.batik.PanelSite;
+import org.polymap.rhei.batik.app.SvgImageRegistryHelper;
+import org.polymap.rhei.batik.toolkit.Snackbar.Appearance;
+import org.polymap.rhei.batik.Context;
+import org.polymap.rhei.batik.IAppContext;
+import org.polymap.rhei.batik.PanelChangeEvent;
+import org.polymap.rhei.batik.PanelChangeEvent.EventType;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.NullValidator;
 import org.polymap.rhei.field.NumberValidator;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.StringFormField;
+import org.polymap.rhei.table.ActionCellEditor;
 import org.polymap.rhei.table.FeatureTableViewer;
 import org.polymap.rhei.table.FormFeatureTableColumn;
 import org.polymap.rhei.table.IFeatureTableColumn;
 import org.polymap.rhei.table.IFeatureTableElement;
 import org.polymap.rhei.table.ITableFieldValidator;
 
+import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
 import org.polymap.wbv.model.Waldbesitzer;
@@ -76,9 +87,25 @@ public class FlurstueckTableViewer
 
     private static final FastDateFormat df   = FastDateFormat.getInstance( "dd.MM.yyyy" );
 
-    private UnitOfWork                  uow;
+    private Context<UnitOfWork>         uow;
     
-
+    private Context<Waldbesitzer>       wb;
+    
+    private Context<Flurstueck>         selected;
+    
+    private PanelSite                   panelSite;
+    
+    private Object                      panelChangeListener = new Object() {
+        @EventHandler( display=true )
+        protected void fieldChange( PanelChangeEvent ev ) {
+            log.info( "ev:  "  + ev );
+            if (!getTable().isDisposed()) {
+                refresh();
+            }
+        }        
+    };
+    
+    
     public boolean isDirty() {
         for (IFeatureTableColumn col : displayed.values()) {
             if (!((FormFeatureTableColumn)col).dirtyFids().isEmpty()) {
@@ -105,11 +132,15 @@ public class FlurstueckTableViewer
     }
 
     
-    public FlurstueckTableViewer( UnitOfWork uow, Composite parent, Iterable<Flurstueck> rs ) {
+    public FlurstueckTableViewer( PanelSite panelSite, Composite parent ) {
         super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | SWT.FULL_SELECTION |*/ SWT.BORDER );
-        this.uow = uow;
+        this.panelSite = panelSite;
+        IAppContext context = BatikApplication.instance().getContext();
+        context.propagate( this );
 
         suppressSelection();
+
+        context.addListener( panelChangeListener, ev -> ev.getType().isOnOf( EventType.LIFECYCLE ) );
         
         // listen to column/field changes
         EventManager.instance().subscribe( this, new EventFilter<PropertyChangeEvent>() {
@@ -120,11 +151,61 @@ public class FlurstueckTableViewer
         });
         
         try {
+            // Action: delete
+            addColumn( new FormFeatureTableColumn( descriptorFor( "", String.class ) )
+                .setWeight( 1, 25 )
+                .setLabelProvider( new ColumnLabelProvider() {
+                    @Override
+                    public Image getImage( Object element ) {
+                        return WbvPlugin.images().svgImage( "delete.svg", SvgImageRegistryHelper.NORMAL12 );
+                    }
+                    @Override
+                    public String getText( Object element ) {
+                        return null;
+                    }
+                    @Override
+                    public String getToolTipText( Object elm ) {
+                        return "Flurstück löschen";
+                    }
+                })
+                .setEditing( new ActionCellEditor( elm -> {
+                    assert wb.isPresent();
+                    Flurstueck fst = FeatureTableElement.entity( elm );
+                    fst.geloescht.set( true );
+                    refresh();
+                    
+                    panelSite.toolkit().createSnackbar( Appearance.FadeIn, "Flurstück wurde gelöscht" );
+                })));
+
+            // Action: transfer
+            addColumn( new FormFeatureTableColumn( descriptorFor( "", String.class ) )
+                .setWeight( 1, 30 )
+                .setLabelProvider( new ColumnLabelProvider() {
+                    @Override
+                    public Image getImage( Object element ) {
+                        return WbvPlugin.images().svgImage( "transfer.svg", SvgImageRegistryHelper.NORMAL12 );
+                    }
+                    @Override
+                    public String getText( Object element ) {
+                        return null;
+                    }
+                    @Override
+                    public String getToolTipText( Object elm ) {
+                        return "Eigentumsübergang: an einem anderen Waldbesitzer übertragen";
+                    }
+                })
+                .setEditing( new ActionCellEditor( elm -> {
+                    Flurstueck fst = FeatureTableElement.entity( elm );
+                    selected.set( fst );
+                    
+                    BatikApplication.instance().getContext().openPanel( panelSite.path(), WaldbesitzerWaehlenPanel.ID );
+                })));
+
             // Gemarkung
             String propName = Flurstueck.TYPE.gemarkung.info().getName();
             final ColumnLabelProvider lp[] = new ColumnLabelProvider[1];
             addColumn( new FormFeatureTableColumn( descriptorFor( propName, String.class ) )
-                .setWeight( 2, 80 )
+                .setWeight( 6, 80 )
                 .setLabelProvider( lp[0] = new ColumnLabelProvider() {
                     @Override
                     public String getText( Object elm ) {
@@ -132,15 +213,15 @@ public class FlurstueckTableViewer
                     }
                     @Override
                     public String getToolTipText( Object elm ) {
-                        Flurstueck entity = FeatureTableElement.entity( elm );
-                        Gemarkung gmk = entity.gemarkung.get();
+                        Flurstueck fst = FeatureTableElement.entity( elm );
+                        Gemarkung gmk = fst.gemarkung.get();
                         return gmk != null ? gmk.label() : "(kein Gemarkung)";
                     }
                 })
                 .setEditing( new PicklistFormField( Gemarkung.all.get() ), new NullValidator() {
                     @Override
                     public Object transform2Model( Object fieldValue ) throws Exception {
-                        return fieldValue != null ? uow.entity( (Entity)fieldValue ) : null; // adopt entity to local uow
+                        return fieldValue != null ? uow.get().entity( (Entity)fieldValue ) : null; // adopt entity to local uow
                     }
                 })
                 .setSortable( new Comparator<IFeatureTableElement>() {
@@ -154,8 +235,8 @@ public class FlurstueckTableViewer
             
             // Flurstücksnummer
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.zaehlerNenner ) )
-                .setWeight( 1, 60 )
-                .setHeader( "Nummer" )
+                .setWeight( 3, 50 )
+                .setHeader( "Nr." )
                 .setLabelProvider( new NotEmptyValidator() {
                     public Object transform2Field( Object modelValue ) throws Exception {
                         log.info( "Nummer: " + modelValue );
@@ -167,7 +248,7 @@ public class FlurstueckTableViewer
             // Fläche
             NumberValidator flaecheValidator = new NumberValidator( Double.class, Locale.GERMANY, 10, 2, 1, 2 );
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.flaeche ) )
-                .setWeight( 1, 60 )
+                .setWeight( 3, 50 )
                 .setHeader( "Fläche\n(in ha)" )
                 .setLabelProvider( flaecheValidator )
                 .setEditing( new StringFormField(), flaecheValidator )
@@ -175,7 +256,7 @@ public class FlurstueckTableViewer
             
             // davon Wald
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.flaecheWald ) )
-                .setWeight( 1, 60 )
+                .setWeight( 3, 50 )
                 .setHeader( "Wald\n(in ha)" )
                 .setLabelProvider( flaecheValidator )
                 .setEditing( new StringFormField(), new WaldflaecheValidator() )
@@ -183,25 +264,13 @@ public class FlurstueckTableViewer
 
             // Bemerkung
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.bemerkung ) )
-                .setWeight( 4, 120 )
-//                .setLabelProvider( new ColumnLabelProvider() {
-//                    @Override
-//                    public String getText( Object elm ) {
-//                        Flurstueck entity = FeatureTableElement.entity( elm );
-//                        return Objects.firstNonNull( entity.bemerkung.get(), "" ).toString();
-//                    }
-//                    @Override
-//                    public String getToolTipText( Object elm ) {
-//                        Flurstueck entity = FeatureTableElement.entity( elm );
-//                        return Objects.firstNonNull( entity.bemerkung.get(), "" ).toString();
-//                    }
-//                })
+                .setWeight( 11, 120 )
                 .setEditing( new StringFormField(), null ) );
 
             // suppress deferred loading to fix "empty table" issue
             // setContent( fs.getFeatures( this.baseFilter ) );
-            setContent( new CompositesFeatureContentProvider( rs ) );
-            setInput( rs );
+            setContent( new CompositesFeatureContentProvider( wb.get().flurstuecke() ) );
+            setInput( wb.get().flurstuecke() );
 
 //            /* Register for property change events */
 //            EventManager.instance().subscribe( this, new EventFilter<PropertyChangeEvent>() {
@@ -263,7 +332,8 @@ public class FlurstueckTableViewer
                         return "Noch keine Gemarkung";
                     }
                     else {
-                        ResultSet<Waldbesitzer> rs = uow.query( Waldbesitzer.class )
+                        ResultSet<Waldbesitzer> rs = uow.get().query( Waldbesitzer.class )
+                                // FIXME geloescht beachten!
                                 .where( anyOf( Waldbesitzer.TYPE.flurstuecke, 
                                         and(
                                                 the( Flurstueck.TYPE.gemarkung, id( gmk.id() ) ),

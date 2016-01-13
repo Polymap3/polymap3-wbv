@@ -197,7 +197,7 @@ public class WaldbesitzerTableViewer
                public String getText( Object elm ) {
                    Waldbesitzer wb = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
                    Set<String> names = new TreeSet();
-                   for (Flurstueck flurstueck : wb.flurstuecke) {
+                   for (Flurstueck flurstueck : wb.flurstuecke()) {
                        Gemarkung gemarkung = flurstueck.gemarkung.get();
                        names.add( gemarkung != null ? gemarkung.gemeinde.get() : "" );    
                    }
@@ -207,7 +207,7 @@ public class WaldbesitzerTableViewer
                public String getToolTipText( Object elm ) {
                    Waldbesitzer wb = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
                    Set<String> names = new TreeSet();
-                   for (Flurstueck flurstueck : wb.flurstuecke) {
+                   for (Flurstueck flurstueck : wb.flurstuecke()) {
                        Gemarkung gemarkung = flurstueck.gemarkung.get();
                        String name = gemarkung != null
                                ? gemarkung.gemeinde.get() + "/" + gemarkung.gemarkung.get()

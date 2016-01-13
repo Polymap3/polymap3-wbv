@@ -121,7 +121,7 @@ public class Report106b
         for (Composite entity : entities) {
             if (entity instanceof Waldbesitzer) {
                 Waldbesitzer wb = (Waldbesitzer)entity;
-                for (Flurstueck flurstueck : wb.flurstuecke) {
+                for (Flurstueck flurstueck : wb.flurstuecke()) {
                     Group group = grouped.get( getArt( wb.eigentumsArt.get() ) );
                     group.flurstuecke.add( flurstueck );
                     List<Flurstueck> fs = null;

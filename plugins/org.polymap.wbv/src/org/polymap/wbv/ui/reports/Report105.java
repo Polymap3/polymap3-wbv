@@ -67,7 +67,7 @@ public class Report105
                 if (value instanceof Waldbesitzer) {
                     Waldbesitzer wb = (Waldbesitzer)value;
                     double flaeche = 0;
-                    for (Flurstueck fs : wb.flurstuecke) {
+                    for (Flurstueck fs : wb.flurstuecke()) {
                         if (fs != null && fs.flaecheWald.get() != null) {
                             flaeche += fs.flaecheWald.get();
                         }
