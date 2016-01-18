@@ -69,7 +69,7 @@ public class Report102
 
     @Override
     public String getName() {
-        return "WBV 1.02";
+        return "WBV 1.02 - Flurstücksweise Anzeige mit WBS";
     }
 
 

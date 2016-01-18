@@ -66,7 +66,6 @@ import org.polymap.rhei.form.batik.BatikFormContainer;
 import org.polymap.rhei.fulltext.FulltextIndex;
 import org.polymap.rhei.fulltext.ui.EntitySearchField;
 import org.polymap.rhei.fulltext.ui.FulltextProposal;
-import org.polymap.rhei.table.FeatureTableFilterBar;
 import org.polymap.rhei.um.ui.LoginPanel;
 import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
 
@@ -275,9 +274,6 @@ public class StartPanel
             }
         });
             
-        // filterBar
-        FeatureTableFilterBar filterBar = new FeatureTableFilterBar( viewer, body );
-
         // searchField
         FulltextIndex fulltext = WbvRepository.fulltextIndex();
         EntitySearchField search = new EntitySearchField<Waldbesitzer>( body, fulltext, uow, Waldbesitzer.class ) {
@@ -311,15 +307,15 @@ public class StartPanel
 
         search.searchOnEnter.set( true );
         search.getText().setFocus();
+        search.getControl().moveAbove( null );
         new FulltextProposal( fulltext, search.getText() );
         
         // layout
         int displayHeight = UIUtils.sessionDisplay().getBounds().height;
         int tableHeight = (displayHeight - (2*50) - 75 - 70);  // margins, searchbar, toolbar+banner 
         createBtn.setLayoutData( FormDataFactory.filled().clearRight().clearBottom().create() );
-        reports.setLayoutData( FormDataFactory.filled().left( createBtn ).clearRight().clearBottom().height( 24 ).create() );
-        filterBar.getControl().setLayoutData( FormDataFactory.filled().bottom( viewer.getTable() ).left( reports ).right( 50 ).create() );
-        search.getControl().setLayoutData( FormDataFactory.filled().height( 27 ).bottom( viewer.getTable() ).left( filterBar.getControl() ).create() );
+        reports.setLayoutData( FormDataFactory.filled().left( createBtn ).noBottom().height( 26 ).right( 50 ).create() );
+        search.getControl().setLayoutData( FormDataFactory.filled().height( 27 ).bottom( viewer.getTable() ).left( reports ).create() );
         viewer.getTable().setLayoutData( FormDataFactory.filled()
                 .top( createBtn ).height( tableHeight ).width( 300 ).create() );
         

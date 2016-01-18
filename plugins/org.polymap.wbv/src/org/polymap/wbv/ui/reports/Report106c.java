@@ -65,7 +65,7 @@ public class Report106c
 
     @Override
     public String getName() {
-        return "WBV 1.06c";
+        return "WBV 1.06c - Fläche nach Gemarkung und EA";
     }
 
 

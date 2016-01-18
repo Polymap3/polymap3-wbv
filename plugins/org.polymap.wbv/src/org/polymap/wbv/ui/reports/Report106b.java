@@ -74,7 +74,7 @@ public class Report106b
 
     @Override
     public String getName() {
-        return "WBV 1.06b";
+        return "WBV 1.06b - Anzahl und Fläche nach Größengruppe (Agrarbericht)";
     }
 
 

@@ -68,7 +68,7 @@ public class Report106
 
     @Override
     public String getName() {
-        return "WBV 1.06";
+        return "WBV 1.06 - Anzahl und Fläche der WBS nach Größengruppe";
     }
 
 

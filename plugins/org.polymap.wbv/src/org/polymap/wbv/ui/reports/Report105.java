@@ -49,7 +49,7 @@ public class Report105
 
     @Override
     public String getName() {
-        return "WBV 1.05";
+        return "WBV 1.05 - Summenliste Waldflächen der Waldbesitzer";
     }
 
 
