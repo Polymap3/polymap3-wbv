@@ -14,6 +14,7 @@ package org.polymap.wbv.model;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import com.google.common.collect.Iterables;
 
 import org.polymap.model2.CollectionProperty;

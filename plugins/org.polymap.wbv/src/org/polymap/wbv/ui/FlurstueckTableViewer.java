@@ -102,6 +102,10 @@ public class FlurstueckTableViewer
             if (!getTable().isDisposed()) {
                 refresh();
             }
+            else {
+                IAppContext context = BatikApplication.instance().getContext();
+                context.removeListener( panelChangeListener );                
+            }
         }        
     };
     
