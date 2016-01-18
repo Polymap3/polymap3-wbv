@@ -95,6 +95,8 @@ public class FlurstueckTableViewer
     
     private PanelSite                   panelSite;
     
+    private boolean                     flurstueckDeleted;
+    
     private Object                      panelChangeListener = new Object() {
         @EventHandler( display=true )
         protected void fieldChange( PanelChangeEvent ev ) {
@@ -116,7 +118,7 @@ public class FlurstueckTableViewer
                 return true;
             }
         }
-        return false;
+        return flurstueckDeleted;
     }
     
 
@@ -178,7 +180,14 @@ public class FlurstueckTableViewer
                     fst.geloescht.set( true );
                     refresh();
                     
-                    panelSite.toolkit().createSnackbar( Appearance.FadeIn, "Flurstück wurde gelöscht" );
+                    flurstueckDeleted = true;
+                    fieldChange( null );
+                    
+                    // waldbesitzer löschen, wen kein flurstück mehr
+                    if (wb.get().flurstuecke().isEmpty()) {
+                        uow.get().removeEntity( wb.get() );
+                        panelSite.toolkit().createSnackbar( Appearance.FadeIn, "Waldbesitzer wird beim Speichern <b>gelöscht</b>!" );
+                    }
                 })));
 
             // Action: transfer

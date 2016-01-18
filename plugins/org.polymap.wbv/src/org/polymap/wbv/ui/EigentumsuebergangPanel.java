@@ -85,12 +85,18 @@ public class EigentumsuebergangPanel
         assert origin.isPresent();
         assert fst.isPresent();
         
+        // copy flurstueck
         selected.flurstuecke.createElement( (Flurstueck proto) -> {
             CopyCompositeState.from( fst.get() ).to( proto );
             return proto;
         });
         
         fst.get().geloescht.set( true );
+        
+        // waldbesitzer löschen
+        if (origin.get().flurstuecke().isEmpty()) {
+            uow.get().removeEntity( origin.get() );
+        }
         uow.get().commit();
     }
     
@@ -107,8 +113,14 @@ public class EigentumsuebergangPanel
             @Override
             public void widgetSelected( SelectionEvent ev ) {
                 perform();
-                ((WbvPanel)getContext().getPanel( site().path().removeLast( 1 ) )).tk().createSnackbar( Appearance.FadeIn, "Flurstück wurde übertragen." );
+                
+                WbvPanel parentPanel = (WbvPanel)getContext().getPanel( site().path().removeLast( 1 ) );
+                parentPanel.tk().createSnackbar( Appearance.FadeIn, "Flurstück wurde übertragen." );
                 getContext().closePanel( site().path() );
+                
+                if (uow.get().entity( origin.get() ) == null) {
+                    getContext().closePanel( parentPanel.site().path() );
+                }
             }
         });
         
@@ -117,7 +129,8 @@ public class EigentumsuebergangPanel
         tk().createFlowText( infoSection.getBody(), 
                 "des Flurstücks:<br/>" + 
                 repeat( "&nbsp;", 10 ) + " *" + fst.get().gemarkung.get().label() + " " + fst.get().zaehlerNenner.get() + "*<br/>" +
-                repeat( "&nbsp;", 10 ) + " *" + origin.get().besitzer().anzeigename() + "*\n\n" +
+                repeat( "&nbsp;", 10 ) + " <em>" + origin.get().besitzer().anzeigename() +
+                        (origin.get().flurstuecke().size() == 1 ? " -- <b>wird im Ergebnis gelöscht!</b> " : "") + "</em>\n\n" +
                 "an: ");
         
         // table viewer

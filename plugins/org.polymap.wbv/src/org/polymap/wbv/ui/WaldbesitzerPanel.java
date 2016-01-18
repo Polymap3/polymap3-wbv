@@ -44,6 +44,7 @@ import org.eclipse.core.runtime.Status;
 
 import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.model2.runtime.ValueInitializer;
+import org.polymap.model2.runtime.EntityRuntimeContext.EntityStatus;
 
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.security.SecurityContext;
@@ -205,8 +206,12 @@ public class WaldbesitzerPanel
             }
             uow.get().commit();
             
-            tk().createSnackbar( Appearance.FadeIn, "Änderungen wurden gespeichert" );
-            //getContext().closePanel( getSite().getPath() );
+            if (wb.status() == EntityStatus.REMOVED) {
+                getContext().closePanel( getSite().getPath() );                
+            }
+            else {
+                tk().createSnackbar( Appearance.FadeIn, "Änderungen wurden gespeichert" );
+            }
         }
         catch (Exception e) {
             StatusDispatcher.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );

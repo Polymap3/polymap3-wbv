@@ -12,9 +12,11 @@
  */
 package org.polymap.wbv.model;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 
 import org.polymap.model2.CollectionProperty;
@@ -122,8 +124,8 @@ public class Waldbesitzer
     
 
     /** Aktuellen, nicht gelöschte Flurstücke.  */
-    public Iterable<Flurstueck> flurstuecke() {
-        return Iterables.filter( flurstuecke, fst -> !fst.geloescht.get() );
+    public Collection<Flurstueck> flurstuecke() {
+        return Collections2.filter( flurstuecke, fst -> !fst.geloescht.get() );
     }
     
     
