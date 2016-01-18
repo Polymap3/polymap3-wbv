@@ -14,6 +14,7 @@
  */
 package org.polymap.wbv.ui;
 
+import static org.apache.commons.lang3.StringUtils.repeat;
 import static org.polymap.core.ui.FormDataFactory.on;
 
 import java.util.Collections;
@@ -35,6 +36,7 @@ import org.polymap.core.ui.UIUtils;
 
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.PanelIdentifier;
+import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.Snackbar.Appearance;
 import org.polymap.rhei.fulltext.FulltextIndex;
 import org.polymap.rhei.fulltext.ui.EntitySearchField;
@@ -52,10 +54,10 @@ import org.polymap.wbv.model.WbvRepository;
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public class WaldbesitzerWaehlenPanel
+public class EigentumsuebergangPanel
         extends WbvPanel {
 
-    private static Log log = LogFactory.getLog( WaldbesitzerWaehlenPanel.class );
+    private static Log log = LogFactory.getLog( EigentumsuebergangPanel.class );
 
     public static final PanelIdentifier ID  = new PanelIdentifier( "wbv", "waldbesitzerWaehlen" );
 
@@ -110,7 +112,15 @@ public class WaldbesitzerWaehlenPanel
             }
         });
         
-        //
+        // info section
+        IPanelSection infoSection = tk().createPanelSection( body, "Eigentumsübergang" );
+        tk().createFlowText( infoSection.getBody(), 
+                "des Flurstücks:<br/>" + 
+                repeat( "&nbsp;", 10 ) + " *" + fst.get().gemarkung.get().label() + " " + fst.get().zaehlerNenner.get() + "*<br/>" +
+                repeat( "&nbsp;", 10 ) + " *" + origin.get().besitzer().anzeigename() + "*\n\n" +
+                "an: ");
+        
+        // table viewer
         final WaldbesitzerTableViewer viewer = new WaldbesitzerTableViewer( uow.get(), body, Collections.EMPTY_LIST, SWT.BORDER );
         getContext().propagate( viewer );
         
@@ -155,8 +165,9 @@ public class WaldbesitzerWaehlenPanel
         
         // layout
         int displayHeight = UIUtils.sessionDisplay().getBounds().height;
-        int tableHeight = (displayHeight - (2*50) - 75 - 70);  // margins, searchbar, toolbar+banner
-        on( search.getControl() ).fill().height( 27 ).noBottom();
+        int tableHeight = (displayHeight - (2*50) - 75 - 70 - 140);  // margins, searchbar, toolbar+banner
+        on( infoSection.getControl() ).fill().height( 140 ).noBottom();
+        on( search.getControl() ).fill().height( 27 ).top( infoSection.getControl() ).noBottom();
         on( viewer.getTable() ).fill().top( search.getControl() ).height( tableHeight ).width( 300 );
     }
     

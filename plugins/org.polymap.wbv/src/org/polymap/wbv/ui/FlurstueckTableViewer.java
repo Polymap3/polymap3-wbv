@@ -202,7 +202,7 @@ public class FlurstueckTableViewer
                     Flurstueck fst = FeatureTableElement.entity( elm );
                     selected.set( fst );
                     
-                    BatikApplication.instance().getContext().openPanel( panelSite.path(), WaldbesitzerWaehlenPanel.ID );
+                    BatikApplication.instance().getContext().openPanel( panelSite.path(), EigentumsuebergangPanel.ID );
                 })));
 
             // Gemarkung
