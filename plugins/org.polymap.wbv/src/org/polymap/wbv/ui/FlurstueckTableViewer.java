@@ -250,7 +250,7 @@ public class FlurstueckTableViewer
                 .setEditing( new StringFormField(), new AenderungValidator( new FlurstueckExistsValidator() ) ) );
             
             // Fläche
-            NumberValidator flaecheValidator = new NumberValidator( Double.class, Locale.GERMANY, 10, 2, 1, 2 );
+            NumberValidator flaecheValidator = new NumberValidator( Double.class, Locale.GERMANY, 10, 4, 1, 4 );
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.flaeche ) )
                 .setWeight( 3, 50 )
                 .setHeader( "Fläche\n(in ha)" )

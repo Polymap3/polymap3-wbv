@@ -13,6 +13,7 @@
 package org.polymap.wbv.ui;
 
 import static org.eclipse.ui.forms.widgets.ExpandableComposite.TREE_NODE;
+import static org.polymap.core.ui.FormDataFactory.on;
 import static org.polymap.rhei.batik.app.SvgImageRegistryHelper.WHITE24;
 
 import java.util.ArrayList;
@@ -23,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import java.beans.PropertyChangeEvent;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -79,6 +79,7 @@ import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
 import org.polymap.wbv.model.WbvRepository;
+import org.polymap.wbv.ui.reports.EntityReport;
 
 /**
  * Dieses Panel zeigt einen {@link Waldbesitzer} und erlaubt es dessen Properties zu
@@ -122,7 +123,7 @@ public class WaldbesitzerPanel
     @Override
     public void init() {
         super.init();
-        site().preferredWidth.set( 550 );
+        site().preferredWidth.set( 600 );
  
         assert !uow.isPresent();
         uow.set( WbvRepository.unitOfWork().newUnitOfWork() );
@@ -323,42 +324,29 @@ public class WaldbesitzerPanel
         flurstuecke.addConstraint( 
                 WbvPlugin.MIN_COLUMN_WIDTH, 
                 new PriorityConstraint( 0 ) );
-        flurstuecke.getBody().setLayout( FormLayoutFactory.defaults().create() );
         createFlurstueckSection( flurstuecke.getBody() );
-
-//        // map
-//        IPanelSection karte = tk.createPanelSection( parent, null );
-//        karte.addConstraint( WbvPlugin.MIN_COLUMN_WIDTH, new PriorityConstraint( 10 ) );
-//        karte.getBody().setLayout( ColumnLayoutFactory.defaults().columns( 1, 1 ).create() );
-//
-//        try {
-//            map = new WbvMapViewer( getSite() );
-//            map.createContents( karte.getBody() )
-//                    .setLayoutData( new ColumnLayoutData( SWT.DEFAULT, 500 ) );
-//        }
-//        catch (Exception e) {
-//            throw new RuntimeException( e );
-//        }
-    
-        // context menu
-        //map.getContextMenu().addProvider( new WaldflaechenMenu() );
-//        map.getContextMenu().addProvider( new IContextMenuProvider() {
-//            @Override
-//            public IContextMenuContribution createContribution() {
-//                return new FindFeaturesMenuContribution() {
-//                    @Override
-//                    protected void onMenuOpen( FeatureStore fs, Feature feature, ILayer layer ) {
-//                        log.info( "Feature: " + feature );
-//                    }
-//                };            
-//            }
-//        });
     }
 
+    
+    private double gesamtFlaeche() {
+        return wb.flurstuecke().stream().map( f -> f.flaeche.get() ).filter( fl -> fl != null ).mapToDouble( d -> d ).sum();
+    }
+    
+    private double waldFlaeche() {
+        return wb.flurstuecke().stream().map( f -> f.flaecheWald.get() ).filter( fl -> fl != null ).mapToDouble( d -> d ).sum();
+    }
+    
     
     protected void createFlurstueckSection( Composite parent ) {
         parent.setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
 
+        // summary
+        Label summary = tk().createFlowText( parent, 
+                "Gesamt: " + EntityReport.nf.format( gesamtFlaeche() ) + " ha -- "
+                + "davon Wald: " + EntityReport.nf.format( waldFlaeche() ) + " ha" );
+        FormDataFactory.on( summary ).fill().height( 30 ).top( 0, -3 ).noBottom();
+        
+        //
         final FlurstueckTableViewer viewer = new FlurstueckTableViewer( site(), parent ) {
             @Override
             protected void fieldChange( PropertyChangeEvent ev ) {
@@ -374,14 +362,18 @@ public class WaldbesitzerPanel
                     status = new Status( IStatus.OK, WbvPlugin.ID, "Alle Eingaben sind in Ordnung" );
                 }
                 statusAdapter.updateStatusOf( this, status );
+
+                summary.setText( 
+                        "Gesamt: " + EntityReport.nf.format( gesamtFlaeche() ) + " ha -- "
+                        + "davon Wald: " + EntityReport.nf.format( waldFlaeche() ) + " ha" );
             }
         };
-        viewer.getTable().setLayoutData( FormDataFactory.filled().right( 100, -33 ).height( 250 ).width( 300 ).create() );
+        FormDataFactory.on( viewer.getTable() ).fill().top( summary ).right( 100, -33 ).height( 250 ).width( 300 );
         
         // addBtn
-        final Button addBtn = tk().createButton( parent, "+", SWT.PUSH );
+        final Button addBtn = on( tk().createButton( parent, "+", SWT.PUSH ) )
+                .left( 100, -30 ).right( 100 ).top( summary ).control();
         addBtn.setToolTipText( "Ein neues Flurstück anlegen" );
-        addBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( 0 ).create() );
         addBtn.addSelectionListener( new SelectionAdapter() {
             @Override
             public void widgetSelected( SelectionEvent ev ) {

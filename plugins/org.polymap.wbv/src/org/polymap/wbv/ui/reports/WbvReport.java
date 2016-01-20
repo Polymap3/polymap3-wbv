@@ -117,6 +117,7 @@ public abstract class WbvReport
     public static class NumberFormatter<T extends Number>
             extends AbstractValueFormatter<String,T> {
 
+        @SuppressWarnings("hiding")
         private NumberFormat nf;
 
 
@@ -134,5 +135,10 @@ public abstract class WbvReport
             return nf.format( value );
         }
 
+        public String format( T value ) {
+            return nf.format( value );
+        }
+
     }
+    
 }
