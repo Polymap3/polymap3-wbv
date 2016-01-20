@@ -24,6 +24,7 @@ import org.polymap.model2.Defaults;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
 import org.polymap.model2.Queryable;
+import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.wbv.mdb.ImportColumn;
 import org.polymap.wbv.mdb.ImportTable;
 
@@ -62,6 +63,15 @@ public class Flurstueck
 //   18|FL_LK                          (TEXT 200)                
 //   19|FL_GEMAFLUR                    (TEXT 200)
 
+    public static final ValueInitializer<Flurstueck> defaults = (Flurstueck proto) -> {
+        proto.landkreis.set( "Mittelsachsen" );
+        Date now = new Date();
+        proto.eingabe.set( now );
+        proto.aenderung.set( now );
+        return proto;
+    };
+    
+    
     @Queryable
     @Defaults
     public Property<Boolean>            geloescht;
@@ -95,6 +105,9 @@ public class Flurstueck
     @Nullable
     @ImportColumn("FL_Datum_Eingabe")
     public Property<Date>               eingabe;
+
+    @Nullable
+    public Property<Date>               aenderung;
 
     @Nullable
     @ImportColumn("FL_LK")

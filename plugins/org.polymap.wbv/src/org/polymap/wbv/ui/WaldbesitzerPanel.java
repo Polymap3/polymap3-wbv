@@ -172,14 +172,7 @@ public class WaldbesitzerPanel
                             }
                         });
                         // damit die sch** tabelle den ersten Eintrag zeigt
-                        prototype.flurstuecke.createElement( new ValueInitializer<Flurstueck>() {
-                            @Override
-                            public Flurstueck initialize( Flurstueck proto ) throws Exception {
-                                proto.landkreis.set( "Mittelsachsen" );
-                                proto.eingabe.set( new Date() );
-                                return proto;
-                            }
-                        });
+                        prototype.flurstuecke.createElement( Flurstueck.defaults );
                         return prototype;
                     }
                 });
@@ -369,6 +362,7 @@ public class WaldbesitzerPanel
         final FlurstueckTableViewer viewer = new FlurstueckTableViewer( site(), parent ) {
             @Override
             protected void fieldChange( PropertyChangeEvent ev ) {
+                super.fieldChange( ev );
                 IStatus status = null;
                 if (!isDirty()) {
                     status = Status.OK_STATUS;
@@ -391,15 +385,7 @@ public class WaldbesitzerPanel
         addBtn.addSelectionListener( new SelectionAdapter() {
             @Override
             public void widgetSelected( SelectionEvent ev ) {
-                Flurstueck newElm = wb.flurstuecke.createElement( new ValueInitializer<Flurstueck>() {
-                    @Override
-                    public Flurstueck initialize( Flurstueck proto ) throws Exception {
-                        proto.landkreis.set( "Mittelsachsen" );
-                        proto.eingabe.set( new Date() );
-                        return proto;
-                    }
-                });
-                log.info( wb.toString() );
+                Flurstueck newElm = wb.flurstuecke.createElement( Flurstueck.defaults );
                 viewer.setInput( wb.flurstuecke );
                 //viewer.reveal( new CompositesFeatureContentProvider.FeatureTableElement( newElm ) );
                 viewer.selectElement( String.valueOf( newElm.hashCode() ), true, true );

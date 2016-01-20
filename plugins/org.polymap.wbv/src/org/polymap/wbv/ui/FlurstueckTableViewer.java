@@ -23,9 +23,9 @@ import static org.polymap.model2.query.Expressions.the;
 import static org.polymap.wbv.ui.PropertyAdapter.descriptorFor;
 
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
 
@@ -45,7 +45,6 @@ import org.polymap.model2.Entity;
 import org.polymap.model2.query.ResultSet;
 import org.polymap.model2.runtime.UnitOfWork;
 
-import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
 
@@ -57,6 +56,7 @@ import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.PanelChangeEvent;
 import org.polymap.rhei.batik.PanelChangeEvent.EventType;
+import org.polymap.rhei.field.IFormFieldValidator;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.NullValidator;
 import org.polymap.rhei.field.NumberValidator;
@@ -149,12 +149,8 @@ public class FlurstueckTableViewer
         context.addListener( panelChangeListener, ev -> ev.getType().isOnOf( EventType.LIFECYCLE ) );
         
         // listen to column/field changes
-        EventManager.instance().subscribe( this, new EventFilter<PropertyChangeEvent>() {
-            @Override
-            public boolean apply( PropertyChangeEvent ev ) {
-                return displayed.values().contains( ev.getSource() );
-            }
-        });
+        EventManager.instance().subscribe( this, ev -> 
+                ev instanceof PropertyChangeEvent && displayed.values().contains( ev.getSource() ) );
         
         try {
             // Action: delete
@@ -231,12 +227,7 @@ public class FlurstueckTableViewer
                         return gmk != null ? gmk.label() : "(kein Gemarkung)";
                     }
                 })
-                .setEditing( new PicklistFormField( Gemarkung.all.get() ), new NullValidator() {
-                    @Override
-                    public Object transform2Model( Object fieldValue ) throws Exception {
-                        return fieldValue != null ? uow.get().entity( (Entity)fieldValue ) : null; // adopt entity to local uow
-                    }
-                })
+                .setEditing( new PicklistFormField( Gemarkung.all.get() ), new AenderungValidator( new AdoptEntityValidator() ))
                 .setSortable( new Comparator<IFeatureTableElement>() {
                     public int compare( IFeatureTableElement e1, IFeatureTableElement e2 ) {
                         String l1 = lp[0].getText( e1 );
@@ -256,7 +247,7 @@ public class FlurstueckTableViewer
                         return super.transform2Field( modelValue );
                     }
                 })
-                .setEditing( new StringFormField(), new FlurstueckExistsValidator() ) );
+                .setEditing( new StringFormField(), new AenderungValidator( new FlurstueckExistsValidator() ) ) );
             
             // Fläche
             NumberValidator flaecheValidator = new NumberValidator( Double.class, Locale.GERMANY, 10, 2, 1, 2 );
@@ -264,7 +255,7 @@ public class FlurstueckTableViewer
                 .setWeight( 3, 50 )
                 .setHeader( "Fläche\n(in ha)" )
                 .setLabelProvider( flaecheValidator )
-                .setEditing( new StringFormField(), flaecheValidator )
+                .setEditing( new StringFormField(), new AenderungValidator( flaecheValidator ) )
                 .setSortable( false ) );  // standard comparator: ClassCastException wenn null
             
             // davon Wald
@@ -272,13 +263,25 @@ public class FlurstueckTableViewer
                 .setWeight( 3, 50 )
                 .setHeader( "Wald\n(in ha)" )
                 .setLabelProvider( flaecheValidator )
-                .setEditing( new StringFormField(), new WaldflaecheValidator() )
+                .setEditing( new StringFormField(), new AenderungValidator( new WaldflaecheValidator() ) )
                 .setSortable( false ) );  // standard comparator: ClassCastException wenn null
+            
+            // Änderungsdatum
+            addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.aenderung ) )
+                .setWeight( 4, 80 )
+                .setHeader( "Änderung" )
+                .setLabelProvider( new ColumnLabelProvider() {
+                    @Override
+                    public String getText( Object elm ) {
+                        Flurstueck fst = FeatureTableElement.entity( elm );
+                        return fst.aenderung.get() != null ? WbvPlugin.df.format( fst.aenderung.get() ) : "--";
+                    }
+                }));
 
             // Bemerkung
             addColumn( new FormFeatureTableColumn( descriptorFor( Flurstueck.TYPE.bemerkung ) )
                 .setWeight( 11, 120 )
-                .setEditing( new StringFormField(), null ) );
+                .setEditing( new StringFormField(), new AenderungValidator() ) );
 
             // suppress deferred loading to fix "empty table" issue
             // setContent( fs.getFeatures( this.baseFilter ) );
@@ -314,11 +317,68 @@ public class FlurstueckTableViewer
         }));
     }
 
-    
+
     /**
      * 
      */
-    class FlurstueckExistsValidator
+    protected class AenderungValidator
+            extends NullValidator
+            implements ITableFieldValidator {
+        
+        private Flurstueck              flurstueck;
+        
+        private IFormFieldValidator     next;
+
+        public AenderungValidator() {
+        }
+
+        public AenderungValidator( IFormFieldValidator next ) {
+            this.next = next;
+        }
+
+        @Override
+        public void init( IFeatureTableElement elm ) {
+            if (next instanceof ITableFieldValidator) {
+                ((ITableFieldValidator)next).init( elm );
+            }
+            flurstueck = FeatureTableElement.entity( elm );
+        }
+
+        @Override
+        public Object transform2Model( Object fieldValue ) throws Exception {
+            flurstueck.aenderung.set( new Date() );
+            return next != null ? next.transform2Model( fieldValue ) : fieldValue;
+        }
+
+        @Override
+        public String validate( Object value ) {
+            return next != null ? next.validate( value ) : null;
+        }
+
+        @Override
+        public Object transform2Field( Object modelValue ) throws Exception {
+            return next != null ? next.transform2Field( modelValue ) : modelValue;
+        }
+    }
+        
+
+    /**
+     * 
+     */
+    protected class AdoptEntityValidator
+            extends NullValidator {
+    
+        @Override
+        public Object transform2Model( Object fieldValue ) throws Exception {
+            return fieldValue != null ? uow.get().entity( (Entity)fieldValue ) : null; // adopt entity to local uow
+        }
+    }
+
+
+    /**
+     * 
+     */
+    protected class FlurstueckExistsValidator
             extends NotEmptyValidator
             implements ITableFieldValidator {
         
@@ -363,7 +423,7 @@ public class FlurstueckTableViewer
     /**
      * 
      */
-    class WaldflaecheValidator
+    protected class WaldflaecheValidator
             extends NumberValidator
             implements ITableFieldValidator {
         
