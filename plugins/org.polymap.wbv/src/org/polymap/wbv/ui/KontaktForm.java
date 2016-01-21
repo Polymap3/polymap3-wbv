@@ -31,6 +31,7 @@ import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.field.EMailAddressValidator;
 import org.polymap.rhei.field.IFormFieldLabel;
 import org.polymap.rhei.field.IFormFieldListener;
+import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.TextFormField;
 import org.polymap.rhei.form.DefaultFormPage;
@@ -112,13 +113,13 @@ public class KontaktForm
                 .field.put( new PicklistFormField( new String[] {"Herr", "Frau", "Firma", "Amt"} )
                             .setTextEditable( true )
                             .setForceTextMatch( false ) )
-                //.setValidator( new NotEmptyValidator() )
                 .create();
 
         formSite.newFormField( new PropertyAdapter( kontakt.name ) )
                 .parent.put( salu )
                 .label.put( IFormFieldLabel.NO_LABEL )
                 .tooltip.put( "Name des Waldbesitzers, inklusive Titel" )
+                .validator.put( new NotEmptyValidator() )
                 .create();
         
         formSite.newFormField( new PropertyAdapter( kontakt.vorname ) )

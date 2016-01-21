@@ -338,13 +338,13 @@ public class WaldbesitzerPanel
     
     
     protected void createFlurstueckSection( Composite parent ) {
-        parent.setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
+        parent.setLayout( FormLayoutFactory.defaults().spacing( 0 ).create() );
 
         // summary
         Label summary = tk().createFlowText( parent, 
                 "Gesamt: " + EntityReport.nf.format( gesamtFlaeche() ) + " ha -- "
                 + "davon Wald: " + EntityReport.nf.format( waldFlaeche() ) + " ha" );
-        FormDataFactory.on( summary ).fill().height( 30 ).top( 0, -3 ).noBottom();
+        FormDataFactory.on( summary ).fill().height( 27 ).noTop().bottom( 100 );
         
         //
         final FlurstueckTableViewer viewer = new FlurstueckTableViewer( site(), parent ) {
@@ -368,11 +368,11 @@ public class WaldbesitzerPanel
                         + "davon Wald: " + EntityReport.nf.format( waldFlaeche() ) + " ha" );
             }
         };
-        FormDataFactory.on( viewer.getTable() ).fill().top( summary ).right( 100, -33 ).height( 250 ).width( 300 );
+        FormDataFactory.on( viewer.getTable() ).fill().right( 100, -33 ).bottom( summary, 5 ).height( 250 ).width( 300 );
         
         // addBtn
         final Button addBtn = on( tk().createButton( parent, "+", SWT.PUSH ) )
-                .left( 100, -30 ).right( 100 ).top( summary ).control();
+                .left( 100, -30 ).right( 100 ).top( 0 ).control();
         addBtn.setToolTipText( "Ein neues Flurstück anlegen" );
         addBtn.addSelectionListener( new SelectionAdapter() {
             @Override

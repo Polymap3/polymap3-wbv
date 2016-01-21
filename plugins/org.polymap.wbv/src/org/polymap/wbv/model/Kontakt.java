@@ -12,7 +12,7 @@
  */
 package org.polymap.wbv.model;
 
-import org.apache.commons.lang3.StringUtils;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import com.google.common.base.Joiner;
 
@@ -105,10 +105,15 @@ public class Kontakt
      * falls die nicht vorhanden ist: Familienname, Vorname )
      */
     public String anzeigename() {
-        return !StringUtils.isEmpty( organisation.get() )
-                ? organisation.get()
-                // Name zuerst wegen Sortierung in Tabellen und Reports
-                : Joiner.on( "" ).skipNulls().join( /*anrede.get(),*/ name.get(), ", ", vorname.get() );
+        if (!isEmpty( organisation.get() )) {
+            return organisation.get();
+        }
+        else if (isEmpty( name.get() ) && isEmpty( vorname.get() ) ) {
+            return "[Besitzerdaten fehlen]";
+        }
+        else {
+            return Joiner.on( "" ).skipNulls().join( /*anrede.get(),*/ name.get(), ", ", vorname.get() );
+        }
     }
     
 }
