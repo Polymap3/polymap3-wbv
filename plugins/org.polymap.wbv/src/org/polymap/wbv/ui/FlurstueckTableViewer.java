@@ -430,7 +430,7 @@ public class FlurstueckTableViewer
         Flurstueck      flurstueck;
 
         public WaldflaecheValidator() {
-            super( Double.class, Locale.GERMANY, 10, 2, 1, 2 );
+            super( Double.class, Locale.GERMANY, 10, 4, 1, 4 );
         }
 
         @Override
