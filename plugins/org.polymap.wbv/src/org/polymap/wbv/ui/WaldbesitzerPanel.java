@@ -371,14 +371,13 @@ public class WaldbesitzerPanel
         FormDataFactory.on( viewer.getTable() ).fill().right( 100, -33 ).bottom( summary, 5 ).height( 250 ).width( 300 );
         
         // addBtn
-        final Button addBtn = on( tk().createButton( parent, "+", SWT.PUSH ) )
-                .left( 100, -30 ).right( 100 ).top( 0 ).control();
+        final Button addBtn = on( tk().createButton( parent, "+", SWT.PUSH ) ).left( 100, -30 ).right( 100 ).top( 0 ).control();
         addBtn.setToolTipText( "Ein neues Flurstück anlegen" );
         addBtn.addSelectionListener( new SelectionAdapter() {
             @Override
             public void widgetSelected( SelectionEvent ev ) {
                 Flurstueck newElm = wb.flurstuecke.createElement( Flurstueck.defaults );
-                viewer.setInput( wb.flurstuecke );
+                viewer.setInput( wb.flurstuecke() );
                 //viewer.reveal( new CompositesFeatureContentProvider.FeatureTableElement( newElm ) );
                 viewer.selectElement( String.valueOf( newElm.hashCode() ), true, true );
                 //statusAdapter.updateStatusOf( this, new Status( IStatus.OK, WbvPlugin.ID, "Alle Eingaben sind korrekt." ) );
