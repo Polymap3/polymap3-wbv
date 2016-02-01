@@ -347,10 +347,10 @@ public class WaldbesitzerPanel
     private String summary() {
         Collection<Flurstueck> flurstuecke = wb.flurstuecke( revier.get() );
         Collection<Flurstueck> alle = wb.flurstuecke( null );
-        return "Flurstücke: **" + flurstuecke.size() + "**" + 
+        return "Flurstücke: " + flurstuecke.size() + "" + 
                     (flurstuecke.size() != alle.size() ? " (" + alle.size() + ")" : "") + " -- " +  
-               "Gesamtfläche: **" + EntityReport.nf.format( gesamtFlaeche( flurstuecke ) ) + " ha** -- " +
-               "davon Wald: **" + EntityReport.nf.format( waldFlaeche( flurstuecke ) ) + " ha**";        
+               "Gesamtfläche: " + EntityReport.nf.format( gesamtFlaeche( flurstuecke ) ) + " ha -- " +
+               "davon Wald: " + EntityReport.nf.format( waldFlaeche( flurstuecke ) ) + " ha";        
     }
     
     protected void createFlurstueckSection( Composite parent ) {

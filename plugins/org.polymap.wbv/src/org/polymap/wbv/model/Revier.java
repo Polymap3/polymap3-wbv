@@ -13,6 +13,9 @@
  */
 package org.polymap.wbv.model;
 
+import static org.polymap.model2.query.Expressions.anyOf;
+import static org.polymap.model2.query.Expressions.isAnyOf;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +26,9 @@ import java.util.function.Supplier;
 import org.polymap.core.runtime.CachedLazyInit;
 import org.polymap.core.runtime.Lazy;
 
+import org.polymap.model2.query.Expressions;
 import org.polymap.model2.query.ResultSet;
+import org.polymap.model2.query.grammar.BooleanExpression;
 import org.polymap.model2.runtime.UnitOfWork;
 
 /**
@@ -37,6 +42,8 @@ import org.polymap.model2.runtime.UnitOfWork;
  */
 public class Revier {
 
+    public static final Revier      UNKNOWN = new Revier( "Alle" );
+    
     /**
      * Alle Reviere: Reviername -> {@link Revier}
      */
@@ -57,9 +64,6 @@ public class Revier {
         }});
     
     
-    public static final Revier      UNKNOWN = new Revier( "Alle" );
-    
-    
     // istance ********************************************
 
     public String                   name;
@@ -70,11 +74,23 @@ public class Revier {
      * {@link UnitOfWork}, die nicht mehr gültig ist.
      */
     public List<Gemarkung>          gemarkungen = new ArrayList( 128 );
-    
+
+    /**
+     * Eine {@link BooleanExpression}, die {@link Waldbesitzer} nach diesem Revier
+     * einschränkt.
+     */
+    public Lazy<BooleanExpression>  waldbesitzerFilter = new CachedLazyInit( () -> {
+        Waldbesitzer wb = Expressions.template( Waldbesitzer.class, WbvRepository.repo() );
+        Flurstueck fl = Expressions.template( Flurstueck.class, WbvRepository.repo() );
+        
+        Gemarkung[] revierGemarkungen = gemarkungen.toArray( new Gemarkung[gemarkungen.size()] );
+        return anyOf( wb.flurstuecke, isAnyOf( fl.gemarkung, revierGemarkungen ) );
+    });
+
     
     protected Revier( String name ) {
         assert name != null;
         this.name = name;
     }
-
+    
 }

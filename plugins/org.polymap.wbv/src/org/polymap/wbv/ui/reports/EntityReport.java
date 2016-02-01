@@ -14,6 +14,8 @@
  */
 package org.polymap.wbv.ui.reports;
 
+import java.util.Collection;
+import java.util.Date;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
@@ -23,8 +25,8 @@ import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-import java.util.Collection;
-import java.util.Date;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,9 +34,6 @@ import org.apache.commons.logging.LogFactory;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import org.polymap.core.runtime.UIJob;
 
@@ -45,7 +44,7 @@ import org.polymap.model2.PropertyBase;
 import org.polymap.model2.runtime.CompositeInfo;
 import org.polymap.model2.runtime.EntityRepository;
 import org.polymap.model2.runtime.PropertyInfo;
-
+import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.WbvRepository;
 import org.polymap.wbv.ui.reports.WbvReport.NumberFormatter;
 
@@ -57,21 +56,24 @@ import org.polymap.wbv.ui.reports.WbvReport.NumberFormatter;
 public abstract class EntityReport
         extends DownloadableReport {
 
-    private static Log                      log = LogFactory.getLog( EntityReport.class );
+    private static Log log = LogFactory.getLog( EntityReport.class );
 
-    public static final DateFormat          df  = new SimpleDateFormat( "dd.MM.yyyy" );
+    public static final DateFormat          df = new SimpleDateFormat( "dd.MM.yyyy" );
 
-    public static final NumberFormatter     nf  = new NumberFormatter( 1, 4, 100, 4 );
+    public static final NumberFormatter     nf = new NumberFormatter( 1, 4, 100, 4 );
 
-    protected Iterable<? extends Composite> entities;
+    protected Iterable<Waldbesitzer>        entities;
 
 
-    public EntityReport setEntities( Iterable<? extends Composite> entities ) {
+    public EntityReport setEntities( Iterable<Waldbesitzer> entities ) {
         this.entities = entities;
         return this;
     }
 
-
+    
+    /**
+     * 
+     */
     protected class JsonBuilder {
 
         @SuppressWarnings("hiding")

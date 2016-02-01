@@ -34,7 +34,9 @@ import org.json.JSONObject;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.model2.Composite;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
 import org.polymap.wbv.model.Waldbesitzer;
@@ -73,71 +75,66 @@ public class Report106c
     public JasperReportBuilder build() throws DRException, JRException, IOException {
         super.build();
 
-        List<Gemarkung> gemarkungen = new ArrayList<Gemarkung>();
-        final Map<Gemarkung,List<Flurstueck>> gemarkung2Flurstuecke = new HashMap<Gemarkung,List<Flurstueck>>();
-        final Map<Flurstueck,String> flurstuecke2Art = new HashMap<Flurstueck,String>();
+        List<Gemarkung> gemarkungen = new ArrayList( 256 );
+        final ListMultimap<String,Flurstueck> gemarkung2Flurstuecke = ArrayListMultimap.create( 256, 100 );
+        final Map<Integer,String> flurstuecke2Art = new HashMap( 4096 );
 
-        for (Composite entity : entities) {
-            if (entity instanceof Waldbesitzer) {
-                Waldbesitzer wb = (Waldbesitzer)entity;
-                for (Flurstueck flurstueck : wb.flurstuecke( revier.get() )) {
-                    Gemarkung gemarkung = flurstueck.gemarkung.get();
-                    gemarkungen.add(gemarkung);
-                    List<Flurstueck> fs = getFlurstueckeForGemarkung( gemarkung2Flurstuecke, gemarkung );
-                    fs.add( flurstueck );
-                    gemarkung2Flurstuecke.put( gemarkung, fs );
-                    flurstuecke2Art.put( flurstueck, getArt( wb.eigentumsArt.get() ) );
+        for (Waldbesitzer wb : entities) {
+            for (Flurstueck flurstueck : wb.flurstuecke( revier.get() )) {
+                Gemarkung gemarkung = flurstueck.gemarkung.get();
+                if (gemarkung != null) {
+                    gemarkungen.add( gemarkung );
+                    gemarkung2Flurstuecke.put( (String)gemarkung.id(), flurstueck );
                 }
+                flurstuecke2Art.put( flurstueck.hashCode(), getArt( wb.eigentumsArt.get() ) );
             }
         }
 
         final List<String> arten = new ArrayList<String>();
-        arten.add("LW");
-        arten.add("BW");
-        arten.add("KiW4_2");
+        arten.add( "LW" );
+        arten.add( "BW" );
+        arten.add( "KiW4_2" );
         // TODO
-        // arten.add("KiW\nnach §4/3");                
-        arten.add("PW");
-        arten.add("TW");
-        arten.add("Kow_KoeW");
-        arten.add("ohne_ea");
+        // arten.add("KiW\nnach §4/3");
+        arten.add( "PW" );
+        arten.add( "TW" );
+        arten.add( "Kow_KoeW" );
+        arten.add( "ohne_ea" );
 
-        Map<String, String> artenLabels = new HashMap<String, String>();
-        artenLabels.put("LW", "LW");
-        artenLabels.put("BW", "BW");
-        artenLabels.put("KiW4_2", "KiW\nnach §4/2");
+        Map<String,String> artenLabels = new HashMap<String,String>();
+        artenLabels.put( "LW", "LW" );
+        artenLabels.put( "BW", "BW" );
+        artenLabels.put( "KiW4_2", "KiW\nnach §4/2" );
         // TODO
-        // artenLabels.put("KiW\nnach §4/3");                
-        artenLabels.put("PW", "PW");
-        artenLabels.put("TW", "TW");
-        artenLabels.put("Kow_KoeW", "Kow/KöW");
-        artenLabels.put("ohne_ea", "ohne EA");
+        // artenLabels.put("KiW\nnach §4/3");
+        artenLabels.put( "PW", "PW" );
+        artenLabels.put( "TW", "TW" );
+        artenLabels.put( "Kow_KoeW", "Kow/KöW" );
+        artenLabels.put( "ohne_ea", "ohne EA" );
 
         // datasource
         JsonBuilder jsonBuilder = new JsonBuilder( gemarkungen ) {
-
             @Override
             protected Object buildJson( Object value ) {
                 Object result = super.buildJson( value );
                 //
                 if (value instanceof Gemarkung) {
-                    JSONObject resultObj = (JSONObject)result;
                     Gemarkung gemarkungObj = (Gemarkung)value;
-                    String gemeinde = gemarkungObj.gemeinde.get();
-                    resultObj.put( "gemeinde", gemeinde );
-                    String gemarkung = gemarkungObj.gemarkung.get();
-                    resultObj.put( "gemarkung", gemarkung );
+                    JSONObject resultObj = (JSONObject)result;
+                    resultObj.put( "gemeinde", gemarkungObj.gemeinde.get() );
+                    resultObj.put( "gemarkung", gemarkungObj.gemarkung.get() );
+
                     double totalSum = 0d, sum = 0d;
-                    for (Flurstueck f : gemarkung2Flurstuecke.get( gemarkungObj )) {
-                        if (flurstuecke2Art.get( f ) == null) {
+                    for (Flurstueck f : gemarkung2Flurstuecke.get( (String)gemarkungObj.id() )) {
+                        if (flurstuecke2Art.get( f.hashCode() ) == null) {
                             sum += f.flaecheWald.get();
                         }
                     }
                     resultObj.put( "ohne_ea", sum );
                     for (String art : arten) {
                         sum = 0d;
-                        for (Flurstueck f : gemarkung2Flurstuecke.get( gemarkungObj )) {
-                            if (flurstuecke2Art.get( f ).equals(art)) {
+                        for (Flurstueck f : gemarkung2Flurstuecke.get( (String)gemarkungObj.id() )) {
+                            if (flurstuecke2Art.get( f.hashCode() ).equals( art )) {
                                 sum += f.flaecheWald.get();
                             }
                         }
@@ -182,8 +179,8 @@ public class Report106c
                 .title( cmp.text( "Flächenverzeichnis nach Gemarkung und EA" ).setStyle( titleStyle ),
                         cmp.text( "Basis: Waldfläche der Waldbesitzer" ).setStyle( headerStyle ),
                         cmp.text( "Forstbezirk: Mittelsachsen" ).setStyle( headerStyle ),
-                        cmp.text( "Revier: " + getRevier() + " / Abfrage: \"" + getQuery() + "\"" ).setStyle(
-                                headerStyle ), cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
+                        cmp.text( "Revier: " + getRevier() /*+ " / Abfrage: \"" + getQuery() + "\""*/ ).setStyle( headerStyle ), 
+                        cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
                         cmp.text( "" ).setStyle( headerStyle ) ).pageFooter( cmp.pageXofY().setStyle( footerStyle ) )
                 // number of page
                 .setDetailOddRowStyle( highlightRowStyle ).setColumnTitleStyle( columnTitleStyle )
@@ -222,13 +219,13 @@ public class Report106c
     }
 
 
-    private List<Flurstueck> getFlurstueckeForGemarkung( Map<Gemarkung,List<Flurstueck>> gemarkung2Flurstuecke,
-            Gemarkung key ) {
-        List<Flurstueck> fs = gemarkung2Flurstuecke.get( key );
-        if (fs == null) {
-            fs = new ArrayList<Flurstueck>();
-            gemarkung2Flurstuecke.put( key, fs );
-        }
-        return fs;
-    }
+//    private List<Flurstueck> getFlurstueckeForGemarkung( Map<Gemarkung,List<Flurstueck>> gemarkung2Flurstuecke,
+//            Gemarkung key ) {
+//        List<Flurstueck> fs = gemarkung2Flurstuecke.get( key );
+//        if (fs == null) {
+//            fs = new ArrayList<Flurstueck>();
+//            gemarkung2Flurstuecke.put( key, fs );
+//        }
+//        return fs;
+//    }
 }

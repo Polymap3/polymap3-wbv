@@ -12,9 +12,6 @@
  */
 package org.polymap.wbv.ui;
 
-import static org.polymap.model2.query.Expressions.anyOf;
-import static org.polymap.model2.query.Expressions.isAnyOf;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -74,8 +71,6 @@ import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.rap.updownload.download.DownloadService;
 import org.polymap.wbv.Messages;
 import org.polymap.wbv.WbvPlugin;
-import org.polymap.wbv.model.Flurstueck;
-import org.polymap.wbv.model.Gemarkung;
 import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.WbvRepository;
@@ -256,7 +251,16 @@ public class StartPanel
                 try {
                     if (reports.getSelectionIndex() > 0) {
                         WbvReport report = reportsMap.get( reports.getSelectionIndex()-1 );
-                        report.setEntities( viewer.getInput() ).setOutputType( OutputType.PDF );
+                        report.setOutputType( OutputType.PDF );
+                        if (report instanceof Report103) {
+                            report.setEntities( viewer.getInput() );
+                        }
+                        else {
+                            ResultSet<Waldbesitzer> all = uow.query( Waldbesitzer.class )
+                                    .where( revier.isPresent() ? revier.get().waldbesitzerFilter.get() : Expressions.TRUE )
+                                    .execute();
+                            report.setEntities( all );
+                        }
                         String url = DownloadService.registerContent( report );
 
                         UrlLauncher launcher = RWT.getClient().getService( UrlLauncher.class );
@@ -281,14 +285,9 @@ public class StartPanel
             }
             @Override
             protected void doRefresh() {
-                if (revier.get() != null) {
-                    Waldbesitzer wb = Expressions.template( Waldbesitzer.class, WbvRepository.repo() );
-                    Flurstueck fl = Expressions.template( Flurstueck.class, WbvRepository.repo() );
-                    
-                    List<Gemarkung> gemarkungen = revier.get().gemarkungen;
-                    Gemarkung[] revierGemarkungen = gemarkungen.toArray( new Gemarkung[gemarkungen.size()] );
-                    query.andWhere( anyOf( wb.flurstuecke, isAnyOf( fl.gemarkung, revierGemarkungen ) ) );
-                }
+                // nach revier filtern
+                revier.ifPresent( r-> query.andWhere( r.waldbesitzerFilter.get() ) );
+
                 // SelectionEvent nach refresh() verhindern
                 viewer.clearSelection();
                 

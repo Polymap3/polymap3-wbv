@@ -16,10 +16,13 @@ package org.polymap.wbv.ui.reports;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 import java.awt.Color;
 import java.io.IOException;
 import java.text.NumberFormat;
-import java.util.Locale;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,6 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.Scope;
 
+import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Revier;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
@@ -78,6 +82,16 @@ public abstract class WbvReport
     }
 
 
+    /**
+     * Alle Flurstücke für {@link #entities} im {@link #revier}.
+     */
+    protected List<Flurstueck> flurstuecke() {
+        List<Flurstueck> result = new ArrayList( 4096 );
+        entities.forEach( wb -> result.addAll( wb.flurstuecke( revier.get() ) ) );
+        return result;
+    }
+
+    
     /**
      * Creates template styles. Sub-classes should invoke this super implementation
      * before doing their work.

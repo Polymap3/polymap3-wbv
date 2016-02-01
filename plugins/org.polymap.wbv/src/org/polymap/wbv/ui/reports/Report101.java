@@ -25,12 +25,7 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 import static net.sf.dynamicreports.report.builder.DynamicReports.template;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import java.io.IOException;
 
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
@@ -55,7 +50,6 @@ import org.json.JSONObject;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.model2.Composite;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Waldbesitzer;
 
@@ -80,31 +74,18 @@ public class Report101
     public JasperReportBuilder build() throws DRException, JRException, IOException {
         super.build();
 
-        List<Flurstueck> flurstuecke = new ArrayList<Flurstueck>();
-        final Map<Flurstueck,Waldbesitzer> flurstueck2Waldbesitzer = new HashMap<Flurstueck,Waldbesitzer>();
-
-        for (Composite entity : entities) {
-            if (entity instanceof Waldbesitzer) {
-                Waldbesitzer wb = (Waldbesitzer)entity;
-                for (Flurstueck flurstueck : wb.flurstuecke( revier.get() )) {
-                    flurstuecke.add( flurstueck );
-                    flurstueck2Waldbesitzer.put( flurstueck, wb );
-                }
-            }
-        };
-
         // datasource
-        JsonBuilder jsonBuilder = new JsonBuilder( flurstuecke ) {
-
+        JsonBuilder jsonBuilder = new JsonBuilder( flurstuecke() ) {
             @Override
             protected Object buildJson( Object value ) {
                 Object result = super.buildJson( value );
+                
                 //
                 if (value instanceof Flurstueck) {
                     try {
                         JSONObject resultObj = (JSONObject)result;
                         Flurstueck flurstueck = (Flurstueck)value;
-                        Waldbesitzer wb = flurstueck2Waldbesitzer.get( flurstueck );
+                        Waldbesitzer wb = flurstueck.waldbesitzer();
                         resultObj.put( "name", besitzerName( wb ) );
                         resultObj.put( "adresse", calculateAdresse( wb ) );
                         if (flurstueck.gemarkung.get() != null) {

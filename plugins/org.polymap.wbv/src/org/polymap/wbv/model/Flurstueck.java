@@ -25,6 +25,7 @@ import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
 import org.polymap.model2.Queryable;
 import org.polymap.model2.runtime.ValueInitializer;
+import org.polymap.model2.runtime.config.DefaultDouble;
 import org.polymap.wbv.mdb.ImportColumn;
 import org.polymap.wbv.mdb.ImportTable;
 
@@ -71,6 +72,7 @@ public class Flurstueck
         return proto;
     };
     
+    // instance *******************************************
     
     @Queryable
     @Defaults
@@ -90,10 +92,12 @@ public class Flurstueck
     public Property<String>             zaehlerNenner;
     
     @Nullable
+    @DefaultDouble( 0 )
     @ImportColumn("FL_Flae")
     public Property<Double>             flaeche;
 
     @Nullable
+    @DefaultDouble( 0 )
     @ImportColumn("FL_davon_Wald")
     public Property<Double>             flaecheWald;
 
@@ -113,4 +117,10 @@ public class Flurstueck
     @ImportColumn("FL_LK")
     public Property<String>             landkreis;
 
+    /**
+     * 
+     */
+    public Waldbesitzer waldbesitzer() {
+        return context.getEntity();
+    }
 }

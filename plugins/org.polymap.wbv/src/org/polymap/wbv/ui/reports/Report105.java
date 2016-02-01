@@ -59,7 +59,6 @@ public class Report105
 
         // datasource
         JsonBuilder jsonBuilder = new JsonBuilder( entities ) {
-
             @Override
             protected Object buildJson( Object value ) {
                 Object result = super.buildJson( value );
@@ -89,10 +88,7 @@ public class Report105
                 .setPageFormat( PageType.A4, PageOrientation.PORTRAIT )
                 .title( cmp.text( "Waldflächen der Waldbesitzer" ).setStyle( titleStyle ),
                         cmp.text( "Forstbezirk: Mittelsachsen" ).setStyle( headerStyle ),
-                        cmp.text( "Revier: " + getRevier() + " / Abfrage: \"" + getQuery() + "\"" )
-                                .setStyle( headerStyle ),
-                        // cmp.text( "Abfrage: \"" + queryString.get() + "\""
-                        // ).setStyle( headerStyle ),
+                        cmp.text( "Revier: " + getRevier() /*+ " / Abfrage: \"" + getQuery() + "\""*/ ) .setStyle( headerStyle ),
                         cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
                         cmp.text( "" ).setStyle( headerStyle ) ).pageFooter( cmp.pageXofY().setStyle( footerStyle ) )
                 // number of page

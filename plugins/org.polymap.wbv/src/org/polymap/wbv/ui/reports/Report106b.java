@@ -87,8 +87,6 @@ public class Report106b
         Map<Double,Double>           flaecheToGesamtFlaeche  = new HashMap<Double,Double>();
 
         Map<Double,Integer>          flaecheToWBS            = new HashMap<Double,Integer>();
-
-        Map<Flurstueck,Waldbesitzer> flurstueck2Waldbesitzer = new HashMap<Flurstueck,Waldbesitzer>();
     }
 
 
@@ -127,9 +125,9 @@ public class Report106b
                     List<Flurstueck> fs = null;
                     if (flurstueck.flaecheWald.get() == null) {
                         fs = getFlurstueckeForGroup( group.flaecheToFlurstuecke, -1d );
-                        if (!fs.contains( flurstueck )) {
+//                        if (!fs.contains( flurstueck )) {
                             fs.add( flurstueck );
-                        }
+//                        }
                     }
                     else {
                         for (int i = 1; i < flaechenGruppe.size(); i++) {
@@ -139,7 +137,6 @@ public class Report106b
                             }
                         }
                     }
-                    group.flurstueck2Waldbesitzer.put( flurstueck, wb );
                 }
             }
         }
@@ -153,8 +150,8 @@ public class Report106b
                 //durchschnittsFlaeche = 0.0d;
                 wbs = new HashSet<Waldbesitzer>();
                 for (Flurstueck flurstueck : entry.getValue()) {
-                    sum += flurstueck.flaecheWald.get();
-                    wbs.add( group.flurstueck2Waldbesitzer.get( flurstueck ) );
+                    sum += flurstueck.flaecheWald.get() != null ? flurstueck.flaecheWald.get() : 0; 
+                    wbs.add( flurstueck.waldbesitzer() );
                 }
                 group.flaecheToGesamtFlaeche.put( entry.getKey(), sum );
                 group.flaecheToWBS.put( entry.getKey(), wbs.size() );
@@ -192,7 +189,6 @@ public class Report106b
         ByteArrayInputStream bis = new ByteArrayInputStream( sb.toString().getBytes() );
 
         NumberFormatter countFormatter = new NumberFormatter( 1, 0, 10000, 0 ) {
-
             @Override
             public String format( Number value, ReportParameters params ) {
                 if (value.intValue() <= 0) {
@@ -205,7 +201,6 @@ public class Report106b
         };
 
         NumberFormatter haNumberFormatter = new NumberFormatter( 1, 2, 10000, 2 ) {
-
             @Override
             public String format( Number value, ReportParameters params ) {
                 if (value.doubleValue() <= 0) {
@@ -269,8 +264,8 @@ public class Report106b
                         titleStyle ),
                         cmp.text( "Basis: Waldfläche der Waldbesitzer" ).setStyle( titleStyle ),
                         cmp.text( "Forstbezirk: Mittelsachsen" ).setStyle( headerStyle ),
-                        cmp.text( "Revier: " + getRevier() + " / Abfrage: \"" + getQuery() + "\"" ).setStyle(
-                                headerStyle ), cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
+                        cmp.text( "Revier: " + getRevier() /*+ " / Abfrage: \"" + getQuery() + "\""*/ ).setStyle( headerStyle ), 
+                        cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
                         cmp.text( "" ).setStyle( headerStyle ) ).pageFooter( cmp.pageXofY().setStyle( footerStyle ) )
                 // number of page
                 .setDetailOddRowStyle( highlightRowStyle ).setColumnTitleStyle( columnTitleStyle )

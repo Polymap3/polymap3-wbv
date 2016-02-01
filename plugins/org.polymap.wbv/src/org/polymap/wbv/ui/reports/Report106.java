@@ -76,11 +76,11 @@ public class Report106
     public JasperReportBuilder build() throws DRException, JRException, IOException {
         super.build();
 
-        List<Flurstueck> flurstuecke = new ArrayList<Flurstueck>();
-        Map<Double,List<Flurstueck>> flaecheToFlurstuecke = new HashMap<Double,List<Flurstueck>>();
-        Map<Double,Double> flaecheToGesamtFlaeche = new HashMap<Double,Double>();
-        Map<Double,Integer> flaecheToWBS = new HashMap<Double,Integer>();
-        Map<Double,Double> flaecheToDurchschnittFlaecheProWBS = new HashMap<Double,Double>();
+        List<Flurstueck> flurstuecke = new ArrayList();
+        Map<Double,List<Flurstueck>> flaecheToFlurstuecke = new HashMap();
+        Map<Double,Double> flaecheToGesamtFlaeche = new HashMap();
+        Map<Double,Integer> flaecheToWBS = new HashMap();
+        Map<Double,Double> flaecheToDurchschnittFlaecheProWBS = new HashMap();
         List<Double> flaechenGruppe = new ArrayList<Double>();
         flaechenGruppe.add( 2000d );
         flaechenGruppe.add( 1000d );
@@ -94,29 +94,24 @@ public class Report106
         flaechenGruppe.add( 1d );
         flaechenGruppe.add( 0d );
 
-        Map<Flurstueck,Waldbesitzer> flurstueck2Waldbesitzer = new HashMap<Flurstueck,Waldbesitzer>();
-
         for (Composite entity : entities) {
-            if (entity instanceof Waldbesitzer) {
-                Waldbesitzer wb = (Waldbesitzer)entity;
-                for (Flurstueck flurstueck : wb.flurstuecke( revier.get() )) {
-                    flurstuecke.add( flurstueck );
-                    List<Flurstueck> fs = null;
-                    if (flurstueck.flaecheWald.get() == null) {
-                        fs = getFlurstueckeForGroup( flaecheToFlurstuecke, -1d );
-                        if (!fs.contains( flurstueck )) {
+            Waldbesitzer wb = (Waldbesitzer)entity;
+            for (Flurstueck flurstueck : wb.flurstuecke( revier.get() )) {
+                flurstuecke.add( flurstueck );
+                List<Flurstueck> fs = null;
+                if (flurstueck.flaecheWald.get() == null) {
+                    fs = getFlurstueckeForGroup( flaecheToFlurstuecke, -1d );
+                    //if (!fs.contains( flurstueck )) {
+                        fs.add( flurstueck );
+                    //}
+                }
+                else {
+                    for (int i = 1; i < flaechenGruppe.size(); i++) {
+                        if (flurstueck.flaecheWald.get() >= flaechenGruppe.get( i )) {
+                            fs = getFlurstueckeForGroup( flaecheToFlurstuecke, flaechenGruppe.get( i - 1 ) );
                             fs.add( flurstueck );
                         }
                     }
-                    else {
-                        for (int i = 1; i < flaechenGruppe.size(); i++) {
-                            if (flurstueck.flaecheWald.get() >= flaechenGruppe.get( i )) {
-                                fs = getFlurstueckeForGroup( flaecheToFlurstuecke, flaechenGruppe.get( i - 1 ) );
-                                fs.add( flurstueck );
-                            }
-                        }
-                    }
-                    flurstueck2Waldbesitzer.put( flurstueck, wb );
                 }
             }
         }
@@ -129,7 +124,7 @@ public class Report106
             wbs = new HashSet<Waldbesitzer>();
             for (Flurstueck flurstueck : entry.getValue()) {
                 sum += flurstueck.flaecheWald.get();
-                wbs.add( flurstueck2Waldbesitzer.get( flurstueck ) );
+                wbs.add( flurstueck.waldbesitzer() );
             }
             flaecheToGesamtFlaeche.put( entry.getKey(), sum );
             flaecheToWBS.put( entry.getKey(), wbs.size() );
@@ -161,7 +156,6 @@ public class Report106
         ByteArrayInputStream bis = new ByteArrayInputStream( sb.toString().getBytes() );
         
         NumberFormatter haNumberFormatter = new NumberFormatter( 1, 2, 10000, 2 ) {
-
             @Override
             public String format( Number value, ReportParameters params ) {
                 return super.format( value, params ) + " ha";
@@ -196,8 +190,8 @@ public class Report106
                 .title( cmp.text( "Meldeliste Anzahl Waldbesitzer nach Größengruppen" ).setStyle( titleStyle ),
                         cmp.text( "Basis: Waldfläche der Waldbesitzer" ).setStyle( titleStyle ),
                         cmp.text( "Forstbezirk: Mittelsachsen" ).setStyle( headerStyle ),
-                        cmp.text( "Revier: " + getRevier() + " / Abfrage: \"" + getQuery() + "\"" ).setStyle(
-                                headerStyle ), cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
+                        cmp.text( "Revier: " + getRevier() /*+ " / Abfrage: \"" + getQuery() + "\""*/ ).setStyle( headerStyle ), 
+                        cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
                         cmp.text( "" ).setStyle( headerStyle ) )
                 .pageFooter( cmp.pageXofY().setStyle( footerStyle ) )
                 // number of page
