@@ -17,6 +17,7 @@ import static org.polymap.core.ui.FormDataFactory.on;
 import static org.polymap.rhei.batik.app.SvgImageRegistryHelper.WHITE24;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -328,22 +329,34 @@ public class WaldbesitzerPanel
     }
 
     
-    private double gesamtFlaeche() {
-        return wb.flurstuecke().stream().map( f -> f.flaeche.get() ).filter( fl -> fl != null ).mapToDouble( d -> d ).sum();
+    private double gesamtFlaeche( Collection<Flurstueck> flurstuecke ) {
+        return flurstuecke.stream()
+                .map( f -> f.flaeche.get() )
+                .filter( fl -> fl != null )
+                .mapToDouble( d -> d ).sum();
     }
     
-    private double waldFlaeche() {
-        return wb.flurstuecke().stream().map( f -> f.flaecheWald.get() ).filter( fl -> fl != null ).mapToDouble( d -> d ).sum();
+    private double waldFlaeche( Collection<Flurstueck> flurstuecke ) {
+        return flurstuecke.stream()
+                .map( f -> f.flaecheWald.get() )
+                .filter( fl -> fl != null )
+                .mapToDouble( d -> d ).sum();
     }
     
+    private String summary() {
+        Collection<Flurstueck> flurstuecke = wb.flurstuecke( revier.get() );
+        Collection<Flurstueck> alle = wb.flurstuecke( null );
+        return "Flurstücke: **" + flurstuecke.size() + "**" + 
+                    (flurstuecke.size() != alle.size() ? " (" + alle.size() + ")" : "") + " -- " +  
+               "Gesamtfläche: **" + EntityReport.nf.format( gesamtFlaeche( flurstuecke ) ) + " ha** -- " +
+               "davon Wald: **" + EntityReport.nf.format( waldFlaeche( flurstuecke ) ) + " ha**";        
+    }
     
     protected void createFlurstueckSection( Composite parent ) {
         parent.setLayout( FormLayoutFactory.defaults().spacing( 0 ).create() );
 
         // summary
-        Label summary = tk().createFlowText( parent, 
-                "Gesamt: " + EntityReport.nf.format( gesamtFlaeche() ) + " ha -- "
-                + "davon Wald: " + EntityReport.nf.format( waldFlaeche() ) + " ha" );
+        Label summary = tk().createFlowText( parent, summary() );
         FormDataFactory.on( summary ).fill().height( 27 ).noTop().bottom( 100 );
         
         //
@@ -363,9 +376,7 @@ public class WaldbesitzerPanel
                 }
                 statusAdapter.updateStatusOf( this, status );
 
-                summary.setText( 
-                        "Gesamt: " + EntityReport.nf.format( gesamtFlaeche() ) + " ha -- "
-                        + "davon Wald: " + EntityReport.nf.format( waldFlaeche() ) + " ha" );
+                summary.setText( summary() );
             }
         };
         FormDataFactory.on( viewer.getTable() ).fill().right( 100, -33 ).bottom( summary, 5 ).height( 250 ).width( 300 );
@@ -377,7 +388,7 @@ public class WaldbesitzerPanel
             @Override
             public void widgetSelected( SelectionEvent ev ) {
                 Flurstueck newElm = wb.flurstuecke.createElement( Flurstueck.defaults );
-                viewer.setInput( wb.flurstuecke() );
+                viewer.setInput( wb.flurstuecke( revier.get() ) );
                 //viewer.reveal( new CompositesFeatureContentProvider.FeatureTableElement( newElm ) );
                 viewer.selectElement( String.valueOf( newElm.hashCode() ), true, true );
                 //statusAdapter.updateStatusOf( this, new Status( IStatus.OK, WbvPlugin.ID, "Alle Eingaben sind korrekt." ) );

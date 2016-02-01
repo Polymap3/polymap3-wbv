@@ -22,7 +22,10 @@ import org.polymap.core.security.UserPrincipal;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.DefaultPanel;
 import org.polymap.rhei.batik.IPanel;
+import org.polymap.rhei.batik.Scope;
 import org.polymap.rhei.batik.toolkit.md.MdToolkit;
+
+import org.polymap.wbv.model.Revier;
 
 /**
  * Basisklasse für andere Panels.
@@ -37,6 +40,14 @@ public abstract class WbvPanel
 
     protected Context<UserPrincipal>    user;
 
+    /** */
+    @Scope( "org.polymap.wbv.ui" )
+    protected Context<Revier>           revier;
+    
+    /** */
+    @Scope( "org.polymap.wbv.ui" )
+    protected Context<String>           queryString;
+    
     
     protected MdToolkit tk() {
         return (MdToolkit)site().toolkit();    

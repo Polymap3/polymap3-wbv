@@ -86,7 +86,7 @@ public class Report101
         for (Composite entity : entities) {
             if (entity instanceof Waldbesitzer) {
                 Waldbesitzer wb = (Waldbesitzer)entity;
-                for (Flurstueck flurstueck : wb.flurstuecke()) {
+                for (Flurstueck flurstueck : wb.flurstuecke( revier.get() )) {
                     flurstuecke.add( flurstueck );
                     flurstueck2Waldbesitzer.put( flurstueck, wb );
                 }

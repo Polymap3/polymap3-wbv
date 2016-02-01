@@ -12,7 +12,8 @@
  */
 package org.polymap.wbv.ui;
 
-import java.io.IOException;
+import static org.polymap.model2.query.Expressions.anyOf;
+import static org.polymap.model2.query.Expressions.isAnyOf;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,8 +21,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import java.io.IOException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Menu;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.ActionContributionItem;
@@ -32,14 +44,6 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.rap.rwt.RWT;
 import org.eclipse.rap.rwt.client.service.UrlLauncher;
 import org.eclipse.rap.rwt.service.SettingStore;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Menu;
 
 import org.polymap.core.mapeditor.ContextMenuSite;
 import org.polymap.core.mapeditor.IContextMenuContribution;
@@ -48,11 +52,6 @@ import org.polymap.core.runtime.i18n.IMessages;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.core.ui.UIUtils;
-
-import org.polymap.model2.query.Expressions;
-import org.polymap.model2.query.ResultSet;
-import org.polymap.model2.runtime.UnitOfWork;
-import org.polymap.rap.updownload.download.DownloadService;
 
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.PanelIdentifier;
@@ -69,6 +68,10 @@ import org.polymap.rhei.fulltext.ui.FulltextProposal;
 import org.polymap.rhei.um.ui.LoginPanel;
 import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
 
+import org.polymap.model2.query.Expressions;
+import org.polymap.model2.query.ResultSet;
+import org.polymap.model2.runtime.UnitOfWork;
+import org.polymap.rap.updownload.download.DownloadService;
 import org.polymap.wbv.Messages;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Flurstueck;
@@ -103,12 +106,6 @@ public class StartPanel
     
     private UnitOfWork                      uow = WbvRepository.unitOfWork();
 
-    /** */
-    private Context<Revier>                 revier;
-    
-    /** */
-    private Context<String>                 queryString;
-    
     /** Der selektierte {@link Waldbesitzer}. */
     private Context<Waldbesitzer>           selected;
 
@@ -290,8 +287,7 @@ public class StartPanel
                     
                     List<Gemarkung> gemarkungen = revier.get().gemarkungen;
                     Gemarkung[] revierGemarkungen = gemarkungen.toArray( new Gemarkung[gemarkungen.size()] );
-                    query.andWhere( Expressions.anyOf( wb.flurstuecke, 
-                                    Expressions.isAnyOf( fl.gemarkung, revierGemarkungen ) ) );
+                    query.andWhere( anyOf( wb.flurstuecke, isAnyOf( fl.gemarkung, revierGemarkungen ) ) );
                 }
                 // SelectionEvent nach refresh() verhindern
                 viewer.clearSelection();
@@ -303,7 +299,7 @@ public class StartPanel
             }
         };
         search.searchOnEnter.set( false );
-        search.getText().setText( "Hedwig" );
+        search.getText().setText( "Stadtverwaltung" );
 
         search.searchOnEnter.set( true );
         search.getText().setFocus();

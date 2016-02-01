@@ -93,8 +93,8 @@ public class EigentumsuebergangPanel
         
         fst.get().geloescht.set( true );
         
-        // waldbesitzer löschen
-        if (origin.get().flurstuecke().isEmpty()) {
+        // waldbesitzer löschen, wenn (wirklich) kein flurstück mehr da
+        if (origin.get().flurstuecke( null ).isEmpty()) {
             uow.get().removeEntity( origin.get() );
         }
         uow.get().commit();
@@ -130,7 +130,7 @@ public class EigentumsuebergangPanel
                 "des Flurstücks:<br/>" + 
                 repeat( "&nbsp;", 10 ) + " *" + fst.get().gemarkung.get().label() + " " + fst.get().zaehlerNenner.get() + "*<br/>" +
                 repeat( "&nbsp;", 10 ) + " <em>" + origin.get().besitzer().anzeigename() +
-                        (origin.get().flurstuecke().size() == 1 ? " -- <b>wird im Ergebnis gelöscht!</b> " : "") + "</em>\n\n" +
+                        (origin.get().flurstuecke( null ).size() == 1 ? " -- <b>wird im Ergebnis gelöscht!</b> " : "") + "</em>\n\n" +
                 "an: ");
         
         // table viewer

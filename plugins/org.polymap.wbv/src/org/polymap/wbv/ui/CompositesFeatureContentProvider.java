@@ -21,6 +21,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.eclipse.jface.viewers.Viewer;
 
+import org.polymap.rhei.table.DefaultFeatureTableElement;
 import org.polymap.rhei.table.IFeatureContentProvider;
 import org.polymap.rhei.table.IFeatureTableElement;
 
@@ -44,6 +45,10 @@ class CompositesFeatureContentProvider
     private static Log log = LogFactory.getLog( CompositesFeatureContentProvider.class );
 
     private Iterable<? extends Composite>   composites;
+
+
+    public CompositesFeatureContentProvider() {
+    }
 
 
     public CompositesFeatureContentProvider( Iterable<? extends Composite> composites ) {
@@ -75,7 +80,7 @@ class CompositesFeatureContentProvider
      *
      */
     public static class FeatureTableElement
-            implements IFeatureTableElement {
+            extends DefaultFeatureTableElement {
 
         public static <T extends Composite> T entity( Object elm ) {
             return (T)((FeatureTableElement)elm).getComposite();

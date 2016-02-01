@@ -46,6 +46,9 @@ import org.polymap.core.runtime.event.EventFilter;
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
 
+import org.polymap.rhei.batik.BatikApplication;
+import org.polymap.rhei.batik.Context;
+import org.polymap.rhei.batik.Scope;
 import org.polymap.rhei.table.DefaultFeatureTableColumn;
 import org.polymap.rhei.table.FeatureTableViewer;
 import org.polymap.rhei.table.IFeatureTableElement;
@@ -54,6 +57,7 @@ import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
 import org.polymap.wbv.model.Kontakt;
+import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.ui.CompositesFeatureContentProvider.FeatureTableElement;
 
@@ -71,11 +75,16 @@ public class WaldbesitzerTableViewer
 
     private UnitOfWork                  uow;
 
+    /** */
+    @Scope( "org.polymap.wbv.ui" )
+    protected Context<Revier>           revier;
+    
 
     public WaldbesitzerTableViewer( UnitOfWork uow, Composite parent,
             Iterable<Waldbesitzer> rs, int style ) {
         super( parent, /* SWT.VIRTUAL | SWT.V_SCROLL | SWT.FULL_SELECTION | */style );
         this.uow = uow;
+        BatikApplication.instance().getContext().propagate( this );
         try {
             addColumn( new NameColumn() ).sort( SWT.DOWN );
             addColumn( new EigentumColumn() );
@@ -197,7 +206,7 @@ public class WaldbesitzerTableViewer
                public String getText( Object elm ) {
                    Waldbesitzer wb = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
                    Set<String> names = new TreeSet();
-                   for (Flurstueck flurstueck : wb.flurstuecke()) {
+                   for (Flurstueck flurstueck : wb.flurstuecke( revier.get() )) {
                        Gemarkung gemarkung = flurstueck.gemarkung.get();
                        names.add( gemarkung != null ? gemarkung.gemeinde.get() : "" );    
                    }
@@ -207,7 +216,7 @@ public class WaldbesitzerTableViewer
                public String getToolTipText( Object elm ) {
                    Waldbesitzer wb = (Waldbesitzer)((FeatureTableElement)elm).getComposite();
                    Set<String> names = new TreeSet();
-                   for (Flurstueck flurstueck : wb.flurstuecke()) {
+                   for (Flurstueck flurstueck : wb.flurstuecke( revier.get() )) {
                        Gemarkung gemarkung = flurstueck.gemarkung.get();
                        String name = gemarkung != null
                                ? gemarkung.gemeinde.get() + "/" + gemarkung.gemarkung.get()

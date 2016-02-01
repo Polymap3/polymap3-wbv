@@ -80,7 +80,7 @@ public class Report106c
         for (Composite entity : entities) {
             if (entity instanceof Waldbesitzer) {
                 Waldbesitzer wb = (Waldbesitzer)entity;
-                for (Flurstueck flurstueck : wb.flurstuecke()) {
+                for (Flurstueck flurstueck : wb.flurstuecke( revier.get() )) {
                     Gemarkung gemarkung = flurstueck.gemarkung.get();
                     gemarkungen.add(gemarkung);
                     List<Flurstueck> fs = getFlurstueckeForGemarkung( gemarkung2Flurstuecke, gemarkung );

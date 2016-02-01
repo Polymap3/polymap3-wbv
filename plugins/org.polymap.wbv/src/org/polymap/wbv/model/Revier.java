@@ -64,6 +64,11 @@ public class Revier {
 
     public String                   name;
     
+    /**
+     * {@link Revier} Instanzen werden statisch in {@link #all} gecacht. Deshalb sind
+     * auch diese Instanzen von {@link Gemarkung} aus einer globalen
+     * {@link UnitOfWork}, die nicht mehr gültig ist.
+     */
     public List<Gemarkung>          gemarkungen = new ArrayList( 128 );
     
     

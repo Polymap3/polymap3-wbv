@@ -123,9 +123,28 @@ public class Waldbesitzer
     public CollectionProperty<Ereignis> ereignisse;
     
 
-    /** Aktuellen, nicht gelöschte Flurstücke.  */
-    public Collection<Flurstueck> flurstuecke() {
-        return Collections2.filter( flurstuecke, fst -> !fst.geloescht.get() );
+    /** 
+     * Aktuellen, nicht gelöschte Flurstücke, die in einer {@link Gemarkung} des
+     * übergebenen {@link Revier}s liegen.  
+     */
+    public Collection<Flurstueck> flurstuecke( Revier revier ) {
+        return Collections2.filter( flurstuecke, fst -> {
+            if (fst.geloescht.get()) {
+                return false;
+            }
+            else if (revier != null && fst.gemarkung.isPresent()) {
+                Object fstGmkId = fst.gemarkung.get().id();
+                for (Gemarkung gmk : revier.gemarkungen) {
+                    if (gmk.id().equals( fstGmkId )) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            else {
+                return true;
+            }
+        });
     }
     
     

@@ -26,11 +26,11 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.FastDateFormat;
 
 import java.beans.PropertyChangeEvent;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -39,23 +39,21 @@ import com.google.common.base.Function;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.jface.viewers.ColumnLabelProvider;
 
-import org.polymap.model2.Entity;
-import org.polymap.model2.query.ResultSet;
-import org.polymap.model2.runtime.UnitOfWork;
+import org.eclipse.jface.viewers.ColumnLabelProvider;
 
 import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.runtime.event.EventManager;
 
 import org.polymap.rhei.batik.BatikApplication;
-import org.polymap.rhei.batik.PanelSite;
-import org.polymap.rhei.batik.app.SvgImageRegistryHelper;
-import org.polymap.rhei.batik.toolkit.Snackbar.Appearance;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.IAppContext;
 import org.polymap.rhei.batik.PanelChangeEvent;
 import org.polymap.rhei.batik.PanelChangeEvent.EventType;
+import org.polymap.rhei.batik.PanelSite;
+import org.polymap.rhei.batik.Scope;
+import org.polymap.rhei.batik.app.SvgImageRegistryHelper;
+import org.polymap.rhei.batik.toolkit.Snackbar.Appearance;
 import org.polymap.rhei.field.IFormFieldValidator;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.NullValidator;
@@ -69,9 +67,13 @@ import org.polymap.rhei.table.IFeatureTableColumn;
 import org.polymap.rhei.table.IFeatureTableElement;
 import org.polymap.rhei.table.ITableFieldValidator;
 
+import org.polymap.model2.Entity;
+import org.polymap.model2.query.ResultSet;
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
+import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.ui.CompositesFeatureContentProvider.FeatureTableElement;
 
@@ -92,6 +94,10 @@ public class FlurstueckTableViewer
     private Context<Waldbesitzer>       wb;
     
     private Context<Flurstueck>         selected;
+    
+    /** */
+    @Scope( "org.polymap.wbv.ui" )
+    protected Context<Revier>           revier;
     
     private PanelSite                   panelSite;
     
@@ -179,8 +185,8 @@ public class FlurstueckTableViewer
                     flurstueckDeleted = true;
                     fieldChange( null );
                     
-                    // waldbesitzer löschen, wen kein flurstück mehr
-                    if (wb.get().flurstuecke().isEmpty()) {
+                    // waldbesitzer löschen, wenn (wirklich) kein flurstück mehr da
+                    if (wb.get().flurstuecke( null ).isEmpty()) {
                         uow.get().removeEntity( wb.get() );
                         panelSite.toolkit().createSnackbar( Appearance.FadeIn, "Waldbesitzer wird beim Speichern <b>gelöscht</b>!" );
                     }
@@ -285,8 +291,8 @@ public class FlurstueckTableViewer
 
             // suppress deferred loading to fix "empty table" issue
             // setContent( fs.getFeatures( this.baseFilter ) );
-            setContent( new CompositesFeatureContentProvider( wb.get().flurstuecke() ) );
-            setInput( wb.get().flurstuecke() );
+            setContent( new CompositesFeatureContentProvider() );
+            setInput( wb.get().flurstuecke( revier.get() ) );
 
 //            /* Register for property change events */
 //            EventManager.instance().subscribe( this, new EventFilter<PropertyChangeEvent>() {
