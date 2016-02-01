@@ -197,7 +197,7 @@ public class WaldbesitzerTableViewer
        public FlurstueckColumn() {
            super( createDescriptor( "flurstuecke", String.class ) );
            setWeight( 2, 120 );
-           setHeader( "Flurstücke" );
+           setHeader( "Gemarkungen" );
            setAlign( SWT.LEFT );
            //          setComparator( new ViewerComparator() {                
            //          });
