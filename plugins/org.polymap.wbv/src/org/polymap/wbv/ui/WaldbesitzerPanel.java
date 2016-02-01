@@ -321,7 +321,8 @@ public class WaldbesitzerPanel
         }
 
         // Flurstücke
-        final IPanelSection flurstuecke = tk().createPanelSection( parent, "Flurstücke" );
+        final IPanelSection flurstuecke = tk().createPanelSection( parent, "Flurstücke" + 
+                (revier.isPresent() ? ", Revier " + revier.get().name : "") );
         flurstuecke.addConstraint( 
                 WbvPlugin.MIN_COLUMN_WIDTH, 
                 new PriorityConstraint( 0 ) );
