@@ -15,17 +15,19 @@ package org.polymap.wbv.ui;
 import static com.google.common.collect.ImmutableList.copyOf;
 import static com.google.common.collect.Iterables.transform;
 import static java.util.Arrays.asList;
-import static org.polymap.model2.query.Expressions.and;
 import static org.polymap.model2.query.Expressions.anyOf;
 import static org.polymap.model2.query.Expressions.eq;
 import static org.polymap.model2.query.Expressions.id;
 import static org.polymap.model2.query.Expressions.the;
+import static org.polymap.rhei.field.Validators.AND;
 import static org.polymap.wbv.ui.PropertyAdapter.descriptorFor;
 
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import java.beans.PropertyChangeEvent;
 
@@ -54,7 +56,6 @@ import org.polymap.rhei.batik.PanelSite;
 import org.polymap.rhei.batik.Scope;
 import org.polymap.rhei.batik.app.SvgImageRegistryHelper;
 import org.polymap.rhei.batik.toolkit.Snackbar.Appearance;
-import org.polymap.rhei.field.IFormFieldValidator;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.NullValidator;
 import org.polymap.rhei.field.NumberValidator;
@@ -68,6 +69,7 @@ import org.polymap.rhei.table.IFeatureTableElement;
 import org.polymap.rhei.table.ITableFieldValidator;
 
 import org.polymap.model2.Entity;
+import org.polymap.model2.query.Expressions;
 import org.polymap.model2.query.ResultSet;
 import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.wbv.WbvPlugin;
@@ -233,7 +235,7 @@ public class FlurstueckTableViewer
                         return gmk != null ? gmk.label() : "(kein Gemarkung)";
                     }
                 })
-                .setEditing( new PicklistFormField( Gemarkung.all.get() ), new AenderungValidator( new AdoptEntityValidator() ))
+                .setEditing( new PicklistFormField( Gemarkung.all.get() ), new AenderungValidator().and( new AdoptEntityValidator() ) )
                 .setSortable( new Comparator<IFeatureTableElement>() {
                     public int compare( IFeatureTableElement e1, IFeatureTableElement e2 ) {
                         String l1 = lp[0].getText( e1 );
@@ -253,7 +255,7 @@ public class FlurstueckTableViewer
                         return super.transform2Field( modelValue );
                     }
                 })
-                .setEditing( new StringFormField(), new AenderungValidator( new FlurstueckExistsValidator() ) ) );
+                .setEditing( new StringFormField(), AND( new AenderungValidator(), new NummerValidator(), new FlurstueckExistsValidator() ) ) );
             
             // Fläche
             NumberValidator flaecheValidator = new NumberValidator( Double.class, Locale.GERMANY, 10, 4, 1, 4 );
@@ -261,7 +263,7 @@ public class FlurstueckTableViewer
                 .setWeight( 3, 50 )
                 .setHeader( "Fläche\n(in ha)" )
                 .setLabelProvider( flaecheValidator )
-                .setEditing( new StringFormField(), new AenderungValidator( flaecheValidator ) )
+                .setEditing( new StringFormField(), AND( new AenderungValidator(), flaecheValidator ) )
                 .setSortable( false ) );  // standard comparator: ClassCastException wenn null
             
             // davon Wald
@@ -269,7 +271,7 @@ public class FlurstueckTableViewer
                 .setWeight( 3, 50 )
                 .setHeader( "Wald\n(in ha)" )
                 .setLabelProvider( flaecheValidator )
-                .setEditing( new StringFormField(), new AenderungValidator( new WaldflaecheValidator() ) )
+                .setEditing( new StringFormField(), AND( new AenderungValidator(), new WaldflaecheValidator() ) )
                 .setSortable( false ) );  // standard comparator: ClassCastException wenn null
             
             // Änderungsdatum
@@ -331,52 +333,52 @@ public class FlurstueckTableViewer
             extends NullValidator
             implements ITableFieldValidator {
         
-        private Flurstueck              flurstueck;
+        private Flurstueck                  flurstueck;
         
-        private IFormFieldValidator     next;
-
-        public AenderungValidator() {
-        }
-
-        public AenderungValidator( IFormFieldValidator next ) {
-            this.next = next;
-        }
-
         @Override
         public void init( IFeatureTableElement elm ) {
-            if (next instanceof ITableFieldValidator) {
-                ((ITableFieldValidator)next).init( elm );
-            }
             flurstueck = FeatureTableElement.entity( elm );
         }
 
         @Override
         public Object transform2Model( Object fieldValue ) throws Exception {
             flurstueck.aenderung.set( new Date() );
-            return next != null ? next.transform2Model( fieldValue ) : fieldValue;
-        }
-
-        @Override
-        public String validate( Object value ) {
-            return next != null ? next.validate( value ) : null;
-        }
-
-        @Override
-        public Object transform2Field( Object modelValue ) throws Exception {
-            return next != null ? next.transform2Field( modelValue ) : modelValue;
+            return super.transform2Model( fieldValue );
         }
     }
         
 
     /**
-     * 
+     * Adopt entity to local uow.
      */
     protected class AdoptEntityValidator
             extends NullValidator {
     
         @Override
         public Object transform2Model( Object fieldValue ) throws Exception {
-            return fieldValue != null ? uow.get().entity( (Entity)fieldValue ) : null; // adopt entity to local uow
+            return fieldValue != null ? uow.get().entity( (Entity)fieldValue ) : null;
+        }
+    }
+
+
+    /**
+     * Im Freistaat Sachsen gibt folgende Flurstückstypen:
+     * <pre>
+     * •  nur Zähler (Bsp.: 111)
+     * •  Zähler/[Nenner] ohne Leerzeichen (Bsp.: 111/2)
+     * •  ZählerKleinbuchstabe ohne Leerzeichen (Bsp.: 111a)
+     * </pre>
+     */
+    protected static class NummerValidator
+            extends NullValidator {
+    
+        public static final Pattern     pattern = Pattern.compile( "[0-9]+(/[0-9]+|[a-z])?" );
+        
+        
+        @Override
+        public String validate( Object value ) {
+            Matcher matcher = pattern.matcher( (String)value );
+            return matcher.matches() ? null : "Flurstücksnummern: 111, 111a, 111/2";
         }
     }
 
@@ -414,7 +416,7 @@ public class FlurstueckTableViewer
                         ResultSet<Waldbesitzer> rs = uow.get().query( Waldbesitzer.class )
                                 // FIXME geloescht beachten!
                                 .where( anyOf( Waldbesitzer.TYPE.flurstuecke, 
-                                        and(
+                                        Expressions.and(
                                                 the( Flurstueck.TYPE.gemarkung, id( gmk.id() ) ),
                                                 eq( Flurstueck.TYPE.zaehlerNenner, (String)fieldValue ) ) ) )
                                 .execute();
