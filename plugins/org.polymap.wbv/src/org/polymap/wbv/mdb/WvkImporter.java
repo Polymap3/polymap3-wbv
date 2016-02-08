@@ -14,8 +14,9 @@
  */
 package org.polymap.wbv.mdb;
 
-import java.util.Map;
+import static org.polymap.wbv.model.fulltext.WaldbesitzerFulltextTransformer.whitespace;
 
+import java.util.Map;
 import java.io.File;
 import java.io.IOException;
 
@@ -186,6 +187,7 @@ public class WvkImporter
                         @Override
                         public Flurstueck initialize( Flurstueck proto ) throws Exception {
                             fill( proto, row );
+                            proto.zaehlerNenner.set( whitespace.matcher( proto.zaehlerNenner.get() ).replaceAll( "" ) );
                             
                             String gemeindeId = row.get( "FL_Gemeinde" ).toString();
                             String gemarkungId = row.get( "FL_Gemarkung" ).toString();

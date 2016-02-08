@@ -39,7 +39,7 @@ public class WaldbesitzerFulltextTransformer
 
     private static Log log = LogFactory.getLog( WaldbesitzerFulltextTransformer.class );
 
-    private static final Pattern        whitespace = Pattern.compile( "\\s" );
+    public static final Pattern         whitespace = Pattern.compile( "\\s" );
     
     
     @Override

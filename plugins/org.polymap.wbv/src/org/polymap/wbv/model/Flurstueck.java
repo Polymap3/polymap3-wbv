@@ -20,6 +20,7 @@ import org.apache.commons.logging.LogFactory;
 
 import org.polymap.model2.Association;
 import org.polymap.model2.Composite;
+import org.polymap.model2.DefaultValue;
 import org.polymap.model2.Defaults;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
@@ -88,6 +89,7 @@ public class Flurstueck
 
     //@Queryable: wird behandelt in WaldbesitzerFulltextTransformer
     @Nullable
+    @DefaultValue("")  // no null on import
     @ImportColumn("FL_Flstnr")
     public Property<String>             zaehlerNenner;
     
