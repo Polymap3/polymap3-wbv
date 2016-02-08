@@ -60,7 +60,7 @@ public class AdresseForm
 //        }
 
         formSite.newFormField( new PropertyAdapter( adresse.strasse ) )
-                .label.put( "Strasse" ).tooltip.put( "Strasse und Hausnummer" )
+                .label.put( "Straße" ).tooltip.put( "Straße und Hausnummer" )
                 .validator.put( new NotEmptyValidator() )
                 .create();
                 //.setLayoutData( FormDataFactory.filled().right( 75 ).create() );
@@ -93,11 +93,11 @@ public class AdresseForm
                 .create();
 
         formSite.newFormField( new PropertyAdapter( adresse.ortsteil ) )
-                .label.put( "Ortsteil" ).tooltip.put( "Ortsteil" )
+                .label.put( "Ortsteil" )
                 .create();
 
         formSite.newFormField( new PropertyAdapter( adresse.land ) )
-                .label.put( "Land" ).tooltip.put( "Land" )
+                .label.put( "Staat" )
                 .create();
     }
 

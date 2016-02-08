@@ -109,7 +109,7 @@ public class KontaktForm
 
         formSite.newFormField( new PropertyAdapter( kontakt.anrede ) )
                 .parent.put( salu )
-                .label.put( "Anrede / Name*" )
+                .label.put( "Anrede / Name" )
                 .field.put( new PicklistFormField( new String[] {"Herr", "Frau", "Firma", "Amt"} )
                             .setTextEditable( true )
                             .setForceTextMatch( false ) )
@@ -134,15 +134,15 @@ public class KontaktForm
         
         formSite.newFormField( new PropertyAdapter( kontakt.email ) )
                 .label.put( "E-Mail" )
-                .tooltip.put( "Die E-Mail-Adresse des kontaktes. Beispiel: info@example.com" )
+                .tooltip.put( "Die E-Mail-Adresse des Kontaktes. Beispiel: info@example.com" )
                 .validator.put( new EMailAddressValidator().msg.put( "Das ist keine gültige E-Mail-Adresse" ) )
                 .create();
 
-        formSite.newFormField( new PropertyAdapter( kontakt.telefon1 ) ).label.put( "Telefon1" ).create();
+        formSite.newFormField( new PropertyAdapter( kontakt.telefon1 ) ).label.put( "Telefon" ).create();
         
-        formSite.newFormField( new PropertyAdapter( kontakt.telefon2 ) ).label.put( "Telefon2" ).create();
+        formSite.newFormField( new PropertyAdapter( kontakt.telefon2 ) ).label.put( "Mobiltelefon" ).create();
         
-        formSite.newFormField( new PropertyAdapter( kontakt.fax ) ).label.put( "Fax" ).create();
+        formSite.newFormField( new PropertyAdapter( kontakt.fax ) ).label.put( "Telefax" ).create();
         
         // Adresse
         adresseForm = new BatikFormContainer( new AdresseForm( kontakt, panelSite ) );
