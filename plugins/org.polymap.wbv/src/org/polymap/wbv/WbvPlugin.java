@@ -35,6 +35,7 @@ import org.polymap.core.security.UserPrincipal;
 import org.polymap.core.ui.StatusDispatcher;
 
 import org.polymap.rhei.batik.app.SvgImageRegistryHelper;
+import org.polymap.rhei.batik.toolkit.BatikDialogStatusAdapter;
 import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.fulltext.FulltextPlugin;
 import org.polymap.rhei.fulltext.FulltextPlugin.ErrorHandler;
@@ -98,7 +99,11 @@ public class WbvPlugin
 	public void start( BundleContext context ) throws Exception {
 		super.start( context );
 		instance = this;
-		
+
+		// Handling errors in the UI
+        StatusDispatcher.registerAdapter( new StatusDispatcher.LogAdapter() );
+        StatusDispatcher.registerAdapter( new BatikDialogStatusAdapter() );
+
 		images = new SvgImageRegistryHelper( this );
 		
         // register HTTP resource

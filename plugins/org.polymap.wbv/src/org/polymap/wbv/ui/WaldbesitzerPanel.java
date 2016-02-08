@@ -166,13 +166,7 @@ public class WaldbesitzerPanel
                     @Override
                     public Waldbesitzer initialize( Waldbesitzer prototype ) throws Exception {
                         prototype.eigentumsArt.set( Waldeigentumsart.Privat );
-                        prototype.kontakte.createElement( new ValueInitializer<Kontakt>() {
-                            @Override
-                            public Kontakt initialize( Kontakt kontakt ) throws Exception {
-                                //kontakt.name.set( "Beispiel" );
-                                return kontakt;
-                            }
-                        });
+                        prototype.kontakte.createElement( Kontakt.defaults );
                         // damit die sch** tabelle den ersten Eintrag zeigt
                         prototype.flurstuecke.createElement( Flurstueck.defaults );
                         return prototype;
@@ -263,8 +257,9 @@ public class WaldbesitzerPanel
                 //new NeighborhoodConstraint( basis.getControl(), Neighborhood.BOTTOM, 1 ) );
         besitzer.getBody().setLayout( ColumnLayoutFactory.defaults().spacing( 10 ).columns( 1, 1 ).create() );
         
-        for (final Kontakt kontakt : wb.kontakte) {
-            createKontaktSection( besitzer.getBody(), kontakt );
+        int index = 0;
+        for (final Kontakt kontakt : wb.kontakte()) {
+            createKontaktSection( besitzer.getBody(), kontakt, index++ > 0 );
         }
 
         // Ereignisse
@@ -398,7 +393,7 @@ public class WaldbesitzerPanel
     }
     
     
-    protected Section createKontaktSection( final Composite parent, final Kontakt kontakt ) {
+    protected Section createKontaktSection( final Composite parent, final Kontakt kontakt, boolean allowRemove ) {
         final Section section = tk().createSection( parent, kontakt.anzeigename(), TREE_NODE | Section.SHORT_TITLE_BAR | Section.FOCUS_TITLE );
         //section.setFont( JFaceResources.getFontRegistry().getBold( JFaceResources.DEFAULT_FONT ) );
         ((Composite)section.getClient()).setLayout( FormLayoutFactory.defaults().spacing( 3 ).create() );
@@ -435,14 +430,9 @@ public class WaldbesitzerPanel
         addBtn.addSelectionListener( new SelectionAdapter() {
             @Override
             public void widgetSelected( SelectionEvent ev ) {
-                Kontakt neu = wb.kontakte.createElement( new ValueInitializer<Kontakt>() {
-                    @Override
-                    public Kontakt initialize( Kontakt proto ) throws Exception {
-                        proto.name.set( "Neu" );
-                        return proto;
-                    }
-                });
-                Section newSection = createKontaktSection( parent, neu );
+                Kontakt neu = wb.kontakte.createElement( Kontakt.defaults );
+                Section newSection = createKontaktSection( parent, neu, false );
+                newSection.setExpanded( true );
                 getSite().layout( true );
                 parent.layout( new Control[] {newSection}, SWT.ALL|SWT.CHANGED );
 
@@ -451,15 +441,14 @@ public class WaldbesitzerPanel
         });
 
         // removeBtn
-        Button removeBtn = null;
-        if (kontakt != wb.besitzer()) {
-            removeBtn = tk().createButton( (Composite)section.getClient(), "-", SWT.PUSH );
+        if (allowRemove) {
+            Button removeBtn = tk().createButton( (Composite)section.getClient(), "-", SWT.PUSH );
             removeBtn.setToolTipText( "Diesen Kontakt löschen" );
             removeBtn.setLayoutData( FormDataFactory.defaults().left( 100, -30 ).right( 100 ).top( addBtn ).create() );
             removeBtn.addSelectionListener( new SelectionAdapter() {
                 @Override
                 public void widgetSelected( SelectionEvent ev ) {
-                    wb.kontakte.remove( kontakt );
+                    kontakt.geloescht.set( true );
                     section.dispose();
                     kForms.remove( form );
                     getSite().layout( true );

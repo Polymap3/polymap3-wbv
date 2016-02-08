@@ -20,6 +20,7 @@ import org.polymap.model2.Defaults;
 import org.polymap.model2.Nullable;
 import org.polymap.model2.Property;
 import org.polymap.model2.Queryable;
+import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.wbv.mdb.ImportColumn;
 import org.polymap.wbv.mdb.ImportTable;
 
@@ -32,10 +33,22 @@ import org.polymap.wbv.mdb.ImportTable;
 public class Kontakt
         extends Adresse {
 
+    public static final ValueInitializer<Kontakt> defaults = (Kontakt proto) -> {
+        proto.name.set( "Neuer Kontakt" );
+        return proto;
+    };
+    
     public enum Anrede {
         Herr, Frau;
     }
     
+    /**
+     * {@link CompositeCollection#remove(Object)} ist noch nicht implementiert.
+     */
+    @Queryable
+    @Defaults
+    public Property<Boolean>        geloescht;
+
     /**
      * Der Familienname einer natürlichen Person. Freitext für Namen einschließlich
      * Adelstitel 'Wagner', 'von Lüttichau', usw. )
@@ -43,7 +56,7 @@ public class Kontakt
     @Defaults
     @Queryable
     @ImportColumn("EWBS_Name")
-    public Property<String> name;
+    public Property<String>         name;
 
     /**
      * Die Anrede inklusive Titel: "Herrn", "Frau", "Frau Dr." (defaults: {@link Anrede}).
@@ -51,11 +64,11 @@ public class Kontakt
     @Defaults
     @Queryable
     @ImportColumn("EWBS_Anrede")
-    public Property<String> anrede;
+    public Property<String>         anrede;
 
     @Defaults
     @ImportColumn("EWBS_Briefanrede")
-    public Property<String> briefanrede;
+    public Property<String>         briefanrede;
 
     /**
      * Der Vorname bei einer natürlichen Person.
@@ -63,41 +76,41 @@ public class Kontakt
     @Defaults
     @Queryable
     @ImportColumn("EWBS_Vorname")
-    public Property<String> vorname;
+    public Property<String>         vorname;
 
     @Defaults
     @Queryable
-    public Property<String> organisation;
+    public Property<String>         organisation;
 
     @Defaults
     @Queryable
     @ImportColumn("EWBS_Telefon1")
-    public Property<String> telefon1;
+    public Property<String>         telefon1;
 
     @Defaults
     @Queryable
     @ImportColumn("EWBS_Telefon2")
-    public Property<String> telefon2;
+    public Property<String>         telefon2;
 
     @Defaults
     @Queryable
     @ImportColumn("EWBS_Fax")
-    public Property<String> fax;
+    public Property<String>         fax;
 
     @Defaults
     @ImportColumn("EWBS_EMail")
 //    @Label("E-Mail", "Die E-Mail-Adresse des kontaktes. Beispiel: info@example.com")
-    public Property<String> email;
+    public Property<String>         email;
 
     /** Zusätzliche Bemerkungen zu diesem Kontakt. */
     @Defaults
     @Queryable
-    public Property<String> bemerkung;
+    public Property<String>         bemerkung;
 
     /** Aus WKV-Daten, Bedeutung ist unklar. */
     @Nullable
     @ImportColumn("EWBS_BetrNr")
-    public Property<String> betrNr;
+    public Property<String>         betrNr;
 
     
     /**

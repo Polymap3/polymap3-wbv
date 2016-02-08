@@ -111,8 +111,10 @@ public class Waldbesitzer
     public CollectionProperty<Flurstueck> flurstuecke;
 
     /**
-     * Alle Ansprechpartner, inklusive des {@link #besitzer()}s auf Index
-     * {@link #besitzerIndex}.
+     * Alle Ansprechpartner/Kontakte, inklusive aller gelöschten Einträge, inklusive
+     * des {@link #besitzer()}s auf Index {@link #besitzerIndex}.
+     * 
+     * @see #kontakte()
      */
     @MinOccurs(1)
     public CollectionProperty<Kontakt>  kontakte;
@@ -148,8 +150,16 @@ public class Waldbesitzer
     }
     
     
+    /** 
+     * Nicht gelöschte {@link #kontakte}.
+     */
+    public Collection<Kontakt> kontakte() {
+        return Collections2.filter( kontakte, k -> !k.geloescht.get() );
+    }
+    
+    
     public Kontakt besitzer() {
-        return Iterables.get( kontakte, besitzerIndex.get(), null );
+        return Iterables.get( kontakte(), besitzerIndex.get(), null );
     }
 
     

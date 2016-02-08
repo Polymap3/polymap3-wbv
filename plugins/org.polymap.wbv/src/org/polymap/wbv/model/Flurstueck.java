@@ -15,6 +15,7 @@ package org.polymap.wbv.model;
 
 import java.util.Date;
 
+import org.apache.commons.collections.collection.CompositeCollection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -75,6 +76,9 @@ public class Flurstueck
     
     // instance *******************************************
     
+    /**
+     * {@link CompositeCollection#remove(Object)} ist noch nicht implementiert.
+     */
     @Queryable
     @Defaults
     public Property<Boolean>            geloescht;

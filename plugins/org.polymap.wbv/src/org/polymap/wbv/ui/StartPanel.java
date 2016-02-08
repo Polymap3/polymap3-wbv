@@ -297,13 +297,16 @@ public class StartPanel
                 site().title.set( i18n.get( "title", results.size() ) );
             }
         };
-//        search.searchOnEnter.set( false );
-//        search.getText().setText( "Stadtverwaltung" );
+
+        if ("falko".equals( System.getProperty( "user.name" ) )) {
+            search.searchOnEnter.set( false );
+            search.getText().setText( "Stadtverwaltung" );
+        }
 
         search.searchOnEnter.set( true );
         search.getText().setFocus();
         search.getControl().moveAbove( null );
-        new FulltextProposal( fulltext, search.getText() );
+        new FulltextProposal( fulltext, search.getText() ).activationDelayMillis.put( 250 );
         
         // layout
         int displayHeight = UIUtils.sessionDisplay().getBounds().height;
