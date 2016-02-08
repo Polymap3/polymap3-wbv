@@ -31,7 +31,7 @@ import org.polymap.wbv.model.Adresse;
 
 /**
  * 
- *
+ * @deprecated Alles im {@link KontaktForm}
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class AdresseForm

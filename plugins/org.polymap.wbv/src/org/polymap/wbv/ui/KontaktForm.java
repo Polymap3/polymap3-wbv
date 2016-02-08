@@ -14,6 +14,7 @@
  */
 package org.polymap.wbv.ui;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -23,22 +24,16 @@ import org.eclipse.swt.widgets.Composite;
 
 import org.eclipse.ui.forms.widgets.ColumnLayoutData;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-
 import org.polymap.core.ui.ColumnLayoutFactory;
 
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.field.EMailAddressValidator;
 import org.polymap.rhei.field.IFormFieldLabel;
-import org.polymap.rhei.field.IFormFieldListener;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.TextFormField;
 import org.polymap.rhei.form.DefaultFormPage;
-import org.polymap.rhei.form.IFormPage2;
 import org.polymap.rhei.form.IFormPageSite;
-import org.polymap.rhei.form.batik.BatikFormContainer;
-
 import org.polymap.wbv.model.Kontakt;
 
 /**
@@ -47,8 +42,8 @@ import org.polymap.wbv.model.Kontakt;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class KontaktForm
-        extends DefaultFormPage
-        implements IFormPage2 {
+        extends DefaultFormPage {
+        //implements IFormPage2 {
 
     private static Log log = LogFactory.getLog( KontaktForm.class );
     
@@ -58,7 +53,7 @@ public class KontaktForm
     
     private Composite               body;
 
-    private BatikFormContainer      adresseForm;
+//    private BatikFormContainer      adresseForm;
 
     
     public KontaktForm( Kontakt kontakt, IPanelSite panelSite ) {
@@ -66,33 +61,33 @@ public class KontaktForm
         this.panelSite = panelSite;
     }
 
-    public void addAdresseFieldListener( IFormFieldListener l ) {
-        adresseForm.addFieldListener( l );
-    }
-
-    @Override
-    public boolean isDirty() {
-        return adresseForm.isDirty();
-    }
-
-    @Override
-    public boolean isValid() {
-        return adresseForm.isValid();
-    }
-
-    @Override
-    public void doLoad( IProgressMonitor monitor ) throws Exception {
-        //throw new RuntimeException( "not yet implemented." );
-    }
-
-    @Override
-    public void doSubmit( IProgressMonitor monitor ) throws Exception {
-        adresseForm.submit( monitor );
-    }
-
-    @Override
-    public void dispose() {
-    }
+//    public void addAdresseFieldListener( IFormFieldListener l ) {
+//        adresseForm.addFieldListener( l );
+//    }
+//
+//    @Override
+//    public boolean isDirty() {
+//        return adresseForm.isDirty();
+//    }
+//
+//    @Override
+//    public boolean isValid() {
+//        return adresseForm.isValid();
+//    }
+//
+//    @Override
+//    public void doLoad( IProgressMonitor monitor ) throws Exception {
+//        //throw new RuntimeException( "not yet implemented." );
+//    }
+//
+//    @Override
+//    public void doSubmit( IProgressMonitor monitor ) throws Exception {
+//        adresseForm.submit( monitor );
+//    }
+//
+//    @Override
+//    public void dispose() {
+//    }
 
 
     @Override
@@ -123,14 +118,49 @@ public class KontaktForm
                 .create();
         
         formSite.newFormField( new PropertyAdapter( kontakt.vorname ) )
-                //.validator.put( new NotEmptyValidator() )
                 .create()
                 .setFocus();
 
-//        if (kontakt instanceof User) {
-//            prop = ((User)kontakt).company();
-//            new FormFieldBuilder( body, new PropertyAdapter( prop ) ).setLabel( i18n.get( prop.name() ) ).create();            
-//        }
+        formSite.newFormField( new PropertyAdapter( kontakt.strasse ) )
+                .label.put( "Straße" ).tooltip.put( "Straße und Hausnummer" )
+                .validator.put( new NotEmptyValidator() )
+                .create();
+        //.setLayoutData( FormDataFactory.filled().right( 75 ).create() );
+
+        Composite city = panelSite.toolkit().createComposite( body );
+        formSite.newFormField( new PropertyAdapter( kontakt.plz ) )
+                .parent.put( city )
+                .label.put( "PLZ / Ort" )
+                .validator.put( new NotEmptyValidator() {
+                    @Override
+                    public String validate( Object fieldValue ) {
+                        String result = super.validate( fieldValue );
+                        if (result == null) {
+                            if (((String)fieldValue).length() != 5) {
+                                result = "Postleitzahl muss 5 Stellen haben";
+                            }
+                            else if (!StringUtils.isNumeric( (String)fieldValue )) {
+                                result = "Postleitzahl darf nur Ziffern enthalten";
+                            }
+                        }
+                        return result;
+                    }
+                })
+                .create();
+
+        formSite.newFormField( new PropertyAdapter( kontakt.ort ) )
+                .parent.put( city )
+                .label.put( IFormFieldLabel.NO_LABEL )
+                .validator.put( new NotEmptyValidator() )
+                .create();
+
+        formSite.newFormField( new PropertyAdapter( kontakt.ortsteil ) )
+                .label.put( "Ortsteil" )
+                .create();
+
+        formSite.newFormField( new PropertyAdapter( kontakt.land ) )
+                .label.put( "Staat" )
+                .create();
         
         formSite.newFormField( new PropertyAdapter( kontakt.email ) )
                 .label.put( "E-Mail" )
@@ -144,9 +174,9 @@ public class KontaktForm
         
         formSite.newFormField( new PropertyAdapter( kontakt.fax ) ).label.put( "Telefax" ).create();
         
-        // Adresse
-        adresseForm = new BatikFormContainer( new AdresseForm( kontakt, panelSite ) );
-        adresseForm.createContents( body );
+//        // Adresse
+//        adresseForm = new BatikFormContainer( new AdresseForm( kontakt, panelSite ) );
+//        adresseForm.createContents( body );
         
         // Bemerkung 
         formSite.newFormField( new PropertyAdapter( kontakt.bemerkung ) )

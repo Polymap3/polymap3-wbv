@@ -420,7 +420,7 @@ public class WaldbesitzerPanel
         
         EnableSubmitFormFieldListener listener = new EnableSubmitFormFieldListener( formContainer );
         formContainer.addFieldListener( listener );
-        form.addAdresseFieldListener( listener );
+//        form.addAdresseFieldListener( listener );
         kForms.put( formContainer, listener );
         
         // addBtn
