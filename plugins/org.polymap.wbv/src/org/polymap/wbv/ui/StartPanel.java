@@ -297,8 +297,8 @@ public class StartPanel
                 site().title.set( i18n.get( "title", results.size() ) );
             }
         };
-        search.searchOnEnter.set( false );
-        search.getText().setText( "Stadtverwaltung" );
+//        search.searchOnEnter.set( false );
+//        search.getText().setText( "Stadtverwaltung" );
 
         search.searchOnEnter.set( true );
         search.getText().setFocus();
