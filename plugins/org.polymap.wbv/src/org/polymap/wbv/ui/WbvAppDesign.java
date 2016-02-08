@@ -44,7 +44,7 @@ public class WbvAppDesign
         UIUtils.setVariant( l, CSS_HEADER );
 
         boolean showText = UIUtils.sessionDisplay().getClientArea().width > 900;
-        l.setText( showText ? "Waldbesitzerverzeichnis" : "WBV" );
+        l.setText( showText ? "Waldverzeichnis Mittelsachsen" : "WBV" );
 
         return result;
     }
