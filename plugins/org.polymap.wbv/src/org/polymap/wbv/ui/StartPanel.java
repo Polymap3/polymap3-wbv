@@ -39,6 +39,7 @@ import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
 import org.eclipse.rap.rwt.RWT;
+import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.rap.rwt.client.service.UrlLauncher;
 import org.eclipse.rap.rwt.service.SettingStore;
 
@@ -50,8 +51,10 @@ import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.core.ui.UIUtils;
 
+import org.polymap.rhei.batik.BatikPlugin;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.PanelIdentifier;
+import org.polymap.rhei.batik.app.SvgImageRegistryHelper;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.batik.toolkit.Snackbar.Appearance;
@@ -222,9 +225,20 @@ public class StartPanel
         createBtn.setToolTipText( "Einen neuen Waldbesitzer anlegen" );
         createBtn.addSelectionListener( new SelectionAdapter() {
             @Override
-            public void widgetSelected( SelectionEvent e ) {
+            public void widgetSelected( SelectionEvent ev ) {
                 selected.set( null );
                 getContext().openPanel( getSite().getPath(), WaldbesitzerPanel.ID );
+            }
+        });
+
+        // exit app
+        Button exitBtn = tk().createButton( body, null, SWT.PUSH );
+        exitBtn.setImage( BatikPlugin.images().svgImage( "close.svg", SvgImageRegistryHelper.WHITE24 ) );
+        exitBtn.setToolTipText( "Anwendung verlassen und neu anmelden" );
+        exitBtn.addSelectionListener( new SelectionAdapter() {
+            @Override
+            public void widgetSelected( SelectionEvent ev ) {
+                RWT.getClient().getService( JavaScriptExecutor.class ).execute( "window.location.reload(true);" );
             }
         });
 
@@ -311,7 +325,8 @@ public class StartPanel
         // layout
         int displayHeight = UIUtils.sessionDisplay().getBounds().height;
         int tableHeight = (displayHeight - (2*50) - 75 - 70);  // margins, searchbar, toolbar+banner 
-        createBtn.setLayoutData( FormDataFactory.filled().clearRight().clearBottom().create() );
+        exitBtn.setLayoutData( FormDataFactory.filled().clearRight().clearBottom().height( 28 ).width( 30 ).create() );
+        createBtn.setLayoutData( FormDataFactory.defaults().left( exitBtn ).create() );
         reports.setLayoutData( FormDataFactory.filled().left( createBtn ).noBottom().height( 26 ).right( 50 ).create() );
         search.getControl().setLayoutData( FormDataFactory.filled().height( 27 ).bottom( viewer.getTable() ).left( reports ).create() );
         viewer.getTable().setLayoutData( FormDataFactory.filled()
