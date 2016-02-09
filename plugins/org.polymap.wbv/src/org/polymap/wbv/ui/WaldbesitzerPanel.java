@@ -56,12 +56,12 @@ import org.polymap.core.ui.StatusDispatcher;
 
 import org.polymap.rhei.batik.BatikPlugin;
 import org.polymap.rhei.batik.Context;
-import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.IPanelSite.PanelStatus;
 import org.polymap.rhei.batik.PanelChangeEvent;
 import org.polymap.rhei.batik.PanelChangeEvent.EventType;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.app.MultiStatusManager;
+import org.polymap.rhei.batik.toolkit.ActionItem;
 import org.polymap.rhei.batik.toolkit.IPanelSection;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.batik.toolkit.Snackbar.Appearance;
@@ -90,8 +90,7 @@ import org.polymap.wbv.ui.reports.EntityReport;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class WaldbesitzerPanel
-        extends WbvPanel
-        implements IPanel {
+        extends WbvPanel {
 
     private static Log log = LogFactory.getLog( WaldbesitzerPanel.class );
 
@@ -120,6 +119,8 @@ public class WaldbesitzerPanel
 
     private MultiStatusManager          statusAdapter;
 
+    private boolean                     ignoreDirty;
+    
 
     @Override
     public void init() {
@@ -133,6 +134,21 @@ public class WaldbesitzerPanel
                 ev.getPanel() == WaldbesitzerPanel.this && 
                 ev.getType() == EventType.LIFECYCLE /*&&
                 ev.getPanel().site().panelStatus() == PanelStatus.FOCUSED*/ );
+    }
+
+
+    @Override
+    public boolean beforeDispose() {
+        if (!ignoreDirty && statusAdapter.highestSeverity() != Status.OK_STATUS) {
+            tk().createSnackbar( Appearance.FadeIn, "Es gibt ungespeicherte Änderungen", new ActionItem( null )
+                    .action.put( ev -> {
+                        ignoreDirty = true;
+                        getContext().closePanel( site().path() );
+                    })
+                    .text.put( "Verwerfen" ) );
+            return false;
+        }
+        return true;
     }
 
 
@@ -196,7 +212,8 @@ public class WaldbesitzerPanel
             uow.get().commit();
             
             if (wb.status() == EntityStatus.REMOVED) {
-                getContext().closePanel( getSite().getPath() );                
+                ignoreDirty = true;
+                getContext().closePanel( getSite().getPath() );
             }
             else {
                 tk().createSnackbar( Appearance.FadeIn, "Änderungen wurden gespeichert" );
@@ -235,7 +252,7 @@ public class WaldbesitzerPanel
                     log.info( "severity: " + highestSeverity );
                     tk().createSnackbar( Appearance.FadeIn, highestSeverity.getMessage() );
                 }
-                submitBtn.setVisible( true );
+                submitBtn.setVisible( highestSeverity.isOK() && highestSeverity != Status.OK_STATUS );
                 submitBtn.setEnabled( highestSeverity.isOK() && highestSeverity != Status.OK_STATUS );
                 previousStatus = highestSeverity;
             }

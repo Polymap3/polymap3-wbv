@@ -21,7 +21,6 @@ import org.polymap.core.security.UserPrincipal;
 
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.DefaultPanel;
-import org.polymap.rhei.batik.IPanel;
 import org.polymap.rhei.batik.Scope;
 import org.polymap.rhei.batik.toolkit.md.MdToolkit;
 
@@ -33,8 +32,7 @@ import org.polymap.wbv.model.Revier;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public abstract class WbvPanel
-        extends DefaultPanel
-        implements IPanel {
+        extends DefaultPanel {
 
     private static Log log = LogFactory.getLog( WbvPanel.class );
 
