@@ -14,6 +14,8 @@
  */
 package org.polymap.wbv.ui;
 
+import java.util.Date;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -27,26 +29,26 @@ import org.polymap.wbv.WbvPlugin;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class DateValidator
-        implements IFormFieldValidator {
+        implements IFormFieldValidator<String,Date> {
 
     private static Log log = LogFactory.getLog( DateValidator.class );
 
 
     @Override
-    public String validate( Object fieldValue ) {
+    public String validate( String fieldValue ) {
         return null;
     }
 
 
     @Override
-    public Object transform2Model( Object fieldValue ) throws Exception {
-        return fieldValue;
+    public Date transform2Model( String fieldValue ) throws Exception {
+        return WbvPlugin.df.parse( fieldValue );
     }
 
 
     @Override
-    public Object transform2Field( Object modelValue ) throws Exception {
-        return WbvPlugin.df.format( modelValue );
+    public String transform2Field( Date modelValue ) throws Exception {
+        return modelValue != null ? WbvPlugin.df.format( modelValue ) : "-";
     }
     
 }

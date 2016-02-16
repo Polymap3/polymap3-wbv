@@ -121,6 +121,7 @@ public class StartPanel
         getSite().setTitle( "Login" );
         getSite().setPreferredWidth( 500 ); // table viewer
         createLoginContents( parent );
+//        createMainContents( parent );
     }
     
     
@@ -132,9 +133,6 @@ public class StartPanel
         welcome.addConstraint( new PriorityConstraint( 10 ), WbvPlugin.MIN_COLUMN_WIDTH );
         String t = i18n.get( "welcomeText" );
         tk().createFlowText( welcome.getBody(), t );
-
-//        tk().createSnackbar( Appearance.FadeIn, "Snackbar!", 
-//                new ActionItem( null ).text.put( "Apply" ) );
 
         // login
         IPanelSection section = tk().createPanelSection( parent, "Anmelden", SWT.BORDER );
@@ -314,7 +312,7 @@ public class StartPanel
 
         if ("falko".equals( System.getProperty( "user.name" ) )) {
             search.searchOnEnter.set( false );
-            search.getText().setText( "Stadtverwaltung" );
+            search.getText().setText( "Hedwig" );
         }
 
         search.searchOnEnter.set( true );

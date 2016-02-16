@@ -40,7 +40,9 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.forms.widgets.ColumnLayoutData;
 import org.eclipse.ui.forms.widgets.Section;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 
 import org.polymap.model2.runtime.UnitOfWork;
@@ -120,6 +122,8 @@ public class WaldbesitzerPanel
     private MultiStatusManager          statusAdapter;
 
     private boolean                     ignoreDirty;
+
+    private FlurstueckTableViewer       fstViewer;
     
 
     @Override
@@ -202,6 +206,9 @@ public class WaldbesitzerPanel
     
     protected void submit() {
         try {
+            fstViewer.submit( new NullProgressMonitor() );
+            fstViewer.refresh( true );
+            
             wbFormContainer.submit( null );
             for (BatikFormContainer formContainer : kForms.keySet()) {
                 formContainer.submit( null );
@@ -373,7 +380,7 @@ public class WaldbesitzerPanel
         FormDataFactory.on( summary ).fill().height( 27 ).noTop().bottom( 100 );
         
         //
-        final FlurstueckTableViewer viewer = new FlurstueckTableViewer( site(), parent ) {
+        fstViewer = new FlurstueckTableViewer( site(), parent ) {
             @Override
             protected void fieldChange( PropertyChangeEvent ev ) {
                 super.fieldChange( ev );
@@ -391,8 +398,14 @@ public class WaldbesitzerPanel
 
                 summary.setText( summary() );
             }
+            @Override
+            public void submit( IProgressMonitor monitor ) throws Exception {
+                super.submit( monitor );
+                statusAdapter.updateStatusOf( this, Status.OK_STATUS );
+                summary.setText( summary() );
+            }
         };
-        FormDataFactory.on( viewer.getTable() ).fill().right( 100, -33 ).bottom( summary, 5 ).height( 250 ).width( 300 );
+        FormDataFactory.on( fstViewer.getTable() ).fill().right( 100, -33 ).bottom( summary, 5 ).height( 250 ).width( 300 );
         
         // addBtn
         final Button addBtn = on( tk().createButton( parent, "+", SWT.PUSH ) ).left( 100, -30 ).right( 100 ).top( 0 ).control();
@@ -401,9 +414,9 @@ public class WaldbesitzerPanel
             @Override
             public void widgetSelected( SelectionEvent ev ) {
                 Flurstueck newElm = wb.flurstuecke.createElement( Flurstueck.defaults );
-                viewer.setInput( wb.flurstuecke( revier.get() ) );
+                fstViewer.setInput( wb.flurstuecke( revier.get() ) );
                 //viewer.reveal( new CompositesFeatureContentProvider.FeatureTableElement( newElm ) );
-                viewer.selectElement( String.valueOf( newElm.hashCode() ), true, true );
+                fstViewer.selectElement( String.valueOf( newElm.hashCode() ), true, true );
                 //statusAdapter.updateStatusOf( this, new Status( IStatus.OK, WbvPlugin.ID, "Alle Eingaben sind korrekt." ) );
             }
         });
