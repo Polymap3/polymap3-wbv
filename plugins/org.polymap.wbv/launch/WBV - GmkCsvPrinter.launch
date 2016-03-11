@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/org.polymap.wbv/src/org/polymap/wbv/mdb/MdbGemarkungen.java"/>
+<listEntry value="/org.polymap.wbv/src/org/polymap/wbv/mdb/GmkCsvPrinter.java"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="1"/>
 </listAttribute>
-<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.polymap.wbv.mdb.MdbGemarkungen"/>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="org.polymap.wbv.mdb.GmkCsvPrinter"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="org.polymap.wbv"/>
-<stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="/home/falko/Data/WBV"/>
+<stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="/home/falko/servers/workspace-wbv"/>
 </launchConfiguration>

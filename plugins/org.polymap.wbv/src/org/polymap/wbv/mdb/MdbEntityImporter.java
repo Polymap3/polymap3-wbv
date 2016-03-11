@@ -29,8 +29,6 @@ import com.healthmarketscience.jackcess.Table;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
-import org.polymap.core.runtime.SubMonitor;
-
 import org.polymap.model2.Composite;
 import org.polymap.model2.Entity;
 import org.polymap.model2.Property;
@@ -82,8 +80,7 @@ public class MdbEntityImporter<T /*extends Composite*/> {
     }
 
 
-    public int importTable( Database db, IProgressMonitor monitor ) throws IOException {
-        SubMonitor submon = new SubMonitor( monitor, 10 );
+    public int importTable( Database db, IProgressMonitor submon ) throws IOException {
         Table table = db.getTable( getTableName() );
         submon.beginTask( entityClass != null ? entityClass.getSimpleName() : tableName, table.getRowCount() );
         int count = 0;
@@ -98,7 +95,7 @@ public class MdbEntityImporter<T /*extends Composite*/> {
     
     
     public String buildId( Row row ) {
-        throw new RuntimeException( "Override this." );
+        return null;
     }
 
 

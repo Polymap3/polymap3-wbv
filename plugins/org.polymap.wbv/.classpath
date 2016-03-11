@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry exported="true" kind="lib" path="lib/commons-lang-2.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-collections-3.2.1.jar" sourcepath="lib/sources/commons-collections-3.2.1-sources.zip"/>
-	<classpathentry exported="true" kind="lib" path="lib/commons-lang3-3.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/commons-lang3-3.1.jar" sourcepath="lib/sources/commons-lang3-3.1-sources.zip"/>
 	<classpathentry exported="true" kind="lib" path="lib/avalon-framework-impl-4.2.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/barcode4j-2.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/castor-1.2.jar"/>

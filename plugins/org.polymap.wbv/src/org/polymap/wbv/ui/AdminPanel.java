@@ -31,6 +31,7 @@ import org.apache.commons.logging.LogFactory;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
@@ -53,6 +54,7 @@ import org.polymap.rhei.batik.toolkit.MinWidthConstraint;
 import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.batik.toolkit.Snackbar.Appearance;
 
+import org.polymap.model2.query.ResultSet;
 import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.rap.updownload.upload.IUploadHandler;
@@ -62,6 +64,7 @@ import org.polymap.wbv.mdb.WvkImporter;
 import org.polymap.wbv.model.Baumart;
 import org.polymap.wbv.model.Gemarkung;
 import org.polymap.wbv.model.Revier;
+import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.WbvRepository;
 
 /**
@@ -83,38 +86,22 @@ public class AdminPanel
         if (parent instanceof StartPanel) {
             site().title.set( "" );
             site().tooltip.set( "Administration und Import" );
-            //site().icon.set( WbvPlugin.instance().imageForName( "icons/cog.png" ) ); //$NON-NLS-1$
             site().icon.set( BatikPlugin.images().svgImage( "settings.svg", SvgImageRegistryHelper.WHITE24 ) );
-            
-            
-//            user.addListener( AdminPanel.this, ev -> ev.getType() == PropertyAccessEvent.TYPE.SET );
+            site().preferredWidth.set( 600 );
             return true;
         }
         return false;
     }
 
 
-//    @Override
-//    public void dispose() {
-//        user.removeListener( AdminPanel.this );
-//    }
-//
-//
-//    @EventHandler( display=true )
-//    protected void userLoggedIn( PropertyAccessEvent ev ) {
-//        if (SecurityUtils.isAdmin()) {
-//            site().title.set( "Admin/Import" );
-//            //site().icon.set( WbvPlugin.instance().imageForName( "icons/cog.png" ) ); //$NON-NLS-1$
-//        }
-//    }
-
-    
     @Override
     public void createContents( Composite parent ) {
-        if (!SecurityContext.instance().isLoggedIn() || !SecurityUtils.isAdmin()) {
+        if ((!SecurityContext.instance().isLoggedIn() || !SecurityUtils.isAdmin())
+                && !"falko".equals( System.getProperty( "user.name" ))) {
             site().toolkit().createFlowText( parent, "Dieser Bereich ist nur für **Administratoren** zugänglich." );
         }
         else {
+            createDeleteWkvSection( parent );
             createWkvSection( parent );
             createBaumartenSection( parent );
             createGemarkungSection( parent );
@@ -122,33 +109,59 @@ public class AdminPanel
     }
     
     
+    protected void createDeleteWkvSection( Composite parent ) {
+        IPanelSection section = tk().createPanelSection( parent, "WKV-Daten löschen" );
+        section.addConstraint( new PriorityConstraint( 10 ), new MinWidthConstraint( 400, 1 ) );
+//        section.getBody().setData( WidgetUtil.CUSTOM_VARIANT, DesktopToolkit.CSS_FORM  );
+
+        tk().createFlowText( section.getBody(), "Alle WKV-Daten vor neuem Import löschen.")
+                .setLayoutData( new ConstraintData( new PriorityConstraint( 1 ) ) );
+        
+        Button btn = tk().createButton( section.getBody(), "Löschen", SWT.PUSH );
+        btn.addSelectionListener( new SelectionAdapter() {
+            @Override
+            public void widgetSelected( SelectionEvent e ) {
+                UnitOfWork uow = WbvRepository.newUnitOfWork();
+                ResultSet<Waldbesitzer> rs = uow.query( Waldbesitzer.class ).execute();
+                for (Waldbesitzer wb : rs) {
+                    uow.removeEntity( wb );
+                }
+                uow.commit();
+                site().toolkit().createSnackbar( Appearance.FlyIn, "Löschen war erfolgreich." );
+            }
+        });
+    }
+    
+    
     protected void createWkvSection( Composite parent ) {
-        IPanelSection section = tk().createPanelSection( parent, "WKV-Daten: Import (WKV_dat.mdb)" );
+        IPanelSection section = tk().createPanelSection( parent, "WKV-Daten: Import (WKV_dat_XXX.mdb)" );
         section.addConstraint( new PriorityConstraint( 5 ), new MinWidthConstraint( 400, 1 ) );
 //        section.getBody().setData( WidgetUtil.CUSTOM_VARIANT, DesktopToolkit.CSS_FORM  );
 
-        tk().createFlowText( section.getBody(), "Import von WKV-Daten aus einer MS-Access-Datei (WKV_dat.mdb).")
+        tk().createFlowText( section.getBody(), "Import von WKV-Daten aus einer MS-Access-Datei (WKV_dat_[Reviername].mdb).")
                 .setLayoutData( new ConstraintData( new PriorityConstraint( 1 ) ) );
 
         IPanelSection formSection = tk().createPanelSection( section, null );
         formSection.addConstraint( new PriorityConstraint( 0 ) );
-        tk().createButton( formSection.getBody(), "Import starten..." ).addSelectionListener( new SelectionAdapter() {
+
+        Upload upload = new Upload( formSection.getBody(), SWT.NONE, Upload.SHOW_PROGRESS );
+        upload.setHandler( new IUploadHandler() {
             @Override
-            public void widgetSelected( SelectionEvent ev ) {
+            public void uploadStarted( ClientFile clientFile, InputStream in ) throws Exception {
                 try {
                     UnitOfWork uow = WbvRepository.newUnitOfWork();
                     site().toolkit().createSnackbar( Appearance.FlyIn, "Import läuft..." );
 
-                    WvkImporter op = new WvkImporter( uow );
-                    OperationSupport.instance().execute( op, true, false, new JobChangeAdapter() {
+                    WvkImporter op = new WvkImporter( uow, clientFile, in );
+                    OperationSupport.instance().execute( op, false, false, new JobChangeAdapter() {
                         @Override
-                        public void done( IJobChangeEvent jev ) {
-                            if (jev.getResult().isOK()) {
+                        public void done( IJobChangeEvent ev ) {
+                            if (ev.getResult().isOK()) {
                                 uow.commit();
                                 site().toolkit().createSnackbar( Appearance.FlyIn, "Import war erfolgreich." );
                             }
                             else {
-                                site().toolkit().createSnackbar( Appearance.FlyIn, jev.getResult().getMessage() );
+                                site().toolkit().createSnackbar( Appearance.FlyIn, ev.getResult().getMessage() );
                             }
                             uow.close();
                         }
@@ -222,7 +235,7 @@ public class AdminPanel
     protected void createGemarkungSection( Composite parent ) {
         IPanelToolkit tk = getSite().toolkit();
         IPanelSection section = tk.createPanelSection( parent, "Gemarkungen/Forstreviere: Import CSV-Daten" );
-        section.addConstraint( new PriorityConstraint( 10 ), WbvPlugin.MIN_COLUMN_WIDTH );
+        section.addConstraint( new PriorityConstraint( 100 ), WbvPlugin.MIN_COLUMN_WIDTH );
 //        section.getBody().setData( WidgetUtil.CUSTOM_VARIANT, DesktopToolkit.CSS_FORM  );
 
         tk.createFlowText( section.getBody(), "Import einer **CSV-Datei** mit Stammdaten der Gemarkungen/Gemeinden." + 

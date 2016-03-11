@@ -1,6 +1,6 @@
 /* 
  * polymap.org
- * Copyright (C) 2014, Falko Bräutigam. All rights reserved.
+ * Copyright (C) 2014-2016, Falko Bräutigam. All rights reserved.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -16,11 +16,18 @@ package org.polymap.wbv.mdb;
 
 import static org.polymap.wbv.model.fulltext.WaldbesitzerFulltextTransformer.whitespace;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -37,22 +44,20 @@ import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.rap.rwt.client.ClientFile;
 
-import org.polymap.model2.query.ResultSet;
-import org.polymap.model2.runtime.UnitOfWork;
-import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.core.runtime.SubMonitor;
-import org.polymap.core.ui.StatusDispatcher;
-
-import org.polymap.wbv.WbvPlugin;
+import org.polymap.model2.runtime.EntityRuntimeContext.EntityStatus;
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
 import org.polymap.wbv.model.Kontakt;
+import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
 
 /**
- * Importiert Daten aus WVK_dat.mdb 
+ * Importiert Daten aus WVK_dat_<Reviername>.mdb 
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
@@ -66,10 +71,33 @@ public class WvkImporter
 
     private UnitOfWork          uow;
 
+    private InputStream         in;
+
+    private ClientFile          clientFile;
+
+    private String              revier;
+
+    private Map<String,String>  gmks = new HashMap();
+
+    private Map<String,String>  gmds = new HashMap();
     
-    public WvkImporter( UnitOfWork uow ) {
+    private int                 wbImportCount = 0;
+
+    private int                 flstImportCount = 0;
+    
+    private int                 adrImportCount = 0;
+    
+
+    public WvkImporter( UnitOfWork uow, ClientFile clientFile, InputStream in ) {
         super( "WVK-Daten importieren" );
         this.uow = uow;
+        this.in = in;
+        this.clientFile = clientFile;
+        
+        this.revier = StringUtils.substringAfterLast( FilenameUtils.getBaseName( clientFile.getName() ), "_" );
+        if (!Revier.all.get().containsKey( revier )) {
+            throw new IllegalStateException( "Das Revier gibt es nicht: " + revier );
+        }
     }
     
     
@@ -80,140 +108,177 @@ public class WvkImporter
             return monitor.isCanceled() ? Status.CANCEL_STATUS : Status.OK_STATUS;
         }
         catch (Exception e) {
-            StatusDispatcher.handleError( "", e );
-            return new Status( IStatus.ERROR, WbvPlugin.ID, "", e );
+            throw new ExecutionException( e.getMessage(), e );
         }
     }
 
 
     public void importData( IProgressMonitor monitor ) throws Exception {
-        Database db = DatabaseBuilder.open( new File( BASEDIR, "WVK_dat.mdb" ) );
-        try {
-            monitor.beginTask( getLabel(), 60 );
-            monitor.subTask( "Datenbank öffnen" );
+        // upload -> temp file
+        monitor.beginTask( getLabel(), 12 );
+        monitor.subTask( "Upload" );
+        File f = File.createTempFile( "WVK_dat_", ".mdb" );
+        try (FileOutputStream out = new FileOutputStream( f )) {
+            IOUtils.copy( in, out );
+        }
+        monitor.worked( 1 );
+        
+        //
+        monitor.subTask( "Datenbank öffnen" );
+        try (
+            Database db = DatabaseBuilder.open( f )
+        ){
             db.setLinkResolver( new LinkResolver() {
                 @Override
                 public Database resolveLinkedDatabase( Database linkerDb, String linkeeFileName ) throws IOException {
                     return DatabaseBuilder.open( new File( FilenameUtils.getName( linkeeFileName ) ) );
                 }
             });
-            monitor.worked( 10 );
+            monitor.worked( 1 );
 
-            SubMonitor submon = null;
-            
-            // Waldbesitzer löschen
-            submon = new SubMonitor( monitor, 10 );
-            ResultSet<Waldbesitzer> wbs = uow.query( Waldbesitzer.class ).execute();
-            submon.beginTask( "Waldbesitzer löschen", wbs.size() );
-            for (Waldbesitzer wb : wbs) {
-                uow.removeEntity( wb );
-                submon.worked( 1 );
+            // Gemarkung: id -> name
+            monitor.subTask( "Gemarkungsnamen lesen" );
+            Table table = db.getTable( "ESt_Gemarkung" );
+            for (Row row=table.getNextRow(); row != null && !monitor.isCanceled(); row=table.getNextRow()) {
+                String id = String.valueOf( row.get( "ID_Gemarkung" ) );
+                gmks.put( id, (String)row.get( "Gemarkung_Name" ) );
             }
-            uow.commit();
-            submon.done();
-   
-            // Waldbesitzer
-            submon = new SubMonitor( monitor, 10 );
+            monitor.worked( 1 );
+            log.info( revier + ": " + gmks.size() + " Gemarkungsschlüssel gelesen." );
+
+            // Gemeinden: id -> name
+            monitor.subTask( "Gemeindenamen lesen" );
+            table = db.getTable( "ESt_Gemeinde" );
+            for (Row row=table.getNextRow(); row != null && !monitor.isCanceled(); row=table.getNextRow()) {
+                String id = String.valueOf( row.get( "ID_Gemeinde" ) );
+                gmds.put( id, (String)row.get( "Gemeinde_Name" ) );
+            }
+            monitor.worked( 1 );
+            log.info( revier + ": " + gmds.size() + " Gemeindeschlüssel gelesen." );
+            
+            // wbRows
+            monitor.subTask( "Waldbesitzer lesen" );
             final MdbEntityImporter<Waldbesitzer> wbImporter = new MdbEntityImporter( uow, Waldbesitzer.class );
-            Table table = db.getTable( wbImporter.getTableName() );
-            submon.beginTask( "Waldbesitzer", table.getRowCount() );
-            for (Row row=table.getNextRow(); row != null && !submon.isCanceled(); row=table.getNextRow()) {
-                final Row finalRow = row;
+            table = db.getTable( wbImporter.getTableName() );
+            Map<String,Row> wbRows = new HashMap( table.getRowCount() * 2 );
+            for (Row row=table.getNextRow(); row != null && !monitor.isCanceled(); row=table.getNextRow()) {
                 String id = row.get( "ID_WBS" ).toString();
-                @SuppressWarnings("unused")
-                Waldbesitzer wb = uow.createEntity( Waldbesitzer.class, "Waldbesitzer."+id, new ValueInitializer<Waldbesitzer>() {
-                    @Override
-                    public Waldbesitzer initialize( Waldbesitzer proto ) throws Exception {
-                        wbImporter.fill( proto, finalRow );
-                        
-                        String ea = (String)finalRow.get( "WBS_EA" );
-                        switch (ea != null ? ea : "null") {
-                            case "P": proto.eigentumsArt.set( Waldeigentumsart.Privat ); break;
-                            case "K42": proto.eigentumsArt.set( Waldeigentumsart.Kirche42 ); break;
-                            case "K43": proto.eigentumsArt.set( Waldeigentumsart.Kirche43 ); break;
-                            case "C": proto.eigentumsArt.set( Waldeigentumsart.Körperschaft_Kommune ); break;
-                            case "T": proto.eigentumsArt.set( Waldeigentumsart.BVVG ); break;
-                            case "B": proto.eigentumsArt.set( Waldeigentumsart.Staat_Bund ); break;
-                            case "A": proto.eigentumsArt.set( Waldeigentumsart.Körperschaft_ZVB ); break;
-                            case "L": proto.eigentumsArt.set( Waldeigentumsart.Staat_Sachsen ); break;
-                            default : {
-                                log.warn( "Unbekannte Eigentumsart: " + ea );
-                                proto.eigentumsArt.set( Waldeigentumsart.Unbekannt );
-                                break;
-                            }
-                        }
-                        return proto;
-                    }
-                });
-                //log.info( "   " + wb );
-                submon.worked( 1 );
+                wbRows.put( "Waldbesitzer."+id, row );
             }
-            submon.done();
-            
-            // Waldbesitzer_Adresse
+            monitor.worked( 1 );
+            log.info( revier + ": " + wbRows.size() + " Waldbesitzer-Rows gelesen." );
+
+            // Flurstuecke und Waldbesitzer
+            SubMonitor submon = new SubMonitor( monitor, 4 );
+            importFlurstuecke( db, wbRows, submon );
+
+            // Adressen für importierte Waldbesitzer
+            submon = new SubMonitor( monitor, 3 );
             new MdbEntityImporter<Kontakt>( uow, Kontakt.class ) {
                 @Override
-                public String buildId( Row row ) {
-                    return null;
-                }
-                @Override
                 public Kontakt createEntity( final Map row, String id ) {
-                    String wbId = row.get( "ID_WBS" ).toString();
-                    Waldbesitzer wb = uow.entity( Waldbesitzer.class, "Waldbesitzer."+wbId );
-                    return wb.kontakte.createElement( new ValueInitializer<Kontakt>() {
-                        @Override
-                        public Kontakt initialize( Kontakt proto ) throws Exception {
-                            return fill( proto, row );
-                        }
-                    });
+                    String wbId = "Waldbesitzer." + row.get( "ID_WBS" ).toString();
+                    Waldbesitzer wb = uow.entity( Waldbesitzer.class, wbId );
+                    return wb != null && wb.status().equals( EntityStatus.CREATED )
+                        ? wb.kontakte.createElement( (Kontakt proto) -> {adrImportCount++; return fill( proto, row );} )
+                        : null;
                 }
-            }.importTable( db, monitor );
-
-
-            final MdbGemarkungen gmkHelper = new MdbGemarkungen();
-            
-            // Flurstücke
-            new MdbEntityImporter<Flurstueck>( uow, Flurstueck.class ) {
-                @Override
-                public String buildId( Row row ) {
-                    String id = row.get( "ID_FL" ).toString();
-                    return "Flurstueck." + id;                  
-                }
-                @Override
-                public Flurstueck createEntity( final Map row, String id ) {
-                    String wbId = row.get( "ID_WBS" ).toString();
-                    Waldbesitzer wb = uow.entity( Waldbesitzer.class, "Waldbesitzer."+wbId );
-                    return wb.flurstuecke.createElement( new ValueInitializer<Flurstueck>() {
-                        @Override
-                        public Flurstueck initialize( Flurstueck proto ) throws Exception {
-                            fill( proto, row );
-                            proto.zaehlerNenner.set( whitespace.matcher( proto.zaehlerNenner.get() ).replaceAll( "" ) );
-                            
-                            String gemeindeId = row.get( "FL_Gemeinde" ).toString();
-                            String gemarkungId = row.get( "FL_Gemarkung" ).toString();
-
-                            String gmkschl = gmkHelper.gmkschl( gemeindeId, gemarkungId );
-                            if (gmkschl == null) {
-                                log.warn( "Keine Gemarkung für: " + gemeindeId + " / " + gemarkungId );
-                                return proto;
-                            }
-                            
-                            Gemarkung gemarkung = uow.entity( Gemarkung.class, gmkschl );
-                            proto.gemarkung.set( gemarkung );
-                            return proto;
-                        }
-                    });
-                }
-            }.importTable( db, monitor );
+            }.importTable( db, submon );
+            log.info( revier + ": Adressen: " + adrImportCount );
 
             monitor.done();
         }
-        finally {
-            if (db != null) { db.close(); }
-        }
+    }
+    
+    
+    protected void importFlurstuecke( Database db, Map<String,Row> wbRows, IProgressMonitor monitor ) throws IOException {
+        GmkImporter gmkHelper = new GmkImporter();
+        new MdbEntityImporter<Flurstueck>( uow, Flurstueck.class ) {
+            @Override
+            public Flurstueck createEntity( final Map row, String id ) {
+                // Gemarkung finden
+                String gemeindeId = String.valueOf( row.get( "FL_Gemeinde" ) );
+                String gemarkungId = String.valueOf( row.get( "FL_Gemarkung" ) );
+
+                String gmkschl = gmkHelper.gmkschl( gemeindeId, gemarkungId );
+                Gemarkung gmk = gmkschl != null ? uow.entity( Gemarkung.class, gmkschl ) : null;
+                
+                // Revier prüfen
+                if (gmk != null && !gmk.revier.get().equals( revier )) {
+                    return null;
+                }
+
+                // Flurstück trotzdem anlegen
+                if (gmk == null) {
+                    log.warn( "Keine Gemarkung für: " + gemeindeId + " / " + gemarkungId );
+                }
+
+                // Waldbesitzer
+                String wbId = "Waldbesitzer." + row.get( "ID_WBS" );
+                Row wbRow = wbRows.get( wbId );
+                if (wbRow == null) {
+                    log.warn( "Flurstück ohne ID_WBS: " + row );
+                    return null;
+                }
+                Waldbesitzer wb = importWaldbesitzer( wbId, wbRow );
+
+                // ohne Gmk gibt es keine Revierzuordnung und wir könnten ein Flst
+                // mehrfach importieren
+                Integer wkvId = (Integer)row.get( "ID_FL" );
+                if (wb.flurstuecke.stream().filter( fst -> Objects.equals( fst.wvkId.get(), wkvId ) ).findAny().isPresent()) {
+                    log.warn( "Flurstück ohne Gmk bereits importiert: " + row );                    
+                    return null;
+                }
+                
+                return wb.flurstuecke.createElement( (Flurstueck proto) -> {
+                    fill( proto, row );
+
+                    proto.wvkGemarkung.set( gmks.get( gemarkungId ) );
+                    proto.wvkGemeinde.set( gmds.get( gemeindeId ) );
+                    
+                    proto.gemarkung.set( gmk );
+                    proto.zaehlerNenner.set( whitespace.matcher( proto.zaehlerNenner.get() ).replaceAll( "" ) );                            
+                    flstImportCount++;
+                    return proto;
+                });
+            }
+        }.importTable( db, monitor );
+        
+        log.info( revier + ": Waldbesitzer: " + wbImportCount + ", Flurstücke: " + flstImportCount );
     }
 
+    
+    protected Waldbesitzer importWaldbesitzer( String id, Row row ) {
+        Waldbesitzer wb = uow.entity( Waldbesitzer.class, id );
+        if (wb == null) {
+            wb = uow.createEntity( Waldbesitzer.class, id, (Waldbesitzer proto) -> {
+                MdbEntityImporter<Waldbesitzer> wbImporter = new MdbEntityImporter( uow, Waldbesitzer.class );
+                wbImporter.fill( proto, row );
 
+                String ea = (String)row.get( "WBS_EA" );
+                switch (ea != null ? ea : "null") {
+                    case "P": proto.eigentumsArt.set( Waldeigentumsart.Privat ); break;
+                    case "K42": proto.eigentumsArt.set( Waldeigentumsart.Kirche42 ); break;
+                    case "K43": proto.eigentumsArt.set( Waldeigentumsart.Kirche43 ); break;
+                    case "C": proto.eigentumsArt.set( Waldeigentumsart.Körperschaft_Kommune ); break;
+                    case "T": proto.eigentumsArt.set( Waldeigentumsart.BVVG ); break;
+                    case "B": proto.eigentumsArt.set( Waldeigentumsart.Staat_Bund ); break;
+                    case "A": proto.eigentumsArt.set( Waldeigentumsart.Körperschaft_ZVB ); break;
+                    case "L": proto.eigentumsArt.set( Waldeigentumsart.Staat_Sachsen ); break;
+                    default : {
+                        log.warn( "Unbekannte Eigentumsart: " + ea );
+                        proto.eigentumsArt.set( Waldeigentumsart.Unbekannt );
+                        break;
+                    }
+                }
+                wbImportCount++;
+                return proto;
+            });
+        }
+        return wb;
+    }
+
+    
     @Override
     public IStatus redo( IProgressMonitor monitor, IAdaptable info ) throws ExecutionException {
         throw new RuntimeException( "not yet implemented." );

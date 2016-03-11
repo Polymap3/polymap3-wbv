@@ -77,6 +77,43 @@ public class Flurstueck
     // instance *******************************************
     
     /**
+     * Der importierte Primärschlüssel. War nur gültig innerhalb der WKV-Datenbank.
+     */
+    @Nullable
+    @ImportColumn("ID_FL")
+    public Property<Integer>            wvkId;
+    
+//    /**
+//     * Der importierte Gemeindeschlüssel. War nur gültig innerhalb der WKV-Datenbank.
+//     * Manche Gemarkungen können aber nicht zugeordnet werden, deshalb wird dieser
+//     * Schlüssel gespeichert.
+//     */
+//    @Nullable
+//    @ImportColumn("FL_Gemeinde")
+//    public Property<Integer>            wvkGemeindeSchluessel;
+//    
+//    /**
+//     * Der importierte Gemarkungsschlüssel. War nur gültig innerhalb der WKV-Datenbank.
+//     * Manche Gemarkungen können aber nicht zugeordnet werden, deshalb wird dieser
+//     * Schlüssel gespeichert.
+//     */
+//    @Nullable
+//    @ImportColumn("FL_Gemarkung")
+//    public Property<Integer>            wvkGemarkungSchluessel;
+    
+    /**
+     * Der importierte Gemarkungsname. Siehe {@link #wvkGemarkungSchluessel}.
+     */
+    @Nullable
+    public Property<String>             wvkGemarkung;
+    
+    /**
+     * Der importierte Gemeindename. Siehe {@link #wvkGemeindeSchluessel}.
+     */
+    @Nullable
+    public Property<String>             wvkGemeinde;
+    
+    /**
      * {@link CompositeCollection#remove(Object)} ist noch nicht implementiert.
      */
     @Queryable
