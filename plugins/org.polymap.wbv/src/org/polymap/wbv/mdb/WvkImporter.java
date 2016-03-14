@@ -233,8 +233,8 @@ public class WvkImporter
                 return wb.flurstuecke.createElement( (Flurstueck proto) -> {
                     fill( proto, row );
 
-                    proto.wvkGemarkung.set( gmks.get( gemarkungId ) );
-                    proto.wvkGemeinde.set( gmds.get( gemeindeId ) );
+//                    proto.wvkGemarkung.set( gmks.get( gemarkungId ) );
+//                    proto.wvkGemeinde.set( gmds.get( gemeindeId ) );
                     
                     proto.gemarkung.set( gmk );
                     proto.zaehlerNenner.set( whitespace.matcher( proto.zaehlerNenner.get() ).replaceAll( "" ) );                            

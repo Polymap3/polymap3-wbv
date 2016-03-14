@@ -143,14 +143,16 @@ public class WaldbesitzerPanel
 
     @Override
     public boolean beforeDispose() {
-        if (!ignoreDirty && statusAdapter.highestSeverity() != Status.OK_STATUS) {
-            tk().createSnackbar( Appearance.FadeIn, "Es gibt ungespeicherte Änderungen", new ActionItem( null )
-                    .action.put( ev -> {
-                        ignoreDirty = true;
-                        getContext().closePanel( site().path() );
-                    })
-                    .text.put( "Verwerfen" ) );
-            return false;
+        if (statusAdapter != null) {
+            if (!ignoreDirty && statusAdapter.highestSeverity() != Status.OK_STATUS) {
+                tk().createSnackbar( Appearance.FadeIn, "Es gibt ungespeicherte Änderungen", new ActionItem( null )
+                        .action.put( ev -> {
+                            ignoreDirty = true;
+                            getContext().closePanel( site().path() );
+                        })
+                        .text.put( "Verwerfen" ) );
+                return false;
+            }
         }
         return true;
     }

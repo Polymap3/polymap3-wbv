@@ -263,6 +263,7 @@ public class AdminPanel
                     for (Gemarkung gmk : uow.query( Gemarkung.class ).execute()) {
                         uow.removeEntity( gmk );
                     }
+                    uow.commit();
 
                     // neue importieren
                     int count = 0;

@@ -24,7 +24,6 @@ import org.osgi.service.http.NamespaceException;
 import org.osgi.util.tracker.ServiceTracker;
 
 import org.eclipse.ui.plugin.AbstractUIPlugin;
-
 import org.polymap.core.runtime.Closer;
 import org.polymap.core.runtime.session.DefaultSessionContextProvider;
 import org.polymap.core.runtime.session.SessionContext;

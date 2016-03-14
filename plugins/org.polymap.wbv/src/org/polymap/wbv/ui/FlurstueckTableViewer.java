@@ -242,7 +242,8 @@ public class FlurstueckTableViewer
                             return gmk;
                         }
                         else {
-                            String result = gmk != null ? gmk.label() : "(kein Gemarkung)";
+                            //Flurstueck flst = FeatureTableElement.entity( site.element() );
+                            String result = gmk != null ? gmk.label() : "-keine Gemarkung-"; //"WVK: " + flst.wvkGemarkung.get() + "/" + flst.wvkGemeinde.get();
                             return StringUtils.abbreviate( result, 30 );
                         }
                     }
