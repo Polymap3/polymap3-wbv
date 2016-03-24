@@ -3,11 +3,15 @@
 
 <product name="WBV" uid="org.polymap.wbv.product" application="org.polymap.wbv.app" useFeatures="false" includeLaunchers="false">
 
+
    <configIni use="">
    </configIni>
 
    <launcherArgs>
    </launcherArgs>
+
+   <windowImages/>
+
 
    <launcher>
       <solaris/>
@@ -15,6 +19,7 @@
          <bmp/>
       </win>
    </launcher>
+
 
    <vm>
    </vm>
@@ -91,7 +96,18 @@
       <plugin id="org.eclipse.equinox.http.registry" autoStart="true" startLevel="4" />
       <plugin id="org.eclipse.rap.rwt.osgi" autoStart="true" startLevel="5" />
       <plugin id="org.polymap.wbv" autoStart="true" startLevel="5" />
+      <property name="eclipse.ignoreApp" value="true" />
       <property name="org.eclipse.equinox.http.jetty.context.sessioninactiveinterval" value="7200" />
+      <property name="org.eclipse.rap.workbenchAutostart" value="true" />
+      <property name="osgi.classloader.singleThreadLoads" value="false" />
+      <property name="osgi.noShutdown" value="true" />
    </configurations>
+
+   <preferencesInfo>
+      <targetfile overwrite="false"/>
+   </preferencesInfo>
+
+   <cssInfo>
+   </cssInfo>
 
 </product>
