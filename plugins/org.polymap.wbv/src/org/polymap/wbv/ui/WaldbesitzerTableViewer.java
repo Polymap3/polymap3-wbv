@@ -132,9 +132,9 @@ public class WaldbesitzerTableViewer
 
     
     /**
-    *
-    */
-   class NameColumn
+     *
+     */
+    class NameColumn
            extends DefaultFeatureTableColumn {
 
        public NameColumn() {
@@ -208,7 +208,7 @@ public class WaldbesitzerTableViewer
                    Set<String> names = new TreeSet();
                    for (Flurstueck flurstueck : wb.flurstuecke( revier.get() )) {
                        Gemarkung gemarkung = flurstueck.gemarkung.get();
-                       names.add( gemarkung != null ? gemarkung.gemeinde.get() : "" );    
+                       names.add( gemarkung != null ? gemarkung.gemarkung.get() : "" );    
                    }
                    return StringUtils.abbreviate( Joiner.on( ", " ).join( names ), 30 );
                }
@@ -218,9 +218,7 @@ public class WaldbesitzerTableViewer
                    Set<String> names = new TreeSet();
                    for (Flurstueck flurstueck : wb.flurstuecke( revier.get() )) {
                        Gemarkung gemarkung = flurstueck.gemarkung.get();
-                       String name = gemarkung != null
-                               ? gemarkung.gemeinde.get() + "/" + gemarkung.gemarkung.get()
-                               : "";
+                       String name = gemarkung != null ? gemarkung.label() : "";
                        names.add( name );    
                    }
                    StringBuilder result = new StringBuilder( 1024 );
