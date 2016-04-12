@@ -17,8 +17,10 @@ package org.polymap.wbv.mdb;
 import static org.polymap.wbv.model.fulltext.WaldbesitzerFulltextTransformer.whitespace;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -47,7 +49,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.rap.rwt.client.ClientFile;
 
 import org.polymap.core.runtime.SubMonitor;
-import org.polymap.model2.runtime.EntityRuntimeContext.EntityStatus;
+
 import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
@@ -86,6 +88,10 @@ public class WvkImporter
     private int                 flstImportCount = 0;
     
     private int                 adrImportCount = 0;
+
+    private Map<String,Row>     wbRows = new HashMap( 5000 );
+    
+    private Set<String>         wbIds = new HashSet( 5000 );
     
 
     public WvkImporter( UnitOfWork uow, ClientFile clientFile, InputStream in ) {
@@ -158,40 +164,54 @@ public class WvkImporter
             
             // wbRows
             monitor.subTask( "Waldbesitzer lesen" );
-            final MdbEntityImporter<Waldbesitzer> wbImporter = new MdbEntityImporter( uow, Waldbesitzer.class );
-            table = db.getTable( wbImporter.getTableName() );
-            Map<String,Row> wbRows = new HashMap( table.getRowCount() * 2 );
+            table = db.getTable( new MdbEntityImporter( uow, Waldbesitzer.class ).getTableName() );
             for (Row row=table.getNextRow(); row != null && !monitor.isCanceled(); row=table.getNextRow()) {
-                String id = row.get( "ID_WBS" ).toString();
-                wbRows.put( "Waldbesitzer."+id, row );
+                wbRows.put( wbId( row, true ), row );
             }
             monitor.worked( 1 );
             log.info( revier + ": " + wbRows.size() + " Waldbesitzer-Rows gelesen." );
 
-            // Flurstuecke und Waldbesitzer
+            // Flurstuecke -> Waldbesitzer
             SubMonitor submon = new SubMonitor( monitor, 4 );
-            importFlurstuecke( db, wbRows, submon );
+            importFlurstuecke( db, submon );
 
             // Adressen für importierte Waldbesitzer
-            submon = new SubMonitor( monitor, 3 );
             new MdbEntityImporter<Kontakt>( uow, Kontakt.class ) {
                 @Override
                 public Kontakt createEntity( final Map row, String id ) {
-                    String wbId = "Waldbesitzer." + row.get( "ID_WBS" ).toString();
-                    Waldbesitzer wb = uow.entity( Waldbesitzer.class, wbId );
-                    return wb != null && wb.status().equals( EntityStatus.CREATED )
-                        ? wb.kontakte.createElement( (Kontakt proto) -> {adrImportCount++; return fill( proto, row );} )
-                        : null;
+                    Waldbesitzer wb = uow.entity( Waldbesitzer.class, wbId( row, true ) );
+                    if (wb != null && wbIds.contains( wb.id() )/*wb.status().equals( EntityStatus.CREATED )*/) {
+                        return wb.kontakte.createElement( (Kontakt proto) -> {
+                            adrImportCount++; 
+                            return fill( proto, row );
+                        });
+                    }
+                    return null;
                 }
             }.importTable( db, submon );
-            log.info( revier + ": Adressen: " + adrImportCount );
+            log.info( revier + ": Kontakte: " + adrImportCount );
 
             monitor.done();
         }
     }
+
+    
+    protected String wbId( Map<String,Object> row, boolean excOnFail ) {
+        Object id = row.get( "ID_WBS" );
+        if (id == null && excOnFail) {
+            throw new IllegalStateException( "Row has no ID_WBS: " + row );
+        }
+        else if (id == null) {
+            log.info( "Row has no ID_WBS: " + row );
+            return null;
+        }
+        else {
+            return "Waldbesitzer." + id.toString();
+        }
+    }
     
     
-    protected void importFlurstuecke( Database db, Map<String,Row> wbRows, IProgressMonitor monitor ) throws IOException {
+    protected void importFlurstuecke( Database db, IProgressMonitor monitor ) throws IOException {
         GmkImporter gmkHelper = new GmkImporter();
         new MdbEntityImporter<Flurstueck>( uow, Flurstueck.class ) {
             @Override
@@ -214,13 +234,12 @@ public class WvkImporter
                 }
 
                 // Waldbesitzer
-                String wbId = "Waldbesitzer." + row.get( "ID_WBS" );
-                Row wbRow = wbRows.get( wbId );
+                Row wbRow = wbRows.get( wbId( row, false ) );
                 if (wbRow == null) {
                     log.warn( "Flurstück ohne ID_WBS: " + row );
                     return null;
                 }
-                Waldbesitzer wb = importWaldbesitzer( wbId, wbRow );
+                Waldbesitzer wb = importWaldbesitzer( wbId( row, true ), wbRow );
 
                 // ohne Gmk gibt es keine Revierzuordnung und wir könnten ein Flst
                 // mehrfach importieren
@@ -232,9 +251,6 @@ public class WvkImporter
                 
                 return wb.flurstuecke.createElement( (Flurstueck proto) -> {
                     fill( proto, row );
-
-//                    proto.wvkGemarkung.set( gmks.get( gemarkungId ) );
-//                    proto.wvkGemeinde.set( gmds.get( gemeindeId ) );
                     
                     proto.gemarkung.set( gmk );
                     proto.zaehlerNenner.set( whitespace.matcher( proto.zaehlerNenner.get() ).replaceAll( "" ) );                            
@@ -251,6 +267,7 @@ public class WvkImporter
     protected Waldbesitzer importWaldbesitzer( String id, Row row ) {
         Waldbesitzer wb = uow.entity( Waldbesitzer.class, id );
         if (wb == null) {
+            // create new
             wb = uow.createEntity( Waldbesitzer.class, id, (Waldbesitzer proto) -> {
                 MdbEntityImporter<Waldbesitzer> wbImporter = new MdbEntityImporter( uow, Waldbesitzer.class );
                 wbImporter.fill( proto, row );
@@ -274,6 +291,10 @@ public class WvkImporter
                 wbImportCount++;
                 return proto;
             });
+            wbIds.add( (String)wb.id() );
+        }
+        else {
+            // XXX check existing
         }
         return wb;
     }
