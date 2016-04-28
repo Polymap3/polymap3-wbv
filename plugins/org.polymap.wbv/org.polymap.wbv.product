@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="WBV" uid="org.polymap.wbv.product" application="org.polymap.wbv.app" useFeatures="false" includeLaunchers="false">
-
+<product name="WBV" uid="org.polymap.wbv.product" application="org.polymap.wbv.app" useFeatures="false" includeLaunchers="true">
 
    <configIni use="">
    </configIni>
@@ -12,14 +11,12 @@
 
    <windowImages/>
 
-
    <launcher>
       <solaris/>
       <win useIco="false">
          <bmp/>
       </win>
    </launcher>
-
 
    <vm>
    </vm>

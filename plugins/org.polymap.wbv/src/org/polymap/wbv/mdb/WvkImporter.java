@@ -33,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.google.common.base.Joiner;
 import com.healthmarketscience.jackcess.Database;
 import com.healthmarketscience.jackcess.DatabaseBuilder;
 import com.healthmarketscience.jackcess.Row;
@@ -91,6 +92,7 @@ public class WvkImporter
 
     private Map<String,Row>     wbRows = new HashMap( 5000 );
     
+    /** Die tatsächlich importierten {@link Waldbesitzer#id()}s. */
     private Set<String>         wbIds = new HashSet( 5000 );
     
 
@@ -206,7 +208,7 @@ public class WvkImporter
             return null;
         }
         else {
-            return "Waldbesitzer." + id.toString();
+            return Joiner.on( "." ).join( "Waldbesitzer", revier, id.toString() );
         }
     }
     
@@ -252,6 +254,12 @@ public class WvkImporter
                 return wb.flurstuecke.createElement( (Flurstueck proto) -> {
                     fill( proto, row );
                     
+//                    if ("Waldfeststellung von Stefan Naumann 2009: 1,05ha".equals( proto.bemerkung.get() )) {
+//                        log.info( "row: " + row );
+//                        log.info( "" + proto );
+//                        log.info( "wbId: " + wbId( row, true ) );
+//                    }
+                    
                     proto.gemarkung.set( gmk );
                     proto.zaehlerNenner.set( whitespace.matcher( proto.zaehlerNenner.get() ).replaceAll( "" ) );                            
                     flstImportCount++;
@@ -265,6 +273,9 @@ public class WvkImporter
 
     
     protected Waldbesitzer importWaldbesitzer( String id, Row row ) {
+//        if (id.equals( "Waldbesitzer.77719" )) {
+//            log.info( "row: " + row );
+//        }
         Waldbesitzer wb = uow.entity( Waldbesitzer.class, id );
         if (wb == null) {
             // create new
@@ -291,7 +302,9 @@ public class WvkImporter
                 wbImportCount++;
                 return proto;
             });
-            wbIds.add( (String)wb.id() );
+            if (!wbIds.add( (String)wb.id() )) {
+                throw new RuntimeException( "" );
+            }
         }
         else {
             // XXX check existing
