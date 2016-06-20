@@ -14,6 +14,7 @@
  */
 package org.polymap.wbv.model.fulltext;
 
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
@@ -42,6 +43,13 @@ public class WaldbesitzerFulltextTransformer
     public static final Pattern         whitespace = Pattern.compile( "\\s" );
     
     
+    public WaldbesitzerFulltextTransformer() {
+        super();
+        locale.set( Locale.GERMAN );
+        honorQueryableAnnotation.set( true );
+    }
+
+
     @Override
     protected void visitProperty( Property prop ) {        
         Object value = prop.get();

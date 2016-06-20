@@ -87,7 +87,6 @@ public class AdminPanel
             site().title.set( "" );
             site().tooltip.set( "Administration und Import" );
             site().icon.set( BatikPlugin.images().svgImage( "settings.svg", SvgImageRegistryHelper.WHITE24 ) );
-            site().preferredWidth.set( 600 );
             return true;
         }
         return false;
@@ -96,6 +95,7 @@ public class AdminPanel
 
     @Override
     public void createContents( Composite parent ) {
+        site().preferredWidth.set( 600 );
         if ((!SecurityContext.instance().isLoggedIn() || !SecurityUtils.isAdmin())
                 && !"falko".equals( System.getProperty( "user.name" ))) {
             site().toolkit().createFlowText( parent, "Dieser Bereich ist nur für **Administratoren** zugänglich." );

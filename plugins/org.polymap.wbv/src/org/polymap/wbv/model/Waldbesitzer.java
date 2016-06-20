@@ -27,6 +27,7 @@ import org.polymap.model2.Property;
 import org.polymap.model2.Queryable;
 import org.polymap.model2.query.Expressions;
 import org.polymap.model2.query.Query;
+import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.wbv.mdb.ImportColumn;
 import org.polymap.wbv.mdb.ImportTable;
 
@@ -41,6 +42,15 @@ public class Waldbesitzer
         extends Entity {
     
     public static Waldbesitzer          TYPE;
+    
+    public static final ValueInitializer<Waldbesitzer> defaults = (Waldbesitzer proto) -> {
+        proto.eigentumsArt.set( Waldeigentumsart.Privat );
+        proto.kontakte.createElement( Kontakt.defaults );
+        // damit die sch** tabelle den ersten Eintrag zeigt
+       // proto.flurstuecke.createElement( Flurstueck.defaults );
+        return proto;
+    };
+    
     
 //    0|ID_WBS                         (LONG 4)                  
 //    1|WBS_Name                       (TEXT 100)                

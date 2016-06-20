@@ -118,8 +118,8 @@ public class StartPanel
     
     @Override
     public void createContents( Composite parent ) {
-        getSite().setTitle( "Login" );
-        getSite().setPreferredWidth( 500 ); // table viewer
+        site().title.set( "Login" );
+        site().setSize( 400, 500, 700 );
         createLoginContents( parent );
 //        createMainContents( parent );
     }

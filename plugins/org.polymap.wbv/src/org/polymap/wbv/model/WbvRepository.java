@@ -98,13 +98,13 @@ public class WbvRepository {
             log.info( "Maximale Anzahl Lucene-Klauseln erhöht auf: " + BooleanQuery.getMaxClauseCount() );
             
             // init fulltext
+            @SuppressWarnings( "deprecation" )
             File wbvDir = new File( Polymap.getDataDir(), WbvPlugin.ID );
             fulltextIndex = new LuceneFulltextIndex( new File( wbvDir, "fulltext" ) );
             fulltextIndex.setTokenizer( new WbvTokenizer() );
             fulltextIndex.addTokenFilter( new LowerCaseTokenFilter() );
             
             WaldbesitzerFulltextTransformer wbTransformer = new WaldbesitzerFulltextTransformer();
-            wbTransformer.setHonorQueryableAnnotation( true );
 
 //            // find DataStore from service
 //            DataAccess ds = service.resolve( DataAccess.class, new NullProgressMonitor() );
@@ -112,6 +112,7 @@ public class WbvRepository {
 //                throw new RuntimeException( "Kein DataStore für Service: " + service );
 //            }
             // create repo
+            @SuppressWarnings( "deprecation" )
             IRecordStore store = LuceneRecordStore.newConfiguration()
                     .indexDir.put( new File( Polymap.getDataDir(), "recordstore/WBV" ) )
                     .create();

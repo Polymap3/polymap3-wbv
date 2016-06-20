@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014, Polymap GmbH. All rights reserved.
+ * Copyright (C) 2014-2016, Polymap GmbH. All rights reserved.
  * 
  * This is free software; you can redistribute it and/or modify it under the terms of
  * the GNU Lesser General Public License as published by the Free Software
@@ -49,7 +49,6 @@ import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.model2.runtime.EntityRuntimeContext.EntityStatus;
 
-import org.polymap.core.runtime.event.EventHandler;
 import org.polymap.core.security.SecurityContext;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.core.ui.FormDataFactory;
@@ -58,8 +57,6 @@ import org.polymap.core.ui.StatusDispatcher;
 
 import org.polymap.rhei.batik.BatikPlugin;
 import org.polymap.rhei.batik.Context;
-import org.polymap.rhei.batik.IPanelSite.PanelStatus;
-import org.polymap.rhei.batik.PanelChangeEvent;
 import org.polymap.rhei.batik.PanelChangeEvent.EventType;
 import org.polymap.rhei.batik.PanelIdentifier;
 import org.polymap.rhei.batik.app.MultiStatusManager;
@@ -129,15 +126,25 @@ public class WaldbesitzerPanel
     @Override
     public void init() {
         super.init();
-        site().preferredWidth.set( 600 );
+        site().setSize( 550, 700, 700 );
  
         assert !uow.isPresent();
         uow.set( WbvRepository.unitOfWork().newUnitOfWork() );
+
+        if (!selected.isPresent()) {
+            wb = uow.get().createEntity( Waldbesitzer.class, null, Waldbesitzer.defaults );
+        }
+        else {
+            wb = uow.get().entity( selected.get() );
+        }
+        // make sure that this panel (and subsequent panels) are working with
+        // entity of our uow()
+        selected.set( wb );
                 
-        getContext().addListener( this, ev -> 
-                ev.getPanel() == WaldbesitzerPanel.this && 
-                ev.getType() == EventType.LIFECYCLE /*&&
-                ev.getPanel().site().panelStatus() == PanelStatus.FOCUSED*/ );
+//        getContext().addListener( this, ev -> 
+//                ev.getPanel() == WaldbesitzerPanel.this && 
+//                ev.getType() == EventType.LIFECYCLE /*&&
+//                ev.getPanel().site().panelStatus() == PanelStatus.FOCUSED*/ );
     }
 
 
@@ -176,34 +183,34 @@ public class WaldbesitzerPanel
     }
 
     
-    @EventHandler( display=true )
-    public void activating( PanelChangeEvent ev ) {
-        log.debug( "panelStatus: " + ev.getPanel().site().panelStatus() );
-        if (ev.getPanel().site().panelStatus() == PanelStatus.FOCUSED) {
-            log.debug( "activating()..." );
-
-            // create new
-            if (selected.get() == null) {
-                wb = uow.get().createEntity( Waldbesitzer.class, null, new ValueInitializer<Waldbesitzer>() {
-                    @Override
-                    public Waldbesitzer initialize( Waldbesitzer prototype ) throws Exception {
-                        prototype.eigentumsArt.set( Waldeigentumsart.Privat );
-                        prototype.kontakte.createElement( Kontakt.defaults );
-                        // damit die sch** tabelle den ersten Eintrag zeigt
-                        prototype.flurstuecke.createElement( Flurstueck.defaults );
-                        return prototype;
-                    }
-                });
-            }
-            // re-fetch
-            else {
-                wb = uow.get().entity( selected.get() );
-            }
-            // make sure that this panel (and subsequent panels) are working with
-            // entity of our uow()
-            selected.set( wb );
-        }
-    }
+//    @EventHandler( display=true )
+//    public void activating( PanelChangeEvent ev ) {
+//        log.debug( "panelStatus: " + ev.getPanel().site().panelStatus() );
+//        if (ev.getPanel().site().panelStatus() == PanelStatus.FOCUSED) {
+//            log.debug( "activating()..." );
+//
+//            // create new
+//            if (selected.get() == null) {
+//                wb = uow.get().createEntity( Waldbesitzer.class, null, new ValueInitializer<Waldbesitzer>() {
+//                    @Override
+//                    public Waldbesitzer initialize( Waldbesitzer prototype ) throws Exception {
+//                        prototype.eigentumsArt.set( Waldeigentumsart.Privat );
+//                        prototype.kontakte.createElement( Kontakt.defaults );
+//                        // damit die sch** tabelle den ersten Eintrag zeigt
+//                        prototype.flurstuecke.createElement( Flurstueck.defaults );
+//                        return prototype;
+//                    }
+//                });
+//            }
+//            // re-fetch
+//            else {
+//                wb = uow.get().entity( selected.get() );
+//            }
+//            // make sure that this panel (and subsequent panels) are working with
+//            // entity of our uow()
+//            selected.set( wb );
+//        }
+//    }
 
     
     protected void submit() {
