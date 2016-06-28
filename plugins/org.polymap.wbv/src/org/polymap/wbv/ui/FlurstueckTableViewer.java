@@ -307,44 +307,44 @@ public class FlurstueckTableViewer
             bcolumn.setWeight( 11, 120 );
             bcolumn.setLabelsAndValidation( new AenderungValidator() );
             bcolumn.setEditing( new CellEditor() {
-                    private String  value;
-                    private Text    txt;
-                    @Override
-                    protected Control createControl( Composite _parent ) {
-                        return null;
-                    }
-                    @Override
-                    protected void doSetFocus() {
-                    }
-                    @Override
-                    protected Object doGetValue() {
-                        return value;
-                    }
-                    @Override
-                    protected void doSetValue( Object newValue ) {
-                        this.value = (String)newValue;
-                    }
-                    @Override
-                    public void activate() {
-                        Shell appShell = BatikApplication.shellToParentOn();
-                        new SimpleDialog().centerOn.put( appShell ).title.put( "Bemerkung" )
-                                .setContents( dialogParent -> {
-                                    dialogParent.setLayout( FormLayoutFactory.defaults().create() );
-                                    txt = on( new Text( dialogParent, SWT.MULTI | SWT.WRAP | SWT.BORDER ) )
-                                            .fill().width( 350 ).height( 150 ).control();
-                                    txt.setText( value != null ? value : "" );
-                                    txt.setFocus();
-                                })
-                                .addOkAction( () -> {
-                                    value = txt.getText();
-                                    fireApplyEditorValue();
-                                    EventManager.instance().publish( new PropertyChangeEvent( bcolumn, "bemerkung", value, null ) );
-                                    return null;
-                                })
-                                .addCancelAction()
-                                .open();
-                    }
-                });
+                private String  value;
+                private Text    txt;
+                @Override
+                protected Control createControl( Composite _parent ) {
+                    return null;
+                }
+                @Override
+                protected void doSetFocus() {
+                }
+                @Override
+                protected Object doGetValue() {
+                    return value;
+                }
+                @Override
+                protected void doSetValue( Object newValue ) {
+                    this.value = (String)newValue;
+                }
+                @Override
+                public void activate() {
+                    Shell appShell = BatikApplication.shellToParentOn();
+                    new SimpleDialog().centerOn.put( appShell ).title.put( "Bemerkung" )
+                            .setContents( dialogParent -> {
+                                dialogParent.setLayout( FormLayoutFactory.defaults().create() );
+                                txt = on( new Text( dialogParent, SWT.MULTI | SWT.WRAP | SWT.BORDER ) )
+                                        .fill().width( 350 ).height( 150 ).control();
+                                txt.setText( value != null ? value : "" );
+                                txt.setFocus();
+                            })
+                            .addOkAction( "ÜBERNEHMEN", () -> {
+                                value = txt.getText();
+                                fireApplyEditorValue();
+                                EventManager.instance().publish( new PropertyChangeEvent( bcolumn, "bemerkung", value, null ) );
+                                return null;
+                            })
+                            .addCancelAction( "ABBRECHEN" )
+                            .open();
+                }
+            });
             addColumn( bcolumn );
 
             // suppress deferred loading to fix "empty table" issue
