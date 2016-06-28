@@ -169,8 +169,8 @@ public class EigentumsuebergangPanel
                 viewer.setInput( results );
             }
         };
-        search.searchOnEnter.set( false );
-        search.getText().setText( "Hedwig" );
+//        search.searchOnEnter.set( false );
+//        search.getText().setText( "Hedwig" );
         
         search.searchOnEnter.set( true );
         search.getText().setFocus();
