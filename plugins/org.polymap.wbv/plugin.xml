@@ -13,9 +13,10 @@
    <extension
          point="org.eclipse.rap.ui.branding">
       <branding
+            favicon="icons/favicon.png"
             id="org.polymap.wbv.branding"
             themeId="org.polymap.rhei.batik.materialDesign"
-            title="WBV">
+            title="WAVE">
          <additionalHeaders>
             <link
                   href="batikres/css/roboto.css"
