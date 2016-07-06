@@ -116,7 +116,7 @@ public class Flurstueck
 //    public Property<String>             wvkGemeinde;
     
     /**
-     * {@link CompositeCollection#remove(Object)} ist noch nicht implementiert.
+     * XXX {@link CompositeCollection#remove(Object)} ist noch nicht implementiert.
      */
     @Queryable
     @Defaults

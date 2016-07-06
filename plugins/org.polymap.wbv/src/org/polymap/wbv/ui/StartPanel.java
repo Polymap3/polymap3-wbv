@@ -312,7 +312,7 @@ public class StartPanel
 
         if ("falko".equals( System.getProperty( "user.name" ) )) {
             search.searchOnEnter.set( false );
-            search.getText().setText( "Wagenbreth" );
+            search.getText().setText( "Beyer" );
         }
 
         search.searchOnEnter.set( true );

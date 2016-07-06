@@ -228,7 +228,7 @@ public class WbvRepository {
         }
 
         public void commit() throws ModelRuntimeException {
-            synchronized( parent) {
+            synchronized (parent) {
                 try {
                     delegate.commit();
                     parent.commit();

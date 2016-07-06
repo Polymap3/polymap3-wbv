@@ -28,6 +28,7 @@ import org.polymap.rhei.fulltext.model2.EntityFeatureTransformer;
 
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
+import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
 
 /**
@@ -80,6 +81,16 @@ public class WaldbesitzerFulltextTransformer
             for (Object fst : prop) {
                 visitFlurstueck( (Flurstueck)fst );
             }
+            return false;
+        }
+        // Kontakt
+        else if (Kontakt.class.isAssignableFrom( prop.info().getType() )) {
+            for (Object kontakt : prop) {
+                if (!((Kontakt)kontakt).geloescht.get()) {
+                    processComposite( (Kontakt)kontakt );
+                }
+            }
+            return false;
         }
         // default process
         return true;
@@ -87,14 +98,17 @@ public class WaldbesitzerFulltextTransformer
     
     
     protected void visitFlurstueck( Flurstueck fst ) {
-        String zn = fst.zaehlerNenner.get();
-        if (zn != null && zn.length() > 0) {
-            String normalized = whitespace.matcher( zn ).replaceAll( "" );
-            if (!normalized.contains( "/" )) {
-                normalized = normalized + "/";
+        if (!fst.geloescht.get()) {
+            String zn = fst.zaehlerNenner.get();
+            if (zn != null && zn.length() > 0) {
+                String normalized = whitespace.matcher( zn ).replaceAll( "" );
+                if (!normalized.contains( "/" )) {
+                    normalized = normalized + "/";
+                }
+                //log.debug( "zaehlerNenner: " + zn + " -> " + normalized );
+                putValue( "zaehlerNenner", normalized );
             }
-            //log.debug( "zaehlerNenner: " + zn + " -> " + normalized );
-            putValue( "zaehlerNenner", normalized );
+            processComposite( fst );
         }
     }
     
