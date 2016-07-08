@@ -133,7 +133,7 @@ public class WbvRepository {
                             new RecordStoreAdapter( store ) ) ) )
                     .commitLockStrategy.set( () ->
                             // other strategies are not thoroughly tested
-                            new CommitLockStrategy.Ignore() )
+                            new CommitLockStrategy.Serialize() )
                     .create();
         }
         catch (RuntimeException e) {
@@ -241,6 +241,15 @@ public class WbvRepository {
                     
                     nested.commit();
                     parent.commit();
+                }
+                catch (ConcurrentEntityModificationException e) {
+                    log.info( "Commit nested ProjectRepository failed.", e );
+                    // das rollback muss sein, da ansonsten halbe änderungen bleiben können
+                    // es darf dann aber nested auf keinen fall länger verwendet werden, weil
+                    // sonst noch speichern zu einem lost-update führt
+                    nested.close();
+                    parent.rollback();
+                    throw e;
                 }
                 catch (Exception e) {
                     log.info( "Commit nested ProjectRepository failed.", e );

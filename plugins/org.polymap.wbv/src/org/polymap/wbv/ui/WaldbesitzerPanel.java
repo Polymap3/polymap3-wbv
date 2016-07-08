@@ -241,6 +241,7 @@ public class WaldbesitzerPanel
                     new Exception( "Ein anderer Nutzer hat diesen Waldbesitzer ebenfalls geändert."
                             + "<br/>Öffnen Sie den Waldbesitzer erneut, um diese Änderungen zu sehen."
                             + "<br/>Ihre aktuellen Änderungen werden dabei verworfen.") );
+            getContext().closePanel( site().path() );
         }
         catch (Exception e) {
             StatusDispatcher.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );
