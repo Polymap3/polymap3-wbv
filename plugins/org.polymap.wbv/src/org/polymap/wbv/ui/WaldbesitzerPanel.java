@@ -47,6 +47,7 @@ import org.eclipse.core.runtime.Status;
 
 import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.model2.runtime.ValueInitializer;
+import org.polymap.model2.runtime.ConcurrentEntityModificationException;
 import org.polymap.model2.runtime.EntityRuntimeContext.EntityStatus;
 
 import org.polymap.core.security.SecurityContext;
@@ -234,6 +235,12 @@ public class WaldbesitzerPanel
             else {
                 tk().createSnackbar( Appearance.FadeIn, "Änderungen wurden gespeichert" );
             }
+        }
+        catch (ConcurrentEntityModificationException e) {
+            StatusDispatcher.handleError( "Die Änderungen können nicht korrekt gespeichert werden.",
+                    new Exception( "Ein anderer Nutzer hat diesen Waldbesitzer ebenfalls geändert."
+                            + "<br/>Öffnen Sie den Waldbesitzer erneut, um diese Änderungen zu sehen."
+                            + "<br/>Ihre aktuellen Änderungen werden dabei verworfen.") );
         }
         catch (Exception e) {
             StatusDispatcher.handleError( "Änderungen konnten nicht korrekt gespeichert werden.", e );

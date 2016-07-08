@@ -26,6 +26,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.search.BooleanQuery;
 
+import com.google.common.base.Throwables;
+
 import org.polymap.core.runtime.Polymap;
 import org.polymap.core.runtime.session.SessionContext;
 import org.polymap.core.runtime.session.SessionSingleton;
@@ -46,6 +48,7 @@ import org.polymap.model2.runtime.EntityRepository;
 import org.polymap.model2.runtime.ModelRuntimeException;
 import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.model2.runtime.ValueInitializer;
+import org.polymap.model2.runtime.locking.CommitLockStrategy;
 import org.polymap.model2.runtime.locking.OptimisticLocking;
 import org.polymap.model2.store.recordstore.RecordStoreAdapter;
 import org.polymap.recordstore.IRecordStore;
@@ -128,6 +131,9 @@ public class WbvRepository {
                             new OptimisticLocking(
                             new FulltextIndexer( fulltextIndex, new TypeFilter( Waldbesitzer.class ), newArrayList( wbTransformer ),
                             new RecordStoreAdapter( store ) ) ) )
+                    .commitLockStrategy.set( () ->
+                            // other strategies are not thoroughly tested
+                            new CommitLockStrategy.Ignore() )
                     .create();
         }
         catch (RuntimeException e) {
@@ -187,39 +193,39 @@ public class WbvRepository {
             extends SessionSingleton
             implements UnitOfWork {
         
-        private UnitOfWork          delegate;
+        private UnitOfWork          nested;
         
         private UnitOfWork          parent;
 
         /** This is the {@link SessionSingleton} ctor. */
         public UnitOfWorkWrapper() {
-            this.delegate = repo.newUnitOfWork();    
+            this.nested = repo.newUnitOfWork();    
         }
         
         /** This is the ctor fpr nested instances. */
         public UnitOfWorkWrapper( UnitOfWork parent ) {
-            this.delegate = parent.newUnitOfWork();
+            this.nested = parent.newUnitOfWork();
             this.parent = parent;
         }
         
         public <T extends Entity> T entityForState( Class<T> entityClass, Object state ) {
-            return delegate.entityForState( entityClass, state );
+            return nested.entityForState( entityClass, state );
         }
 
         public <T extends Entity> T entity( Class<T> entityClass, Object id ) {
-            return delegate.entity( entityClass, id );
+            return nested.entity( entityClass, id );
         }
 
         public <T extends Entity> T entity( T entity ) {
-            return delegate.entity( entity );
+            return nested.entity( entity );
         }
 
         public <T extends Entity> T createEntity( Class<T> entityClass, Object id, ValueInitializer<T>... initializers ) {
-            return delegate.createEntity( entityClass, id, initializers );
+            return nested.createEntity( entityClass, id, initializers );
         }
 
         public void removeEntity( Entity entity ) {
-            delegate.removeEntity( entity );
+            nested.removeEntity( entity );
         }
 
         public void prepare() throws IOException, ConcurrentEntityModificationException {
@@ -230,34 +236,40 @@ public class WbvRepository {
         public void commit() throws ModelRuntimeException {
             synchronized (parent) {
                 try {
-                    delegate.commit();
+                    nested.prepare();
+                    parent.prepare();
+                    
+                    nested.commit();
                     parent.commit();
                 }
                 catch (Exception e) {
                     log.info( "Commit nested ProjectRepository failed.", e );
-                    parent.rollback();
+                    // do not rollback as this would reset states and subsequent commit
+                    // would work (OptimisticLocking)
+                    //parent.rollback();
+                    Throwables.propagateIfPossible( e, ModelRuntimeException.class );
                 }
             }
         }
 
         public void rollback() throws ModelRuntimeException {
-            delegate.rollback();
+            nested.rollback();
         }
 
         public void close() {
-            delegate.close();
+            nested.close();
         }
 
         public boolean isOpen() {
-            return delegate.isOpen();
+            return nested.isOpen();
         }
 
         public <T extends Entity> Query<T> query( Class<T> entityClass ) {
-            return delegate.query( entityClass );
+            return nested.query( entityClass );
         }
 
         public UnitOfWork newUnitOfWork() {
-            return new UnitOfWorkWrapper( delegate );
+            return new UnitOfWorkWrapper( nested );
         }
     }
 

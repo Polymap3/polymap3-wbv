@@ -150,7 +150,7 @@ class CompositesFeatureContentProvider
                 return (String)((Entity)composite).id();
             }
             else if (composite instanceof Composite) {
-                log.warn( "Using hashCode as fid for Composite: " + composite.getClass().getSimpleName() );
+                log.debug( "Using hashCode as fid for Composite: " + composite.getClass().getSimpleName() );
                 return String.valueOf( composite.hashCode() );
             }
             else {
