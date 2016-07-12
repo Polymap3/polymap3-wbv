@@ -1,6 +1,6 @@
 /* 
  * polymap.org
- * Copyright (C) 2014, Falko Bräutigam. All rights reserved.
+ * Copyright (C) 2014-2016, Falko Bräutigam. All rights reserved.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -14,7 +14,8 @@
  */
 package org.polymap.wbv.ui;
 
-import org.apache.commons.lang3.StringUtils;
+import java.util.regex.Pattern;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -43,9 +44,10 @@ import org.polymap.wbv.model.Kontakt;
  */
 public class KontaktForm
         extends DefaultFormPage {
-        //implements IFormPage2 {
 
     private static Log log = LogFactory.getLog( KontaktForm.class );
+
+    public static final Pattern     PLZ = Pattern.compile( "[-0-9a-zA-Z]*" );
     
     private Kontakt                 kontakt;
     
@@ -53,41 +55,11 @@ public class KontaktForm
     
     private Composite               body;
 
-//    private BatikFormContainer      adresseForm;
-
     
     public KontaktForm( Kontakt kontakt, IPanelSite panelSite ) {
         this.kontakt = kontakt;
         this.panelSite = panelSite;
     }
-
-//    public void addAdresseFieldListener( IFormFieldListener l ) {
-//        adresseForm.addFieldListener( l );
-//    }
-//
-//    @Override
-//    public boolean isDirty() {
-//        return adresseForm.isDirty();
-//    }
-//
-//    @Override
-//    public boolean isValid() {
-//        return adresseForm.isValid();
-//    }
-//
-//    @Override
-//    public void doLoad( IProgressMonitor monitor ) throws Exception {
-//        //throw new RuntimeException( "not yet implemented." );
-//    }
-//
-//    @Override
-//    public void doSubmit( IProgressMonitor monitor ) throws Exception {
-//        adresseForm.submit( monitor );
-//    }
-//
-//    @Override
-//    public void dispose() {
-//    }
 
 
     @Override
@@ -136,12 +108,15 @@ public class KontaktForm
                     public String validate( Object fieldValue ) {
                         String result = super.validate( fieldValue );
                         if (result == null) {
-                            if (((String)fieldValue).length() != 5) {
-                                result = "Postleitzahl muss 5 Stellen haben";
+                            if (((String)fieldValue).length() > 10) {
+                                result = "Postleitzahl darf bis zu 10 Stellen haben";
                             }
-                            else if (!StringUtils.isNumeric( (String)fieldValue )) {
-                                result = "Postleitzahl darf nur Ziffern enthalten";
+                            if (!PLZ.matcher( (String)fieldValue ).matches()) {
+                                result = "Postleitzahl darf nur Ziffern, Buchstaben und Bindestrich enthalten";
                             }
+//                            else if (!StringUtils.isNumeric( (String)fieldValue )) {
+//                                result = "Postleitzahl darf nur Ziffern enthalten";
+//                            }
                         }
                         return result;
                     }
