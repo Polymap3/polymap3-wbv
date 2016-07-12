@@ -19,6 +19,7 @@ import static org.polymap.core.ui.FormDataFactory.on;
 import static org.polymap.model2.query.Expressions.anyOf;
 import static org.polymap.model2.query.Expressions.eq;
 import static org.polymap.model2.query.Expressions.is;
+import static org.polymap.model2.query.Expressions.notEq;
 import static org.polymap.rhei.field.Validators.AND;
 import static org.polymap.wbv.ui.PropertyAdapter.descriptorFor;
 
@@ -431,10 +432,11 @@ public class FlurstueckTableViewer
             }
             else {
                 ResultSet<Waldbesitzer> rs = uow.get().query( Waldbesitzer.class )
-                        // FIXME geloescht beachten!
-                        .where( anyOf( Waldbesitzer.TYPE.flurstuecke, Expressions.and(
-                                is( Flurstueck.TYPE.gemarkung, gmk.get() ),
-                                eq( Flurstueck.TYPE.zaehlerNenner, (String)fieldValue ) ) ) )
+                        .where( anyOf( Waldbesitzer.TYPE.flurstuecke, 
+                                Expressions.and(
+                                        notEq( Flurstueck.TYPE.geloescht, true ),
+                                        is( Flurstueck.TYPE.gemarkung, gmk.get() ),
+                                        eq( Flurstueck.TYPE.zaehlerNenner, (String)fieldValue ) ) ) )
                         .maxResults( 1 )
                         .execute();
                 return rs.size() == 0 ? null : "Zähler/Nenner existiert bereits in " + gmk.get().label();
