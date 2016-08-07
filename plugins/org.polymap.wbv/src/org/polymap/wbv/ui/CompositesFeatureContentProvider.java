@@ -42,7 +42,7 @@ import org.polymap.model2.runtime.PropertyInfo;
 class CompositesFeatureContentProvider
         implements IFeatureContentProvider {
 
-    private static Log log = LogFactory.getLog( CompositesFeatureContentProvider.class );
+    private static final Log log = LogFactory.getLog( CompositesFeatureContentProvider.class );
 
     private Iterable<? extends Composite>   composites;
 
@@ -62,7 +62,7 @@ class CompositesFeatureContentProvider
 
 
     public Object[] getElements( Object input ) {
-        log.info( "getElements(): input=" + input.getClass().getName() );
+        log.debug( "getElements(): input=" + input.getClass().getName() );
 
         List<IFeatureTableElement> result = new ArrayList( 1024 );
         for (final Composite composite : composites) {

@@ -17,16 +17,12 @@ package org.polymap.wbv.model;
 import static com.google.common.collect.Lists.newArrayList;
 
 import java.io.File;
-import java.io.IOException;
-
 import org.geotools.factory.CommonFactoryFinder;
 import org.opengis.filter.FilterFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.search.BooleanQuery;
-
-import com.google.common.base.Throwables;
 
 import org.polymap.core.runtime.Polymap;
 import org.polymap.core.runtime.session.SessionContext;
@@ -40,14 +36,9 @@ import org.polymap.rhei.fulltext.model2.FulltextIndexer.TypeFilter;
 import org.polymap.rhei.fulltext.store.lucene.LuceneFulltextIndex;
 
 import org.polymap.model2.Composite;
-import org.polymap.model2.Entity;
-import org.polymap.model2.query.Query;
 import org.polymap.model2.runtime.CompositeInfo;
-import org.polymap.model2.runtime.ConcurrentEntityModificationException;
 import org.polymap.model2.runtime.EntityRepository;
-import org.polymap.model2.runtime.ModelRuntimeException;
 import org.polymap.model2.runtime.UnitOfWork;
-import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.model2.runtime.locking.CommitLockStrategy;
 import org.polymap.model2.runtime.locking.OptimisticLocking;
 import org.polymap.model2.store.recordstore.RecordStoreAdapter;
@@ -162,19 +153,12 @@ public class WbvRepository {
 
 
     /**
-     * The instance of the current {@link SessionContext}. This is the <b>read</b>
-     * cache for all entities used by the UI.
-     * <p/>
-     * Do <b>not</b> use this for <b>modifications</b> that might be canceled or
-     * otherwise may left pending changes! Create a
-     * {@link UnitOfWorkWrapper#newUnitOfWork()} nested instance for that. This
-     * prevents your modifications from being committed by another party are leaving
-     * half-done, uncommitted changes. Commiting a nested instance commits also the
-     * parent, hence making changes persistent, in one atomic action. If that fails
-     * the <b>parent</b> is rolled back.
+     * The {@link UnitOfWork} of the current {@link SessionContext}.
      */
     public static UnitOfWork unitOfWork() {
-        return UnitOfWorkWrapper.instance( UnitOfWorkWrapper.class );
+        UnitOfWorkHolder holder = UnitOfWorkHolder.instance( UnitOfWorkHolder.class );
+        log.debug( "HOLDER: " + holder );
+        return holder.uow;
     }
 
     
@@ -184,102 +168,122 @@ public class WbvRepository {
     public static UnitOfWork newUnitOfWork() {
         return repo.newUnitOfWork();
     }
-    
+
     
     /**
      * 
      */
-    static class UnitOfWorkWrapper
-            extends SessionSingleton
-            implements UnitOfWork {
-        
-        private UnitOfWork          nested;
-        
-        private UnitOfWork          parent;
-
-        /** This is the {@link SessionSingleton} ctor. */
-        public UnitOfWorkWrapper() {
-            this.nested = repo.newUnitOfWork();    
-        }
-        
-        /** This is the ctor fpr nested instances. */
-        public UnitOfWorkWrapper( UnitOfWork parent ) {
-            this.nested = parent.newUnitOfWork();
-            this.parent = parent;
-        }
-        
-        public <T extends Entity> T entityForState( Class<T> entityClass, Object state ) {
-            return nested.entityForState( entityClass, state );
-        }
-
-        public <T extends Entity> T entity( Class<T> entityClass, Object id ) {
-            return nested.entity( entityClass, id );
-        }
-
-        public <T extends Entity> T entity( T entity ) {
-            return nested.entity( entity );
-        }
-
-        public <T extends Entity> T createEntity( Class<T> entityClass, Object id, ValueInitializer<T>... initializers ) {
-            return nested.createEntity( entityClass, id, initializers );
-        }
-
-        public void removeEntity( Entity entity ) {
-            nested.removeEntity( entity );
-        }
-
-        public void prepare() throws IOException, ConcurrentEntityModificationException {
-            throw new RuntimeException( "the nested UoW thing does not (yet) support prepare()." );
-            //delegate.prepare();
-        }
-
-        public void commit() throws ModelRuntimeException {
-            synchronized (parent) {
-                try {
-                    nested.prepare();
-                    parent.prepare();
-                    
-                    nested.commit();
-                    parent.commit();
-                }
-                catch (ConcurrentEntityModificationException e) {
-                    log.info( "Commit nested ProjectRepository failed.", e );
-                    // das rollback muss sein, da ansonsten halbe änderungen bleiben können
-                    // es darf dann aber nested auf keinen fall länger verwendet werden, weil
-                    // sonst noch speichern zu einem lost-update führt
-                    nested.close();
-                    parent.rollback();
-                    throw e;
-                }
-                catch (Exception e) {
-                    log.info( "Commit nested ProjectRepository failed.", e );
-                    // do not rollback as this would reset states and subsequent commit
-                    // would work (OptimisticLocking)
-                    //parent.rollback();
-                    Throwables.propagateIfPossible( e, ModelRuntimeException.class );
-                }
-            }
-        }
-
-        public void rollback() throws ModelRuntimeException {
-            nested.rollback();
-        }
-
-        public void close() {
-            nested.close();
-        }
-
-        public boolean isOpen() {
-            return nested.isOpen();
-        }
-
-        public <T extends Entity> Query<T> query( Class<T> entityClass ) {
-            return nested.query( entityClass );
-        }
-
-        public UnitOfWork newUnitOfWork() {
-            return new UnitOfWorkWrapper( nested );
-        }
+    protected static class UnitOfWorkHolder
+            extends SessionSingleton {
+    
+        public UnitOfWork           uow = repo.newUnitOfWork();
     }
+    
+    
+//    /**
+//    * The {@link UnitOfWork} of the current {@link SessionContext}. This is the <b>read</b>
+//    * cache for all entities used by the UI.
+//    * <p/>
+//    * Do <b>not</b> use this for <b>modifications</b> that might be canceled or
+//    * otherwise may left pending changes! Create a
+//    * {@link UnitOfWorkWrapper#newUnitOfWork()} nested instance for that. This
+//    * prevents your modifications from being committed by another party are leaving
+//    * half-done, uncommitted changes. Commiting a nested instance commits also the
+//    * parent, hence making changes persistent, in one atomic action. If that fails
+//    * the <b>parent</b> is rolled back.
+//     * 
+//     */
+//    static class UnitOfWorkWrapper
+//            extends SessionSingleton
+//            implements UnitOfWork {
+//        
+//        private UnitOfWork          nested;
+//        
+//        private UnitOfWork          parent;
+//
+//        /** This is the {@link SessionSingleton} ctor. */
+//        public UnitOfWorkWrapper() {
+//            this.nested = repo.newUnitOfWork();    
+//        }
+//        
+//        /** This is the ctor for nested instances. */
+//        public UnitOfWorkWrapper( UnitOfWork parent ) {
+//            this.nested = parent.newUnitOfWork();
+//            this.parent = parent;
+//        }
+//        
+//        public <T extends Entity> T entityForState( Class<T> entityClass, Object state ) {
+//            return nested.entityForState( entityClass, state );
+//        }
+//
+//        public <T extends Entity> T entity( Class<T> entityClass, Object id ) {
+//            return nested.entity( entityClass, id );
+//        }
+//
+//        public <T extends Entity> T entity( T entity ) {
+//            return nested.entity( entity );
+//        }
+//
+//        public <T extends Entity> T createEntity( Class<T> entityClass, Object id, ValueInitializer<T>... initializers ) {
+//            return nested.createEntity( entityClass, id, initializers );
+//        }
+//
+//        public void removeEntity( Entity entity ) {
+//            nested.removeEntity( entity );
+//        }
+//
+//        public void prepare() throws IOException, ConcurrentEntityModificationException {
+//            throw new RuntimeException( "the nested UoW thing does not (yet) support prepare()." );
+//            //delegate.prepare();
+//        }
+//
+//        public void commit() throws ModelRuntimeException {
+//            synchronized (parent) {
+//                try {
+//                    nested.prepare();
+//                    parent.prepare();
+//                    
+//                    nested.commit();
+//                    parent.commit();
+//                }
+//                catch (ConcurrentEntityModificationException e) {
+//                    log.info( "Commit nested ProjectRepository failed.", e );
+//                    // das rollback muss sein, da ansonsten halbe änderungen bleiben können
+//                    // es darf dann aber nested auf keinen fall länger verwendet werden, weil
+//                    // sonst nochmal speichern zu einem lost-update führt
+//                    nested.close();
+//                    parent.rollback();
+//                    throw e;
+//                }
+//                catch (Exception e) {
+//                    log.info( "Commit nested ProjectRepository failed.", e );
+//                    // do not rollback as this would reset states and subsequent commit
+//                    // would work (OptimisticLocking)
+//                    //parent.rollback();
+//                    Throwables.propagateIfPossible( e, ModelRuntimeException.class );
+//                }
+//            }
+//        }
+//
+//        public void rollback() throws ModelRuntimeException {
+//            nested.rollback();
+//        }
+//
+//        public void close() {
+//            nested.close();
+//        }
+//
+//        public boolean isOpen() {
+//            return nested.isOpen();
+//        }
+//
+//        public <T extends Entity> Query<T> query( Class<T> entityClass ) {
+//            return nested.query( entityClass );
+//        }
+//
+//        public UnitOfWork newUnitOfWork() {
+//            return new UnitOfWorkWrapper( nested );
+//        }
+//    }
 
 }

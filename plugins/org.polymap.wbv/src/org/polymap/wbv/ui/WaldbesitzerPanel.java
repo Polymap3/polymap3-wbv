@@ -130,7 +130,7 @@ public class WaldbesitzerPanel
         site().setSize( 550, 700, 700 );
  
         assert !uow.isPresent();
-        uow.set( WbvRepository.unitOfWork().newUnitOfWork() );
+        uow.set( WbvRepository.unitOfWork() );
 
         if (!selected.isPresent()) {
             wb = uow.get().createEntity( Waldbesitzer.class, null, Waldbesitzer.defaults );
@@ -169,6 +169,10 @@ public class WaldbesitzerPanel
     @Override
     public void dispose() {
         wb = null;
+
+        // rollback uncommitted modifications left over after Exception on submit;
+        // if commit was ok then this does not harm
+        uow.get().rollback();
         uow.set( null );
         
         if (wbFormListener != null) {
@@ -182,36 +186,6 @@ public class WaldbesitzerPanel
         }
         super.dispose();
     }
-
-    
-//    @EventHandler( display=true )
-//    public void activating( PanelChangeEvent ev ) {
-//        log.debug( "panelStatus: " + ev.getPanel().site().panelStatus() );
-//        if (ev.getPanel().site().panelStatus() == PanelStatus.FOCUSED) {
-//            log.debug( "activating()..." );
-//
-//            // create new
-//            if (selected.get() == null) {
-//                wb = uow.get().createEntity( Waldbesitzer.class, null, new ValueInitializer<Waldbesitzer>() {
-//                    @Override
-//                    public Waldbesitzer initialize( Waldbesitzer prototype ) throws Exception {
-//                        prototype.eigentumsArt.set( Waldeigentumsart.Privat );
-//                        prototype.kontakte.createElement( Kontakt.defaults );
-//                        // damit die sch** tabelle den ersten Eintrag zeigt
-//                        prototype.flurstuecke.createElement( Flurstueck.defaults );
-//                        return prototype;
-//                    }
-//                });
-//            }
-//            // re-fetch
-//            else {
-//                wb = uow.get().entity( selected.get() );
-//            }
-//            // make sure that this panel (and subsequent panels) are working with
-//            // entity of our uow()
-//            selected.set( wb );
-//        }
-//    }
 
     
     protected void submit() {
@@ -237,6 +211,9 @@ public class WaldbesitzerPanel
             }
         }
         catch (ConcurrentEntityModificationException e) {
+            // rollback and close panel so that user MUST try again
+            uow.get().rollback();
+
             StatusDispatcher.handleError( "Die Änderungen können nicht korrekt gespeichert werden.",
                     new Exception( "Ein anderer Nutzer hat diesen Waldbesitzer ebenfalls geändert."
                             + "<br/>Öffnen Sie den Waldbesitzer erneut, um diese Änderungen zu sehen."
@@ -255,8 +232,13 @@ public class WaldbesitzerPanel
             try { Thread.sleep( 100 ); } catch (InterruptedException e) {}
         }
         
-        String title = StringUtils.abbreviate( wb.besitzer().anzeigename(), 20 );
-        getSite().setTitle( title.length() > 1 ? title : "Neu" );
+        try {
+            String title = StringUtils.abbreviate( wb.besitzer().anzeigename(), 20 );
+            site().title.set( title.length() > 1 ? title : "Neu" );
+        }
+        catch (Exception e) {
+            site().title.set( "Kein Besitzer" );
+        }
 
         // submit FAB
         submitBtn = tk().createFab( BatikPlugin.images().svgImage( "check.svg", WHITE24 ), SWT.TOP|SWT.RIGHT );
