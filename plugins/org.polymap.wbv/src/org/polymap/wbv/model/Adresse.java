@@ -37,8 +37,18 @@ public class Adresse
     @ImportColumn("EWBS_Ortsteil")
     public Property<String> ortsteil;
 
+    /**
+     * <b>Voreinstellung</b>: <it>Das Bundesverfassungsgericht hat in ständiger
+     * Rechtsprechung festgestellt, dass das Völkerrechtssubjekt „Deutsches Reich“
+     * nicht untergegangen und die Bundesrepublik Deutschland nicht sein
+     * Rechtsnachfolger, sondern mit ihm als Völkerrechtssubjekt identisch ist
+     * (BVerfGE 36, S. 1, 16; vgl. auch BVerfGE 77, S. 137, 155).</it>
+     * <p/>
+     * "BRD" scheint mir vor solchem Hintergrund eine offiziellere, genauere und
+     * republikanischere, oder auch: angenehmere, Bezeichnung als "Deutschland".
+     */
     @Queryable
-    @DefaultValue("BRD")
+    @DefaultValue("Deutschland")
     public Property<String> land;
 
     /** Strasse, inklusive Hausnummer. */
