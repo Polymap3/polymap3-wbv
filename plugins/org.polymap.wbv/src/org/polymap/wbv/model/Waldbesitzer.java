@@ -43,6 +43,9 @@ public class Waldbesitzer
     
     public static Waldbesitzer          TYPE;
     
+    /** Id des Waldbesitzers, der herrenlose Flurstücke sammelt. */
+    public static final String          HERRENLOSE_FLURSTÜCKE = "HERRENLOSE_FLURSTÜCKE";
+    
     public static final ValueInitializer<Waldbesitzer> defaults = (Waldbesitzer proto) -> {
         proto.eigentumsArt.set( Waldeigentumsart.Privat );
         proto.kontakte.createElement( Kontakt.defaults );

@@ -14,6 +14,8 @@
  */
 package org.polymap.wbv.ui;
 
+import static org.polymap.wbv.model.Waldbesitzer.HERRENLOSE_FLURSTÜCKE;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,6 +41,7 @@ import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.rap.rwt.client.ClientFile;
 
 import org.polymap.core.operation.OperationSupport;
+import org.polymap.core.runtime.Timer;
 import org.polymap.core.security.SecurityContext;
 import org.polymap.core.security.SecurityUtils;
 import org.polymap.core.ui.StatusDispatcher;
@@ -55,6 +58,7 @@ import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.batik.toolkit.Snackbar.Appearance;
 
 import org.polymap.model2.query.ResultSet;
+import org.polymap.model2.runtime.CopyCompositeState;
 import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.model2.runtime.ValueInitializer;
 import org.polymap.rap.updownload.upload.IUploadHandler;
@@ -62,9 +66,12 @@ import org.polymap.rap.updownload.upload.Upload;
 import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.mdb.WvkImporter;
 import org.polymap.wbv.model.Baumart;
+import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Gemarkung;
+import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
+import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
 import org.polymap.wbv.model.WbvRepository;
 
 /**
@@ -105,8 +112,72 @@ public class AdminPanel
             createWkvSection( parent );
             createBaumartenSection( parent );
             createGemarkungSection( parent );
+            createHerrenlosSection( parent );
         }
     }
+    
+
+    protected void createHerrenlosSection( Composite parent ) {
+        IPanelSection section = tk().createPanelSection( parent, "Flurstücke ohne WB" );
+        section.addConstraint( new PriorityConstraint( 0 ), new MinWidthConstraint( 400, 1 ) );
+
+        tk().createFlowText( section.getBody(), "Herrenlose Flurstücke zuordnen.")
+                .setLayoutData( new ConstraintData( new PriorityConstraint( 1 ) ) );
+        
+        Button btn = tk().createButton( section.getBody(), "Suche starten...", SWT.PUSH );
+        btn.addSelectionListener( new SelectionAdapter() {
+            @Override
+            public void widgetSelected( SelectionEvent ev ) {
+                Timer timer = new Timer().start();
+                try (
+                    UnitOfWork uow = WbvRepository.newUnitOfWork();
+                ){
+                    // check target
+                    Waldbesitzer target = uow.entity( Waldbesitzer.class, HERRENLOSE_FLURSTÜCKE ); 
+                    if (target == null) {
+                        target = uow.createEntity( Waldbesitzer.class, HERRENLOSE_FLURSTÜCKE, (Waldbesitzer proto) -> {
+                            proto.bemerkung.set( "Pseudo-Waldbesitzer, der alle Flurstücke enthält, die nach dem Import nicht zugeordnet werden konnten." );
+                            proto.eigentumsArt.set( Waldeigentumsart.Privat );
+                            proto.kontakte.createElement( (Kontakt kontakt) -> {
+                                Kontakt.defaults.initialize( kontakt );
+                                kontakt.name.set( "Herrenlose Flurstücke" );
+                                kontakt.bemerkung.set( "Pseudo-Waldbesitzer, der alle Flurstücke enthält, die nach dem Import nicht zugeordnet werden konnten." );
+                                return kontakt;
+                            });
+                            return proto;
+                        });
+                    }
+                    
+                    // scan all
+                    try (
+                        ResultSet<Waldbesitzer> rs = uow.query( Waldbesitzer.class ).execute();
+                    ){
+                        int count = 0, found = 0;
+                        for (Waldbesitzer wb : rs) {
+                            if (wb.besitzer() == null || StringUtils.isBlank( wb.besitzer().name.get() )) {
+                                log.info( "    Waldbesitzer: " + wb );
+                                found++;
+                                
+                                for (Flurstueck fst : wb.flurstuecke) {
+                                    target.flurstuecke.createElement( (Flurstueck proto) -> {
+                                        CopyCompositeState.from( fst ).to( proto );
+                                        return proto;
+                                    });
+                                }
+                                uow.removeEntity( wb );
+                            }
+                            count++;
+                        }
+                        log.info( "Scanned: " + count + ", found: " + found );
+                        site().toolkit().createSnackbar( Appearance.FadeIn, count + " scanned, " + found + " moved, " + timer.elapsedTime() + "ms" );
+                    }
+                    
+                    uow.commit();
+                }
+            }
+        });
+    }
+    
     
     
     protected void createDeleteWkvSection( Composite parent ) {
