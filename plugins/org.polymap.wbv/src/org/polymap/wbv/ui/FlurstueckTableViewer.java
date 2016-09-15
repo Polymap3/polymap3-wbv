@@ -175,6 +175,10 @@ public class FlurstueckTableViewer
                 ev instanceof PropertyChangeEvent && displayed.values().contains( ev.getSource() ) );
         
         try {
+            // suppress deferred loading to fix "empty table" issue
+            // setContent( fs.getFeatures( this.baseFilter ) );
+            setContentProvider( new CompositesFeatureContentProvider() );
+
             // Action: delete
             addColumn( new FormFeatureTableColumn( descriptorFor( "", String.class ) )
                 .setWeight( 1, 25 )
@@ -348,9 +352,6 @@ public class FlurstueckTableViewer
             });
             addColumn( bcolumn );
 
-            // suppress deferred loading to fix "empty table" issue
-            // setContent( fs.getFeatures( this.baseFilter ) );
-            setContent( new CompositesFeatureContentProvider() );
             setInput( wb.get().flurstuecke( revier.get() ) );
 
 //            /* Register for property change events */

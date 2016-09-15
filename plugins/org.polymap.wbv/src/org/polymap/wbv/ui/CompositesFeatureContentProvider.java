@@ -47,15 +47,6 @@ class CompositesFeatureContentProvider
     private Iterable<? extends Composite>   composites;
 
 
-    public CompositesFeatureContentProvider() {
-    }
-
-
-    public CompositesFeatureContentProvider( Iterable<? extends Composite> composites ) {
-        this.composites = composites;
-    }
-
-
     public void inputChanged( Viewer viewer, Object oldInput, Object newInput ) {
         this.composites = (Iterable<? extends Composite>)newInput;
     }

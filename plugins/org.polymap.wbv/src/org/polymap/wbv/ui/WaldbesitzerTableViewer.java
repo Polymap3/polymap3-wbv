@@ -86,13 +86,14 @@ public class WaldbesitzerTableViewer
         this.uow = uow;
         BatikApplication.instance().getContext().propagate( this );
         try {
+            // suppress deferred loading to fix "empty table" issue
+            // setContent( fs.getFeatures( this.baseFilter ) );
+            setContentProvider( new CompositesFeatureContentProvider() );
+            
             addColumn( new NameColumn() ).sort( SWT.DOWN );
             addColumn( new EigentumColumn() );
             addColumn( new FlurstueckColumn() );
 
-            // suppress deferred loading to fix "empty table" issue
-            // setContent( fs.getFeatures( this.baseFilter ) );
-            setContent( new CompositesFeatureContentProvider( rs ) );
             setInput( rs );
 
             /* Register for property change events */
