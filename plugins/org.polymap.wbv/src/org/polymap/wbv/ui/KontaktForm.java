@@ -29,7 +29,7 @@ import org.polymap.core.ui.ColumnLayoutFactory;
 
 import org.polymap.rhei.batik.IPanelSite;
 import org.polymap.rhei.field.EMailAddressValidator;
-import org.polymap.rhei.field.IFormFieldLabel;
+import org.polymap.rhei.field.HorizontalFieldLayout;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.TextFormField;
@@ -84,7 +84,7 @@ public class KontaktForm
 
         formSite.newFormField( new PropertyAdapter( kontakt.name ) )
                 .parent.put( salu )
-                .label.put( IFormFieldLabel.NO_LABEL )
+                .layout.put( HorizontalFieldLayout.NO_LABEL )
                 .tooltip.put( "Name des Waldbesitzers, inklusive Titel" )
                 .validator.put( new NotEmptyValidator() )
                 .create();
@@ -125,7 +125,7 @@ public class KontaktForm
 
         formSite.newFormField( new PropertyAdapter( kontakt.ort ) )
                 .parent.put( city )
-                .label.put( IFormFieldLabel.NO_LABEL )
+                .layout.put( HorizontalFieldLayout.NO_LABEL )
                 .validator.put( new NotEmptyValidator() )
                 .create();
 

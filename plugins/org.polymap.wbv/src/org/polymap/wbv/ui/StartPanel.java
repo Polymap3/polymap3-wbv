@@ -47,6 +47,7 @@ import org.polymap.core.mapeditor.ContextMenuSite;
 import org.polymap.core.mapeditor.IContextMenuContribution;
 import org.polymap.core.mapeditor.IContextMenuProvider;
 import org.polymap.core.runtime.i18n.IMessages;
+import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.core.ui.FormDataFactory;
 import org.polymap.core.ui.FormLayoutFactory;
 import org.polymap.core.ui.UIUtils;
@@ -60,6 +61,7 @@ import org.polymap.rhei.batik.toolkit.PriorityConstraint;
 import org.polymap.rhei.batik.toolkit.Snackbar.Appearance;
 import org.polymap.rhei.field.PicklistFormField;
 import org.polymap.rhei.field.PlainValuePropertyAdapter;
+import org.polymap.rhei.field.VerticalFieldLayout;
 import org.polymap.rhei.form.IFormPageSite;
 import org.polymap.rhei.form.batik.BatikFormContainer;
 import org.polymap.rhei.fulltext.FulltextIndex;
@@ -139,7 +141,6 @@ public class StartPanel
         section.addConstraint( new PriorityConstraint( 0 ), WbvPlugin.MIN_COLUMN_WIDTH );
 
         LoginForm loginForm = new LoginPanel.LoginForm( getContext(), getSite(), user ) {
-            
             SettingStore        settings = RWT.getSettingStore();
             
             @Override
@@ -150,12 +151,15 @@ public class StartPanel
                 String cookieRevier = settings.getAttribute( WbvPlugin.ID + ".revier" );
                 Revier preSelected = cookieRevier != null ? Revier.all.get().get( cookieRevier ) : null;
                 
+                site.setDefaultFieldLayout( VerticalFieldLayout.INSTANCE );
                 site.newFormField( new PlainValuePropertyAdapter( "revier", preSelected ) )
                         .field.put( new PicklistFormField( reviere ) )
                         .label.put( i18n.get( "revier" ) )
                         .tooltip.put( i18n.get( "revierTip" ) )
                         .create();
+                
                 super.createFormContents( site );
+                site.getPageBody().setLayout( ColumnLayoutFactory.defaults().spacing( 8 ).margins( 10 ).create() );
             }
             
             @Override

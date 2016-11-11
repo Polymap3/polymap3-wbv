@@ -96,7 +96,7 @@ import org.polymap.wbv.ui.CompositesFeatureContentProvider.FeatureTableElement;
 public class FlurstueckTableViewer
         extends FeatureTableViewer {
 
-    private static Log log  = LogFactory.getLog( FlurstueckTableViewer.class );
+    private static final Log log  = LogFactory.getLog( FlurstueckTableViewer.class );
 
     private static final FastDateFormat df   = FastDateFormat.getInstance( "dd.MM.yyyy" );
 
@@ -117,7 +117,6 @@ public class FlurstueckTableViewer
     private Object                      panelChangeListener = new Object() {
         @EventHandler( display=true )
         protected void fieldChange( PanelChangeEvent ev ) {
-            log.info( "ev:  "  + ev );
             if (!getTable().isDisposed()) {
                 refresh();
             }

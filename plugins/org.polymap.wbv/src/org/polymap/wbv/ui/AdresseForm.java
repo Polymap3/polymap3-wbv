@@ -23,10 +23,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.polymap.core.ui.ColumnLayoutFactory;
 
 import org.polymap.rhei.batik.IPanelSite;
-import org.polymap.rhei.field.IFormFieldLabel;
+import org.polymap.rhei.field.HorizontalFieldLayout;
 import org.polymap.rhei.field.NotEmptyValidator;
 import org.polymap.rhei.form.DefaultFormPage;
 import org.polymap.rhei.form.IFormPageSite;
+
 import org.polymap.wbv.model.Adresse;
 
 /**
@@ -88,7 +89,7 @@ public class AdresseForm
 
         formSite.newFormField( new PropertyAdapter( adresse.ort ) )
                 .parent.put( city )
-                .label.put( IFormFieldLabel.NO_LABEL )
+                .layout.put( HorizontalFieldLayout.NO_LABEL )
                 .validator.put( new NotEmptyValidator() )
                 .create();
 
