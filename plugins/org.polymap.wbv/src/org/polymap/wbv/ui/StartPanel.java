@@ -30,11 +30,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Menu;
 
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.ActionContributionItem;
-import org.eclipse.jface.action.ContributionItem;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 
@@ -43,9 +39,6 @@ import org.eclipse.rap.rwt.client.service.JavaScriptExecutor;
 import org.eclipse.rap.rwt.client.service.UrlLauncher;
 import org.eclipse.rap.rwt.service.SettingStore;
 
-import org.polymap.core.mapeditor.ContextMenuSite;
-import org.polymap.core.mapeditor.IContextMenuContribution;
-import org.polymap.core.mapeditor.IContextMenuProvider;
 import org.polymap.core.runtime.i18n.IMessages;
 import org.polymap.core.ui.ColumnLayoutFactory;
 import org.polymap.core.ui.FormDataFactory;
@@ -365,33 +358,33 @@ public class StartPanel
     }
 
 
-    class WaldflaechenMenu
-            extends ContributionItem
-            implements IContextMenuContribution, IContextMenuProvider {
-
-        @Override
-        public boolean init( ContextMenuSite site ) {
-            return true;
-        }
-
-        @Override
-        public void fill( Menu menu, int index ) {
-            Action action = new Action( "Test", Action.AS_PUSH_BUTTON ) {
-                public void run() {
-                }            
-            };
-            new ActionContributionItem( action ).fill( menu, index );
-        }
-
-        @Override
-        public String getMenuGroup() {
-            return GROUP_HIGH;
-        }
-
-        public IContextMenuContribution createContribution() {
-            return this;
-        }
-
-    }
+//    class WaldflaechenMenu
+//            extends ContributionItem
+//            implements IContextMenuContribution, IContextMenuProvider {
+//
+//        @Override
+//        public boolean init( ContextMenuSite site ) {
+//            return true;
+//        }
+//
+//        @Override
+//        public void fill( Menu menu, int index ) {
+//            Action action = new Action( "Test", Action.AS_PUSH_BUTTON ) {
+//                public void run() {
+//                }            
+//            };
+//            new ActionContributionItem( action ).fill( menu, index );
+//        }
+//
+//        @Override
+//        public String getMenuGroup() {
+//            return GROUP_HIGH;
+//        }
+//
+//        public IContextMenuContribution createContribution() {
+//            return this;
+//        }
+//
+//    }
     
 }

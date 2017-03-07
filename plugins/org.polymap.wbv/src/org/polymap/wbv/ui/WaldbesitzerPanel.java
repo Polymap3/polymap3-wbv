@@ -241,7 +241,7 @@ public class WaldbesitzerPanel
         }
 
         // submit FAB
-        submitBtn = tk().createFab( BatikPlugin.images().svgImage( "check.svg", WHITE24 ), SWT.TOP|SWT.RIGHT );
+        submitBtn = tk().createFab( null, BatikPlugin.images().svgImage( "check.svg", WHITE24 ), SWT.TOP|SWT.RIGHT );
         submitBtn.setToolTipText( "Änderungen in die Datenbank übernehmen" );
         submitBtn.setVisible( false );
         submitBtn.addSelectionListener( new SelectionAdapter() {
