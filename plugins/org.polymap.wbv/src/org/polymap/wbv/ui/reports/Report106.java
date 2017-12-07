@@ -22,22 +22,21 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.sbt;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeSet;
 
 import java.io.IOException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
-import org.polymap.wbv.model.Flurstueck;
+import org.polymap.wbv.model.Waldbesitzer;
+
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractValueFormatter;
 import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
@@ -65,12 +64,23 @@ public class Report106
         Flaechengruppe, Anzahl, Gesamt, Durchschnitt
     }
 
+    class RowAccu {
+        public int      anzahl;
+        public double   gesamt;
+        
+        public RowAccu add( double _gesamt ) {
+            this.gesamt += _gesamt;
+            this.anzahl ++;
+            return this;
+        }
+    }
+    
     // instance *******************************************
 
     /**
      * Flurstücksgruppen: obere Intervallgrenze -> Liste von Flurstücken
      */
-    private Multimap<Double,Flurstueck>     gruppen = ArrayListMultimap.create();
+    private Map<Double,RowAccu>     gruppen = new HashMap();
     
     @Override
     public String getName() {
@@ -81,11 +91,12 @@ public class Report106
     @Override
     public JasperReportBuilder build() throws DRException, JRException, IOException {
         // akkumulieren pro intervall
-        for (Flurstueck flurstueck : revierFlurstuecke()) {
-            Double flaecheWald = flurstueck.flaecheWald.opt().orElse( 0d );
+        for (Waldbesitzer wb : revierWaldbesitzer()) {
+            double flaecheWald = wb.flurstuecke( revier.get() ).stream()
+                    .mapToDouble( fst -> fst.flaecheWald.opt().orElse( 0d ) )
+                    .sum();
             Double gruppe = intervalle.higher( flaecheWald - 0.00001d );  // flaeche kleiner oder *gleich* intervallgrenze
-            gruppen.put( gruppe, flurstueck );
-            // XXX if (!fs.contains( flurstueck )) {
+            gruppen.computeIfAbsent( gruppe, key -> new RowAccu() ).add( flaecheWald );
         }
         
         // zeilen berechnen -> data source 
@@ -93,18 +104,11 @@ public class Report106
                 Column.Flaechengruppe.name(), Column.Anzahl.name(), Column.Gesamt.name(), Column.Durchschnitt.name() );
 
         int rowIndex = 0;
-        for (Entry<Double,Collection<Flurstueck>> entry : gruppen.asMap().entrySet()) {
-            double gesamt = 0.0d;
-            HashSet<String> wbIds = new HashSet();
-            for (Flurstueck flurstueck : entry.getValue()) {
-                gesamt += flurstueck.flaecheWald.opt().orElse( 0d );
-                wbIds.add( (String)flurstueck.waldbesitzer().id() );
-            }
-            
+        for (Entry<Double,RowAccu> entry : gruppen.entrySet()) {
             ds.put( Column.Flaechengruppe, rowIndex, entry.getKey() );
-            ds.put( Column.Anzahl, rowIndex, wbIds.size() );
-            ds.put( Column.Gesamt, rowIndex, gesamt );
-            ds.put( Column.Durchschnitt, rowIndex, gesamt / wbIds.size() );
+            ds.put( Column.Anzahl, rowIndex, entry.getValue().anzahl );
+            ds.put( Column.Gesamt, rowIndex, entry.getValue().gesamt );
+            ds.put( Column.Durchschnitt, rowIndex, entry.getValue().gesamt / entry.getValue().anzahl );
             
             rowIndex ++;
         }
@@ -142,7 +146,7 @@ public class Report106
                 .columns( gruppeColumn, anzahlColumn, gesamtColumn, durchschnittColumn )
                 .columnGrid( gruppeColumn, anzahlColumn, gesamtColumn, durchschnittColumn )
                 .subtotalsAtSummary().sortBy( asc( gruppeColumn ) )
-                .subtotalsAtSummary( sbt.text( "("+Iterables.size( revierWaldbesitzer() )+")", anzahlColumn ) )
+                .subtotalsAtSummary( sbt.sum( anzahlColumn ).setValueFormatter( anzahlFormatter ) )
                 .subtotalsAtSummary( sbt.sum( gesamtColumn ).setValueFormatter( hanf ) )
                 .subtotalsAtSummary( sbt.text( "", durchschnittColumn ) );
     }
