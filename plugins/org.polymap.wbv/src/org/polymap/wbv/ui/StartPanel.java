@@ -74,7 +74,6 @@ import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.WbvRepository;
 import org.polymap.wbv.ui.reports.DownloadableReport;
 import org.polymap.wbv.ui.reports.DownloadableReport.OutputType;
-import org.polymap.wbv.ui.reports.Report101;
 import org.polymap.wbv.ui.reports.Report102;
 import org.polymap.wbv.ui.reports.Report103;
 import org.polymap.wbv.ui.reports.Report105;
@@ -91,7 +90,7 @@ import org.polymap.wbv.ui.reports.WbvReport;
 public class StartPanel
         extends WbvPanel {
 
-    private static Log log = LogFactory.getLog( StartPanel.class );
+    private static final Log log = LogFactory.getLog( StartPanel.class );
 
     public static final PanelIdentifier     ID  = new PanelIdentifier( "start" );
 
@@ -239,7 +238,6 @@ public class StartPanel
 
         // reports
         final List<WbvReport> reportsMap = new ArrayList();
-        reportsMap.add( getContext().propagate( new Report101() ) );
         reportsMap.add( getContext().propagate( new Report102() ) );
         reportsMap.add( getContext().propagate( new Report103() ) );
         reportsMap.add( getContext().propagate( new Report105() ) );
@@ -309,7 +307,7 @@ public class StartPanel
 
         if ("falko".equals( System.getProperty( "user.name" ) )) {
             search.searchOnEnter.set( false );
-            search.getText().setText( "Beyer" );
+            search.getText().setText( "gemarkung:Holzhau*" );
         }
 
         search.searchOnEnter.set( true );
