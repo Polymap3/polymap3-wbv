@@ -57,15 +57,6 @@ public class ReportTest {
     }
 
 
-    @Test
-    public void test101_1() throws Exception {
-        Waldbesitzer wb = createWaldbesitzer1();
-        List<Waldbesitzer> wbs = new ArrayList<Waldbesitzer>();
-        wbs.add( wb );
-        executeTest101( entityRepository, wbs, 1 );
-    }
-
-
     private Waldbesitzer createWaldbesitzer1() {
         Waldbesitzer wb = createWaldbesitzer( "Bumbaitschi", "Heidi", "Feldweg 1", "0815", "Dorf" );
         Flurstueck fs1 = createFlurstueck( wb, "1", 0.3, 0.2 );
