@@ -140,7 +140,9 @@ public class Waldbesitzer
 
     /** 
      * Aktuellen, nicht gelöschte Flurstücke, die in einer {@link Gemarkung} des
-     * übergebenen {@link Revier}s liegen.  
+     * übergebenen {@link Revier}s liegen.
+     * 
+     * @param revier Das Revier oder null, dann werden alle Flurstücke geliefert.
      */
     public Collection<Flurstueck> flurstuecke( Revier revier ) {
         return Collections2.filter( flurstuecke, fst -> {

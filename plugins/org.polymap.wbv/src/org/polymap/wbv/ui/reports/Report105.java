@@ -40,7 +40,7 @@ import org.polymap.wbv.model.Waldbesitzer;
 /**
  * Waldflächen aller Waldbesitzer.
  *
- * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
+ * @author Joerg Reichert <joerg@mapzone.io>
  */
 public class Report105
         extends WaldbesitzerReport {
@@ -55,10 +55,8 @@ public class Report105
 
     @Override
     public JasperReportBuilder build() throws DRException, JRException, IOException {
-        super.build();
-
         // datasource
-        JsonBuilder jsonBuilder = new JsonBuilder( entities ) {
+        JsonBuilder jsonBuilder = new JsonBuilder( revierWaldbesitzer() ) {
             @Override
             protected Object buildJson( Object value ) {
                 Object result = super.buildJson( value );

@@ -16,31 +16,39 @@ package org.polymap.wbv.ui.reports;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Supplier;
 
 import java.awt.Color;
-import java.io.IOException;
 import java.text.NumberFormat;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
+
+import org.polymap.rhei.batik.BatikApplication;
 import org.polymap.rhei.batik.Context;
 import org.polymap.rhei.batik.Scope;
 
+import org.polymap.model2.query.Expressions;
+import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Revier;
+import org.polymap.wbv.model.Waldbesitzer;
+import org.polymap.wbv.model.WbvRepository;
 
-import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractValueFormatter;
+import net.sf.dynamicreports.report.builder.DynamicReports;
+import net.sf.dynamicreports.report.builder.ReportTemplateBuilder;
 import net.sf.dynamicreports.report.builder.style.SimpleStyleBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalAlignment;
+import net.sf.dynamicreports.report.constant.Position;
 import net.sf.dynamicreports.report.definition.ReportParameters;
-import net.sf.dynamicreports.report.exception.DRException;
-import net.sf.jasperreports.engine.JRException;
 
 /**
  * Mostly style templates for WBV.
@@ -50,11 +58,33 @@ import net.sf.jasperreports.engine.JRException;
 public abstract class WbvReport
         extends EntityReport {
 
-    private static Log log = LogFactory.getLog( WbvReport.class );
+    private static final Log log = LogFactory.getLog( WbvReport.class );
 
+    private static final List<Class<? extends WbvReport>> reports = Arrays.asList( 
+            Report102.class, 
+            Report103.class,
+            Report105.class,
+            Report106.class,
+            Report106b.class,
+            Report106c.class );
+    
+    public static final List<Supplier<WbvReport>> factories = Lists.transform( reports, cl -> () -> {
+            try {
+                WbvReport report = cl.newInstance();
+                return BatikApplication.instance().getContext().propagate( report );
+            }
+            catch (Exception e) {
+                throw new RuntimeException( e );
+            }
+    });
+    
+    // instance ******************************************
+    
     protected StyleBuilder          bold;
 
     protected StyleBuilder          titleStyle;
+
+    protected StyleBuilder          title2Style;
 
     protected StyleBuilder          columnTitleStyle;
 
@@ -64,46 +94,30 @@ public abstract class WbvReport
     
     protected SimpleStyleBuilder    highlightRowStyle;
 
+    protected ReportTemplateBuilder reportTemplate;
+
     @Scope( "org.polymap.wbv.ui" )
     protected Context<Revier>       revier;
 
     @Scope( "org.polymap.wbv.ui" )
     protected Context<String>       queryString;
 
-
-    protected String getQuery() {
-        return queryString.get();
-    }
-
-
-    protected String getRevier() {
-        Revier result = revier.get();
-        return result != null ? result.name : "Alle";
-    }
-
-
-    /**
-     * Alle Flurstücke für {@link #entities} im {@link #revier}.
-     */
-    protected List<Flurstueck> flurstuecke() {
-        List<Flurstueck> result = new ArrayList( 4096 );
-        entities.forEach( wb -> result.addAll( wb.flurstuecke( revier.get() ) ) );
-        return result;
-    }
+    /** Die {@link Waldbesitzer}, die gerade in der Liste angezeigt werden. */
+    private Iterable<Waldbesitzer>  viewerEntities;
 
     
-    /**
-     * Creates template styles. Sub-classes should invoke this super implementation
-     * before doing their work.
-     */
-    @Override
-    public JasperReportBuilder build() throws DRException, JRException, IOException {
+    protected WbvReport() {
         bold = stl.style().bold();
 
         titleStyle = stl.style()
                 .setHorizontalAlignment( HorizontalAlignment.LEFT )
-                .setFontSize( 20 )
-                .setPadding( stl.padding().setTop( 10 ).setBottom( 10 ) );
+                .setFontSize( 18 )
+                .setPadding( stl.padding().setTop( 10 ).setBottom( 5 ) );
+
+        title2Style = stl.style()
+                .setHorizontalAlignment( HorizontalAlignment.LEFT )
+                .setFontSize( 14 )
+                .setPadding( stl.padding().setTop( 0 ).setBottom( 5 ) );
 
         headerStyle = stl.style()
                 .setHorizontalAlignment( HorizontalAlignment.RIGHT )
@@ -121,7 +135,55 @@ public abstract class WbvReport
         highlightRowStyle = stl.simpleStyle()
                 .setBackgroundColor( new Color( 243, 243, 248 ) );
 
-        return null;
+        reportTemplate = DynamicReports.template();
+        reportTemplate.setSubtotalLabelPosition( Position.BOTTOM );
+        reportTemplate.setSummaryStyle( stl.style().setTopBorder( stl.pen1Point() ) );
+        reportTemplate.setPageMargin( DynamicReports.margin().setTop( 50 ).setLeft( 45 ).setBottom( 50 ).setRight( 55 ) );
+    }
+
+    
+    public EntityReport setViewerEntities( Iterable<Waldbesitzer> entities ) {
+        this.viewerEntities = entities;
+        return this;
+    }
+
+    
+    /** 
+     * Die {@link Waldbesitzer}, die gerade in der Liste angezeigt werden. 
+     */
+    public Iterable<Waldbesitzer> gesuchteWaldbesitzer() {
+        return viewerEntities;
+    }
+
+    
+    /** 
+     * Alle {@link Waldbesitzer} im aktuellen {@link Revier}. 
+     */
+    public Iterable<Waldbesitzer> revierWaldbesitzer() {
+        UnitOfWork uow = WbvRepository.unitOfWork();
+        return uow.query( Waldbesitzer.class )
+                .where( revier.isPresent() ? revier.get().waldbesitzerFilter.get() : Expressions.TRUE )
+                .execute();
+    }
+
+    
+    /** 
+     * Alle {@link Flurstueck}e im aktuellen {@link Revier}. 
+     */
+    public Iterable<Flurstueck> revierFlurstuecke() {
+        return FluentIterable.from( revierWaldbesitzer() )
+                .transformAndConcat( wb -> wb.flurstuecke( revier.get() ) );
+    }
+
+
+    protected String getQuery() {
+        return queryString.get();
+    }
+
+
+    protected String getRevier() {
+        Revier result = revier.get();
+        return result != null ? result.name : "Alle";
     }
 
 

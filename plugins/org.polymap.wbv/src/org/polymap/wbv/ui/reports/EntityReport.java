@@ -16,6 +16,7 @@ package org.polymap.wbv.ui.reports;
 
 import java.util.Collection;
 import java.util.Date;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
@@ -44,7 +45,6 @@ import org.polymap.model2.PropertyBase;
 import org.polymap.model2.runtime.CompositeInfo;
 import org.polymap.model2.runtime.EntityRepository;
 import org.polymap.model2.runtime.PropertyInfo;
-import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.WbvRepository;
 import org.polymap.wbv.ui.reports.WbvReport.NumberFormatter;
 
@@ -56,27 +56,17 @@ import org.polymap.wbv.ui.reports.WbvReport.NumberFormatter;
 public abstract class EntityReport
         extends DownloadableReport {
 
-    private static Log log = LogFactory.getLog( EntityReport.class );
+    private static final Log log = LogFactory.getLog( EntityReport.class );
 
     public static final DateFormat          df = new SimpleDateFormat( "dd.MM.yyyy" );
 
     public static final NumberFormatter     nf = new NumberFormatter( 1, 4, 100, 4 );
 
-    protected Iterable<Waldbesitzer>        entities;
-
-
-    public EntityReport setEntities( Iterable<Waldbesitzer> entities ) {
-        this.entities = entities;
-        return this;
-    }
-
-    
     /**
      * 
      */
     protected class JsonBuilder {
 
-        @SuppressWarnings("hiding")
         private Iterable<? extends Composite> entities;
 
         private PipedOutputStream             out;

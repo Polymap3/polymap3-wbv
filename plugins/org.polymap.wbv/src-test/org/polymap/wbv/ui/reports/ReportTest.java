@@ -299,7 +299,7 @@ public class ReportTest {
 
     private void executeTest( EntityRepository entityRepository, List<Waldbesitzer> wbs, WbvReport report, String name,
             int counter ) throws DRException, JRException, IOException, FileNotFoundException {
-        report.setEntities( wbs );
+        report.setViewerEntities( wbs );
         JasperReportBuilder builder = report.build();
         File file = new File( name + counter + ".pdf" );
         try (FileOutputStream fos = new FileOutputStream( file )) {

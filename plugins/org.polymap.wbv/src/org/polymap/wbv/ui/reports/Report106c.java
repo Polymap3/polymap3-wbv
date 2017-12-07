@@ -57,7 +57,7 @@ import net.sf.jasperreports.engine.data.JsonDataSource;
 /**
  * Waldflächen aller Waldbesitzer.
  *
- * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
+ * @author Joerg Reichert <joerg@mapzone.io>
  */
 public class Report106c
         extends WbvReport {
@@ -73,13 +73,11 @@ public class Report106c
 
     @Override
     public JasperReportBuilder build() throws DRException, JRException, IOException {
-        super.build();
-
         List<Gemarkung> gemarkungen = new ArrayList( 256 );
         final ListMultimap<String,Flurstueck> gemarkung2Flurstuecke = ArrayListMultimap.create( 256, 100 );
         final Map<Integer,String> flurstuecke2Art = new HashMap( 4096 );
 
-        for (Waldbesitzer wb : entities) {
+        for (Waldbesitzer wb : revierWaldbesitzer()) {
             for (Flurstueck flurstueck : wb.flurstuecke( revier.get() )) {
                 Gemarkung gemarkung = flurstueck.gemarkung.get();
                 if (gemarkung != null) {

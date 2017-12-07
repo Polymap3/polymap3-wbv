@@ -36,7 +36,7 @@ import org.polymap.model2.runtime.UnitOfWork;
  * <p/>
  * Revier ist keine eigenen Entity, sondern wird aus den Gemarkungen extrahiert.
  * {@link Gemarkung} wird extra importiert und enthält die Information welche
- * Gemarkungen zu einem Reviert gehören.
+ * Gemarkungen zu einem Revier gehören.
  * 
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */

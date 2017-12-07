@@ -12,11 +12,10 @@
  */
 package org.polymap.wbv.ui;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 
 import java.io.IOException;
 
@@ -63,7 +62,6 @@ import org.polymap.rhei.fulltext.ui.FulltextProposal;
 import org.polymap.rhei.um.ui.LoginPanel;
 import org.polymap.rhei.um.ui.LoginPanel.LoginForm;
 
-import org.polymap.model2.query.Expressions;
 import org.polymap.model2.query.ResultSet;
 import org.polymap.model2.runtime.UnitOfWork;
 import org.polymap.rap.updownload.download.DownloadService;
@@ -72,14 +70,7 @@ import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.WbvRepository;
-import org.polymap.wbv.ui.reports.DownloadableReport;
 import org.polymap.wbv.ui.reports.DownloadableReport.OutputType;
-import org.polymap.wbv.ui.reports.Report102;
-import org.polymap.wbv.ui.reports.Report103;
-import org.polymap.wbv.ui.reports.Report105;
-import org.polymap.wbv.ui.reports.Report106;
-import org.polymap.wbv.ui.reports.Report106b;
-import org.polymap.wbv.ui.reports.Report106c;
 import org.polymap.wbv.ui.reports.WbvReport;
 
 /**
@@ -237,18 +228,10 @@ public class StartPanel
         });
 
         // reports
-        final List<WbvReport> reportsMap = new ArrayList();
-        reportsMap.add( getContext().propagate( new Report102() ) );
-        reportsMap.add( getContext().propagate( new Report103() ) );
-        reportsMap.add( getContext().propagate( new Report105() ) );
-        reportsMap.add( getContext().propagate( new Report106() ) );
-        reportsMap.add( getContext().propagate( new Report106b() ) );
-        reportsMap.add( getContext().propagate( new Report106c() ) );
-        
         final Combo reports = new Combo( body, SWT.BORDER | SWT.READ_ONLY );
         reports.add( "Auswertung wählen..." );
-        for (DownloadableReport report : reportsMap) {
-            reports.add( report.getName() );
+        for (Supplier<WbvReport> factory : WbvReport.factories) {
+            reports.add( factory.get().getName() );
         }
         reports.setVisibleItemCount( 8 );
         reports.select( 0 );
@@ -257,17 +240,9 @@ public class StartPanel
             public void widgetSelected( SelectionEvent ev ) {
                 try {
                     if (reports.getSelectionIndex() > 0) {
-                        WbvReport report = reportsMap.get( reports.getSelectionIndex()-1 );
+                        WbvReport report = WbvReport.factories.get( reports.getSelectionIndex()-1 ).get();
                         report.setOutputType( OutputType.PDF );
-                        if (report instanceof Report103) {
-                            report.setEntities( viewer.getInput() );
-                        }
-                        else {
-                            ResultSet<Waldbesitzer> all = uow.query( Waldbesitzer.class )
-                                    .where( revier.isPresent() ? revier.get().waldbesitzerFilter.get() : Expressions.TRUE )
-                                    .execute();
-                            report.setEntities( all );
-                        }
+                        report.setViewerEntities( viewer.getInput() );
                         String url = DownloadService.registerContent( report );
 
                         UrlLauncher launcher = RWT.getClient().getService( UrlLauncher.class );

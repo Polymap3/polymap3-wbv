@@ -58,7 +58,7 @@ import net.sf.jasperreports.engine.data.JsonDataSource;
 /**
  * Waldflächen aller Waldbesitzer.
  *
- * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
+ * @author Joerg Reichert <joerg@mapzone.io>
  */
 public class Report103
         extends WaldbesitzerReport {
@@ -73,8 +73,6 @@ public class Report103
 
     @Override
     public JasperReportBuilder build() throws DRException, JRException, IOException {
-        super.build();
-
         ReportTemplateBuilder templateBuilder = template();
         templateBuilder.setGroupShowColumnHeaderAndFooter( false );
         templateBuilder.setGroupHeaderLayout( GroupHeaderLayout.VALUE );
@@ -89,7 +87,7 @@ public class Report103
         // nur den ersten, weil sonst Subreports noetig waeren
         Waldbesitzer firstWb = null;
 
-        Iterator<? extends Composite> iter = entities.iterator();
+        Iterator<? extends Composite> iter = gesuchteWaldbesitzer().iterator();
         Composite entity = iter.next();
         if (entity instanceof Waldbesitzer) {
             firstWb = (Waldbesitzer)entity;

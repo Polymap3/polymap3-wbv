@@ -1,6 +1,6 @@
 /* 
  * polymap.org
- * Copyright (C) 2015, Falko Bräutigam. All rights reserved.
+ * Copyright (C) 2015-2017, Falko Bräutigam. All rights reserved.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -19,53 +19,59 @@ import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
 import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.sbt;
-import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
-import static net.sf.dynamicreports.report.builder.DynamicReports.template;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
+import java.util.TreeSet;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.text.NumberFormat;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.model2.Composite;
-import org.polymap.wbv.model.Flurstueck;
-import org.polymap.wbv.model.Waldbesitzer;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 
+import org.polymap.wbv.model.Flurstueck;
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
-import net.sf.dynamicreports.report.builder.ReportTemplateBuilder;
+import net.sf.dynamicreports.report.base.expression.AbstractValueFormatter;
 import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
+import net.sf.dynamicreports.report.constant.HorizontalAlignment;
 import net.sf.dynamicreports.report.constant.PageOrientation;
 import net.sf.dynamicreports.report.constant.PageType;
-import net.sf.dynamicreports.report.constant.Position;
 import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRException;
-import net.sf.jasperreports.engine.data.JRCsvDataSource;
 
 /**
  * Waldflächen aller Waldbesitzer.
  *
+ * @author Joerg Reichert <joerg@mapzone.io>
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class Report106
         extends WbvReport {
 
-    private static Log      log = LogFactory.getLog( Report106.class );
+    private static final Log log = LogFactory.getLog( Report106.class );
 
+    private static final TreeSet<Double> intervalle = Sets.newTreeSet( Arrays.asList( 10000d, 1000d, 500d, 200d, 100d, 50d, 20d, 10d, 5d, 1d, 0d ) );
+    
+    private enum Column {
+        Flaechengruppe, Anzahl, Gesamt, Durchschnitt
+    }
 
+    // instance *******************************************
+
+    /**
+     * Flurstücksgruppen: obere Intervallgrenze -> Liste von Flurstücken
+     */
+    private Multimap<Double,Flurstueck>     gruppen = ArrayListMultimap.create();
+    
     @Override
     public String getName() {
         return "WBV 1.06 - Anzahl und Fläche der WBS nach Größengruppe";
@@ -74,145 +80,84 @@ public class Report106
 
     @Override
     public JasperReportBuilder build() throws DRException, JRException, IOException {
-        super.build();
-
-        List<Flurstueck> flurstuecke = new ArrayList();
-        Map<Double,List<Flurstueck>> flaecheToFlurstuecke = new HashMap();
-        Map<Double,Double> flaecheToGesamtFlaeche = new HashMap();
-        Map<Double,Integer> flaecheToWBS = new HashMap();
-        Map<Double,Double> flaecheToDurchschnittFlaecheProWBS = new HashMap();
-        List<Double> flaechenGruppe = new ArrayList<Double>();
-        flaechenGruppe.add( 2000d );
-        flaechenGruppe.add( 1000d );
-        flaechenGruppe.add( 500d );
-        flaechenGruppe.add( 200d );
-        flaechenGruppe.add( 100d );
-        flaechenGruppe.add( 50d );
-        flaechenGruppe.add( 20d );
-        flaechenGruppe.add( 10d );
-        flaechenGruppe.add( 5d );
-        flaechenGruppe.add( 1d );
-        flaechenGruppe.add( 0d );
-
-        for (Composite entity : entities) {
-            Waldbesitzer wb = (Waldbesitzer)entity;
-            for (Flurstueck flurstueck : wb.flurstuecke( revier.get() )) {
-                flurstuecke.add( flurstueck );
-                List<Flurstueck> fs = null;
-                if (flurstueck.flaecheWald.get() == null) {
-                    fs = getFlurstueckeForGroup( flaecheToFlurstuecke, -1d );
-                    //if (!fs.contains( flurstueck )) {
-                        fs.add( flurstueck );
-                    //}
-                }
-                else {
-                    for (int i = 1; i < flaechenGruppe.size(); i++) {
-                        if (flurstueck.flaecheWald.get() >= flaechenGruppe.get( i )) {
-                            fs = getFlurstueckeForGroup( flaecheToFlurstuecke, flaechenGruppe.get( i - 1 ) );
-                            fs.add( flurstueck );
-                        }
-                    }
-                }
-            }
+        // akkumulieren pro intervall
+        for (Flurstueck flurstueck : revierFlurstuecke()) {
+            Double flaecheWald = flurstueck.flaecheWald.opt().orElse( 0d );
+            Double gruppe = intervalle.higher( flaecheWald - 0.00001d );  // flaeche kleiner oder *gleich* intervallgrenze
+            gruppen.put( gruppe, flurstueck );
+            // XXX if (!fs.contains( flurstueck )) {
         }
-        Double sum;
-        Set<Waldbesitzer> wbs;
-        Double durchschnittsFlaeche;
-        for (Entry<Double,List<Flurstueck>> entry : flaecheToFlurstuecke.entrySet()) {
-            sum = 0.0d;
-            durchschnittsFlaeche = 0.0d;
-            wbs = new HashSet<Waldbesitzer>();
-            for (Flurstueck flurstueck : entry.getValue()) {
-                sum += flurstueck.flaecheWald.get();
-                wbs.add( flurstueck.waldbesitzer() );
-            }
-            flaecheToGesamtFlaeche.put( entry.getKey(), sum );
-            flaecheToWBS.put( entry.getKey(), wbs.size() );
-            durchschnittsFlaeche = sum / new Double( wbs.size() );
-            flaecheToDurchschnittFlaecheProWBS.put( entry.getKey(), durchschnittsFlaeche );
-        }
-
-        StringBuilder sb = new StringBuilder();
-        int index = -1;
-        Double lowerBound;
-        for (Entry<Double,Integer> entry : flaecheToWBS.entrySet()) {
-            index = flaechenGruppe.indexOf( entry.getKey() );
-            if (index + 1 < flaechenGruppe.size()) {
-                lowerBound = flaechenGruppe.get( index + 1 );
-            }
-            else {
-                lowerBound = null;
-            }
-            if(lowerBound.intValue() >= 0) {
-                sb.append( lowerBound.intValue() + " bis " + entry.getKey().intValue() ).append( ";" );
-            } else {
-                sb.append( "ohne Flächenangabe" ).append( ";" );
-            }
-            sb.append( flaecheToWBS.get( entry.getKey() ) ).append( ";" );
-            sb.append( flaecheToGesamtFlaeche.get( entry.getKey() ) ).append( ";" );
-            sb.append( flaecheToDurchschnittFlaecheProWBS.get( entry.getKey() ) ).append( ";" );
-            sb.append( "\n" );
-        }
-        ByteArrayInputStream bis = new ByteArrayInputStream( sb.toString().getBytes() );
         
-        NumberFormatter haNumberFormatter = new NumberFormatter( 1, 2, 10000, 2 ) {
-            @Override
-            public String format( Number value, ReportParameters params ) {
-                return super.format( value, params ) + " ha";
-            }
-        };
+        // zeilen berechnen -> data source 
+        SimpleDataSource ds = new SimpleDataSource(
+                Column.Flaechengruppe.name(), Column.Anzahl.name(), Column.Gesamt.name(), Column.Durchschnitt.name() );
 
-        JRCsvDataSource datasource = new JRCsvDataSource( bis );
-        datasource.setColumnNames( new String[] { "flaechengruppe", "anzahl_waldbesitzer", "gesamtflaeche",
-                "durchschnittsflaeche" } );
-        datasource.setFieldDelimiter( ';' );
-        datasource.setUseFirstRowAsHeader( false );
-        datasource.setNumberFormat( NumberFormat.getInstance( Locale.US ) );
+        int rowIndex = 0;
+        for (Entry<Double,Collection<Flurstueck>> entry : gruppen.asMap().entrySet()) {
+            double gesamt = 0.0d;
+            HashSet<String> wbIds = new HashSet();
+            for (Flurstueck flurstueck : entry.getValue()) {
+                gesamt += flurstueck.flaecheWald.opt().orElse( 0d );
+                wbIds.add( (String)flurstueck.waldbesitzer().id() );
+            }
+            
+            ds.put( Column.Flaechengruppe, rowIndex, entry.getKey() );
+            ds.put( Column.Anzahl, rowIndex, wbIds.size() );
+            ds.put( Column.Gesamt, rowIndex, gesamt );
+            ds.put( Column.Durchschnitt, rowIndex, gesamt / wbIds.size() );
+            
+            rowIndex ++;
+        }
 
         // report
-        TextColumnBuilder<String> flaechengruppeColumn = col.column( "Flächengruppe", "flaechengruppe",
-                type.stringType() );
-        TextColumnBuilder<Integer> waldbesitzerAnzahlColumn = col.column( "Anzahl der Waldbesitzer",
-                "anzahl_waldbesitzer", type.integerType() );
-        TextColumnBuilder<Double> gesamtflaecheColumn = col.column( "Gesamtfläche pro Flächengruppe", "gesamtflaeche",
-                type.doubleType() ).setValueFormatter( haNumberFormatter);
-        TextColumnBuilder<Double> durchschnittsflaecheColumn = col.column( "Durchschnittl. Waldfläche je WBS",
-                "durchschnittsflaeche", type.doubleType() ).setValueFormatter(haNumberFormatter);
-
-        ReportTemplateBuilder templateBuilder = template();
-        templateBuilder.setSubtotalLabelPosition( Position.BOTTOM );
-        templateBuilder.setSummaryStyle( stl.style().setTopBorder( stl.pen1Point() ) );
+        HaNumberFormatter hanf = new HaNumberFormatter();
+        NumberFormatter anzahlFormatter = new NumberFormatter( 1, 0, 100000, 0 );
+        TextColumnBuilder<Double> gruppeColumn = col
+                .column( "Flächengruppe", Column.Flaechengruppe.name(), type.doubleType() )
+                .setValueFormatter( new IntervallFormatter() );
+        TextColumnBuilder<Integer> anzahlColumn = col
+                .column( "Anzahl der Waldbesitzer", Column.Anzahl.name(), type.integerType() )
+                .setHorizontalAlignment( HorizontalAlignment.RIGHT )
+                .setValueFormatter( anzahlFormatter );
+        TextColumnBuilder<Double> gesamtColumn = col
+                .column( "Gesamtfläche pro Flächengruppe", Column.Gesamt.name(), type.doubleType() )
+                .setValueFormatter( hanf );
+        TextColumnBuilder<Double> durchschnittColumn = col
+                .column( "Durchschnittl. Waldfläche je WBS", Column.Durchschnitt.name(), type.doubleType() )
+                .setValueFormatter( hanf );
 
         return report()
-                .setTemplate( templateBuilder )
-                .setDataSource( datasource )
+                .setTemplate( reportTemplate )
                 .setPageFormat( PageType.A4, PageOrientation.PORTRAIT )
+                .setDataSource( ds )
                 .title( cmp.text( "Meldeliste Anzahl Waldbesitzer nach Größengruppen" ).setStyle( titleStyle ),
-                        cmp.text( "Basis: Waldfläche der Waldbesitzer" ).setStyle( titleStyle ),
+                        cmp.text( "Basis: Waldfläche der Waldbesitzer" ).setStyle( title2Style ),
                         cmp.text( "Forstbezirk: Mittelsachsen" ).setStyle( headerStyle ),
                         cmp.text( "Revier: " + getRevier() /*+ " / Abfrage: \"" + getQuery() + "\""*/ ).setStyle( headerStyle ), 
                         cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
                         cmp.text( "" ).setStyle( headerStyle ) )
                 .pageFooter( cmp.pageXofY().setStyle( footerStyle ) )
-                // number of page
                 .setDetailOddRowStyle( highlightRowStyle )
                 .setColumnTitleStyle( columnTitleStyle )
-                .columns( flaechengruppeColumn, waldbesitzerAnzahlColumn, gesamtflaecheColumn,
-                        durchschnittsflaecheColumn )
-                .columnGrid( flaechengruppeColumn, waldbesitzerAnzahlColumn, gesamtflaecheColumn,
-                        durchschnittsflaecheColumn ).subtotalsAtSummary().sortBy( asc( flaechengruppeColumn ) )
-                .subtotalsAtSummary( sbt.sum( waldbesitzerAnzahlColumn) )
-                .subtotalsAtSummary( sbt.sum( gesamtflaecheColumn).setValueFormatter( haNumberFormatter ) )
-                .subtotalsAtSummary( sbt.sum( durchschnittsflaecheColumn).setValueFormatter( haNumberFormatter ) );
+                .columns( gruppeColumn, anzahlColumn, gesamtColumn, durchschnittColumn )
+                .columnGrid( gruppeColumn, anzahlColumn, gesamtColumn, durchschnittColumn )
+                .subtotalsAtSummary().sortBy( asc( gruppeColumn ) )
+                .subtotalsAtSummary( sbt.text( "("+Iterables.size( revierWaldbesitzer() )+")", anzahlColumn ) )
+                .subtotalsAtSummary( sbt.sum( gesamtColumn ).setValueFormatter( hanf ) )
+                .subtotalsAtSummary( sbt.text( "", durchschnittColumn ) );
     }
 
+ 
+    public class IntervallFormatter
+            extends AbstractValueFormatter<String,Double> {
 
-    private List<Flurstueck> getFlurstueckeForGroup( Map<Double,List<Flurstueck>> flaecheToFlurstuecke, Double key ) {
-        List<Flurstueck> fs = flaecheToFlurstuecke.get( key );
-        if (fs == null) {
-            fs = new ArrayList<Flurstueck>();
-            flaecheToFlurstuecke.put( key, fs );
+        @Override
+        public String format( Double value, ReportParameters params ) {
+            if (value == 0d) {
+                return "Waldfläche unbekannt";
+            }
+            return "bis " + value.intValue() + " ha";
         }
-        return fs;
+
     }
 }

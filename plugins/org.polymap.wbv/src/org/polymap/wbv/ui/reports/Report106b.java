@@ -41,7 +41,6 @@ import java.text.NumberFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import org.polymap.model2.Composite;
 import org.polymap.wbv.model.Flurstueck;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
@@ -64,13 +63,12 @@ import net.sf.jasperreports.engine.data.JRCsvDataSource;
 /**
  * Waldflächen aller Waldbesitzer.
  *
- * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
+ * @author Joerg Reichert <joerg@mapzone.io>
  */
 public class Report106b
         extends WbvReport {
 
-    private static Log      log = LogFactory.getLog( Report106b.class );
-
+    private static final Log log = LogFactory.getLog( Report106b.class );
 
     @Override
     public String getName() {
@@ -80,20 +78,18 @@ public class Report106b
 
     class Group {
 
-        List<Flurstueck>             flurstuecke             = new ArrayList<Flurstueck>();
+        List<Flurstueck>             flurstuecke = new ArrayList<Flurstueck>();
 
-        Map<Double,List<Flurstueck>> flaecheToFlurstuecke    = new HashMap<Double,List<Flurstueck>>();
+        Map<Double,List<Flurstueck>> flaecheToFlurstuecke = new HashMap<Double,List<Flurstueck>>();
 
-        Map<Double,Double>           flaecheToGesamtFlaeche  = new HashMap<Double,Double>();
+        Map<Double,Double>           flaecheToGesamtFlaeche = new HashMap<Double,Double>();
 
-        Map<Double,Integer>          flaecheToWBS            = new HashMap<Double,Integer>();
+        Map<Double,Integer>          flaecheToWBS = new HashMap<Double,Integer>();
     }
 
 
     @Override
     public JasperReportBuilder build() throws DRException, JRException, IOException {
-        super.build();
-
         List<String> arten = new ArrayList<String>();
         arten.add( "Privatwald" );
         arten.add( "Kirchenwald" );
@@ -116,9 +112,7 @@ public class Report106b
         flaechenGruppe.add( 1d );
         flaechenGruppe.add( 0d );
 
-        for (Composite entity : entities) {
-            if (entity instanceof Waldbesitzer) {
-                Waldbesitzer wb = (Waldbesitzer)entity;
+        for (Waldbesitzer wb : revierWaldbesitzer()) {
                 for (Flurstueck flurstueck : wb.flurstuecke( revier.get() )) {
                     Group group = grouped.get( getArt( wb.eigentumsArt.get() ) );
                     group.flurstuecke.add( flurstueck );
@@ -138,7 +132,6 @@ public class Report106b
                         }
                     }
                 }
-            }
         }
 
         Double sum;
