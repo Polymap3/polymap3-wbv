@@ -188,19 +188,6 @@ public class ReportTest {
     }
 
 
-    private void executeTest101( EntityRepository entityRepository, List<Waldbesitzer> wbs, int counter )
-            throws DRException, JRException, IOException, FileNotFoundException {
-        Report101 report = new Report101() {
-
-            @Override
-            protected EntityRepository getRepository() {
-                return entityRepository;
-            }
-        };
-        executeTest( entityRepository, wbs, report, "report101_", counter );
-    }
-
-
     private void executeTest102( EntityRepository entityRepository, List<Waldbesitzer> wbs, int counter )
             throws DRException, JRException, IOException, FileNotFoundException {
         Report102 report = new Report102() {
