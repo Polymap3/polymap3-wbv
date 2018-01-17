@@ -84,6 +84,7 @@ public class Revier {
         Flurstueck fl = Expressions.template( Flurstueck.class, WbvRepository.repo() );
         
         Gemarkung[] revierGemarkungen = gemarkungen.toArray( new Gemarkung[gemarkungen.size()] );
+        // FIXME gelöschte Flurstücke!
         return anyOf( wb.flurstuecke, isAnyOf( fl.gemarkung, revierGemarkungen ) );
     });
 

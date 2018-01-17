@@ -479,7 +479,7 @@ public class WaldbesitzerPanel
                 public void widgetSelected( SelectionEvent ev ) {
                     kontakt.geloescht.set( true );
                     section.dispose();
-                    kForms.remove( form );
+                    kForms.remove( formContainer );
                     getSite().layout( true );
 
                     statusAdapter.updateStatusOf( parent, new Status( IStatus.OK, WbvPlugin.ID, "Ein Kontakt gelöscht" ) );

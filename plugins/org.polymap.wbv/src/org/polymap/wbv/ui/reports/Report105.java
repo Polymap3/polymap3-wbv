@@ -41,11 +41,12 @@ import org.polymap.wbv.model.Waldbesitzer;
  * Waldflächen aller Waldbesitzer.
  *
  * @author Joerg Reichert <joerg@mapzone.io>
+ * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class Report105
         extends WaldbesitzerReport {
 
-    private static Log      log = LogFactory.getLog( Report105.class );
+    private static final Log log = LogFactory.getLog( Report105.class );
 
     @Override
     public String getName() {

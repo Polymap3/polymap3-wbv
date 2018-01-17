@@ -17,12 +17,15 @@ package org.polymap.wbv.model.fulltext;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
+import org.json.JSONObject;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import org.polymap.model2.Association;
 import org.polymap.model2.CollectionProperty;
 import org.polymap.model2.Composite;
+import org.polymap.model2.Entity;
 import org.polymap.model2.Property;
 import org.polymap.rhei.fulltext.model2.EntityFeatureTransformer;
 
@@ -39,7 +42,7 @@ import org.polymap.wbv.model.Waldbesitzer.Waldeigentumsart;
 public class WaldbesitzerFulltextTransformer
         extends EntityFeatureTransformer {
 
-    private static Log log = LogFactory.getLog( WaldbesitzerFulltextTransformer.class );
+    private static final Log log = LogFactory.getLog( WaldbesitzerFulltextTransformer.class );
 
     public static final Pattern         whitespace = Pattern.compile( "\\s" );
     
@@ -50,7 +53,15 @@ public class WaldbesitzerFulltextTransformer
         honorQueryableAnnotation.set( true );
     }
 
-
+    
+    @Override
+    public JSONObject apply( Entity entity ) {
+        JSONObject json = super.apply( entity );
+        log.debug( "JSON: " + json.toString( 4 ) );
+        return json;
+    }
+    
+    
     @Override
     protected void visitProperty( Property prop ) {        
         Object value = prop.get();
