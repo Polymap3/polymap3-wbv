@@ -179,6 +179,7 @@ public class ReportTest {
     }
 
 
+    @SuppressWarnings( "hiding" )
     private void executeTest102( EntityRepository entityRepository, List<Waldbesitzer> wbs, int counter )
             throws DRException, JRException, IOException, FileNotFoundException {
         Report102 report = new Report102() {
@@ -192,6 +193,7 @@ public class ReportTest {
     }
 
 
+    @SuppressWarnings( "hiding" )
     private void executeTest103( EntityRepository entityRepository, List<Waldbesitzer> wbs, int counter )
             throws DRException, JRException, IOException, FileNotFoundException {
         Report103 report = new Report103() {
@@ -215,6 +217,7 @@ public class ReportTest {
     }
 
 
+    @SuppressWarnings( "hiding" )
     private void executeTest105( EntityRepository entityRepository, List<Waldbesitzer> wbs, int counter )
             throws DRException, JRException, IOException, FileNotFoundException {
         Report105 report = new Report105() {
@@ -228,6 +231,7 @@ public class ReportTest {
     }
 
 
+    @SuppressWarnings( "hiding" )
     private void executeTest106( EntityRepository entityRepository, List<Waldbesitzer> wbs, int counter )
             throws DRException, JRException, IOException, FileNotFoundException {
         Report106 report = new Report106() {
@@ -251,6 +255,7 @@ public class ReportTest {
     }
 
 
+    @SuppressWarnings( "hiding" )
     private void executeTest106b( EntityRepository entityRepository, List<Waldbesitzer> wbs, int counter )
             throws DRException, JRException, IOException, FileNotFoundException {
         Report106b report = new Report106b() {
@@ -274,6 +279,7 @@ public class ReportTest {
     }
 
 
+    @SuppressWarnings( "hiding" )
     private void executeTest106c( EntityRepository entityRepository, List<Waldbesitzer> wbs, int counter )
             throws DRException, JRException, IOException, FileNotFoundException {
         Report106c report = new Report106c() {
@@ -297,6 +303,7 @@ public class ReportTest {
     }
 
 
+    @SuppressWarnings( "hiding" )
     private void executeTest( EntityRepository entityRepository, List<Waldbesitzer> wbs, WbvReport report, String name,
             int counter ) throws DRException, JRException, IOException, FileNotFoundException {
         report.setViewerEntities( wbs );
