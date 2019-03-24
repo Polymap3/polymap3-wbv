@@ -1,6 +1,6 @@
 /* 
  * polymap.org
- * Copyright (C) 2017, the @authors. All rights reserved.
+ * Copyright (C) 2017-2018, the @authors. All rights reserved.
  *
  * This is free software; you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as
@@ -26,7 +26,7 @@ import net.sf.jasperreports.engine.JRException;
 import net.sf.jasperreports.engine.JRField;
 
 /**
- * Simple, in-memory data source.
+ * In-memory data source used by the reports.
  *
  * @author Falko Bräutigam
  */

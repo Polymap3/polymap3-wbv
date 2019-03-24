@@ -15,14 +15,11 @@
 package org.polymap.wbv.ui.reports;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.asc;
-import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
 import static net.sf.dynamicreports.report.builder.DynamicReports.col;
-import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import static net.sf.dynamicreports.report.builder.DynamicReports.sbt;
 import static net.sf.dynamicreports.report.builder.DynamicReports.type;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -41,8 +38,6 @@ import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractValueFormatter;
 import net.sf.dynamicreports.report.builder.column.TextColumnBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalAlignment;
-import net.sf.dynamicreports.report.constant.PageOrientation;
-import net.sf.dynamicreports.report.constant.PageType;
 import net.sf.dynamicreports.report.definition.ReportParameters;
 import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRException;
@@ -130,19 +125,10 @@ public class Report106
                 .column( "Durchschnittl. Waldfläche je WBS", Column.Durchschnitt.name(), type.doubleType() )
                 .setValueFormatter( hanf );
 
-        return report()
-                .setTemplate( reportTemplate )
-                .setPageFormat( PageType.A4, PageOrientation.PORTRAIT )
+        return newReport( 
+                "Meldeliste Anzahl Waldbesitzer nach Größengruppen",
+                "Basis: Waldfläche der Waldbesitzer" )
                 .setDataSource( ds )
-                .title( cmp.text( "Meldeliste Anzahl Waldbesitzer nach Größengruppen" ).setStyle( titleStyle ),
-                        cmp.text( "Basis: Waldfläche der Waldbesitzer" ).setStyle( title2Style ),
-                        cmp.text( "Forstbezirk: Mittelsachsen" ).setStyle( headerStyle ),
-                        cmp.text( "Revier: " + getRevier() /*+ " / Abfrage: \"" + getQuery() + "\""*/ ).setStyle( headerStyle ), 
-                        cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
-                        cmp.text( "" ).setStyle( headerStyle ) )
-                .pageFooter( cmp.pageXofY().setStyle( footerStyle ) )
-                .setDetailOddRowStyle( highlightRowStyle )
-                .setColumnTitleStyle( columnTitleStyle )
                 .columns( gruppeColumn, anzahlColumn, gesamtColumn, durchschnittColumn )
                 .columnGrid( gruppeColumn, anzahlColumn, gesamtColumn, durchschnittColumn )
                 .subtotalsAtSummary().sortBy( asc( gruppeColumn ) )

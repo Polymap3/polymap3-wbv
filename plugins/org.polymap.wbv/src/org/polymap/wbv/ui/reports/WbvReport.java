@@ -15,8 +15,10 @@
 package org.polymap.wbv.ui.reports;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.stl;
-
+import static net.sf.dynamicreports.report.builder.DynamicReports.cmp;
+import static net.sf.dynamicreports.report.builder.DynamicReports.report;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
@@ -41,12 +43,15 @@ import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.WbvRepository;
 
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.base.expression.AbstractValueFormatter;
 import net.sf.dynamicreports.report.builder.DynamicReports;
 import net.sf.dynamicreports.report.builder.ReportTemplateBuilder;
 import net.sf.dynamicreports.report.builder.style.SimpleStyleBuilder;
 import net.sf.dynamicreports.report.builder.style.StyleBuilder;
 import net.sf.dynamicreports.report.constant.HorizontalAlignment;
+import net.sf.dynamicreports.report.constant.PageOrientation;
+import net.sf.dynamicreports.report.constant.PageType;
 import net.sf.dynamicreports.report.constant.Position;
 import net.sf.dynamicreports.report.definition.ReportParameters;
 
@@ -65,7 +70,7 @@ public abstract class WbvReport
             Report103.class,
             Report105.class,
             Report106.class,
-            Report106b.class,
+            Report106b_1.class,
             Report106c.class );
     
     public static final List<Supplier<WbvReport>> factories = Lists.transform( reports, cl -> () -> {
@@ -141,6 +146,25 @@ public abstract class WbvReport
         reportTemplate.setPageMargin( DynamicReports.margin().setTop( 50 ).setLeft( 45 ).setBottom( 50 ).setRight( 55 ) );
     }
 
+    
+    /**
+     * Creates a new report with defaults styles and default header.
+     */
+    protected JasperReportBuilder newReport( String title, String title2 ) {
+        return report()
+                .setTemplate( reportTemplate )
+                .setPageFormat( PageType.A4, PageOrientation.PORTRAIT )
+                .title( cmp.text( title ).setStyle( titleStyle ),
+                        cmp.text( title2 ).setStyle( title2Style ),
+                        cmp.text( "Forstbezirk: Mittelsachsen" ).setStyle( headerStyle ),
+                        cmp.text( "Revier: " + getRevier() /*+ " / Abfrage: \"" + getQuery() + "\""*/ ).setStyle( headerStyle ), 
+                        cmp.text( df.format( new Date() ) ).setStyle( headerStyle ),
+                        cmp.text( "" ).setStyle( headerStyle ) )
+                .pageFooter( cmp.pageXofY().setStyle( footerStyle ) )
+                .setDetailOddRowStyle( highlightRowStyle )
+                .setColumnTitleStyle( columnTitleStyle );
+    }
+    
     
     public EntityReport setViewerEntities( Iterable<Waldbesitzer> entities ) {
         this.viewerEntities = entities;
