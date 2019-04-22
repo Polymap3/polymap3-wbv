@@ -53,7 +53,7 @@ public class Report106
 
     private static final Log log = LogFactory.getLog( Report106.class );
 
-    private static final TreeSet<Double> intervalle = Sets.newTreeSet( Arrays.asList( 10000d, 1000d, 500d, 200d, 100d, 50d, 20d, 10d, 5d, 1d, 0d ) );
+    private static final TreeSet<Double> INTERVALL_GRENZEN = Sets.newTreeSet( Arrays.asList( 10000d, 1000d, 500d, 200d, 100d, 50d, 20d, 10d, 5d, 1d, 0d ) );
     
     private enum Column {
         Flaechengruppe, Anzahl, Gesamt, Durchschnitt
@@ -90,7 +90,7 @@ public class Report106
             double flaecheWald = wb.flurstuecke( revier.get() ).stream()
                     .mapToDouble( fst -> fst.flaecheWald.opt().orElse( 0d ) )
                     .sum();
-            Double gruppe = intervalle.higher( flaecheWald - 0.00001d );  // flaeche kleiner oder *gleich* intervallgrenze
+            Double gruppe = INTERVALL_GRENZEN.higher( flaecheWald - 0.00001d );  // flaeche kleiner oder *gleich* intervallgrenze
             gruppen.computeIfAbsent( gruppe, key -> new RowAccu() ).add( flaecheWald );
         }
         

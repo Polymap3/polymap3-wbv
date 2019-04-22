@@ -55,19 +55,30 @@ public class Report106b_1
 
     private static final Log log = LogFactory.getLog( Report106b_1.class );
 
-    private static final TreeSet<Double> intervalle = Sets.newTreeSet( Arrays.asList( 10000d, 1000d, 500d, 200d, 100d, 50d, 20d, 10d, 5d, 1d, 0d ) );
+    private static final TreeSet<Double> INTERVALL_GRENZEN = Sets.newTreeSet( Arrays.asList( 10000d, 1000d, 500d, 200d, 100d, 50d, 20d, 10d, 5d, 1d, 0d ) );
     
     private enum Column {
-        Flaechengruppe, PrivatAnzahl, PrivatFlaeche, KircheAnzahl, KircheFlaeche, KoerpAnzahl, KoerpFlaeche
+        Flaechengruppe, PrivatAnzahl, PrivatFlaeche, KircheAnzahl, KircheFlaeche, KoerpAnzahl, KoerpFlaeche, StaatAnzahl, StaatFlaeche
     }
 
     
     class RowAccu {
-        public int      koerpAnzahl, kircheAnzahl, privatAnzahl;
-        public double   koerpFlaeche, kircheFlaeche, privatFlaeche;
+        public int      koerpAnzahl, kircheAnzahl, privatAnzahl, staatAnzahl, bvvgAnzahl;
+        public double   koerpFlaeche, kircheFlaeche, privatFlaeche, staatFlaeche, bvvgFlaeche;
         
         public RowAccu add( Waldeigentumsart eigentumsart, double flaeche ) {
             switch (eigentumsart) {
+                case Staat_Bund:
+                case Staat_Sachsen: {
+                    staatFlaeche += flaeche;
+                    staatAnzahl ++;
+                    break;
+                }
+                case BVVG: {
+                    bvvgAnzahl ++;
+                    bvvgFlaeche += flaeche;
+                    break;
+                }
                 case Kirche42:
                 case Kirche43: {
                     kircheFlaeche += flaeche;
@@ -78,10 +89,14 @@ public class Report106b_1
                 case Körperschaft_ZVB: {
                     koerpFlaeche += flaeche;
                     koerpAnzahl ++;
+                    break;
                 }
                 case Privat: {
                     privatFlaeche += flaeche;
                     privatAnzahl ++;
+                    break;
+                }
+                case Unbekannt: {
                 }
             }
             return this;
@@ -108,17 +123,18 @@ public class Report106b_1
             double flaecheWald = wb.flurstuecke( revier.get() ).stream()
                     .mapToDouble( fst -> fst.flaecheWald.opt().orElse( 0d ) )
                     .sum();
-            Double gruppe = intervalle.higher( flaecheWald - 0.00001d );  // flaeche kleiner oder *gleich* intervallgrenze
+            Double gruppe = INTERVALL_GRENZEN.higher( flaecheWald - 0.00001d );  // flaeche kleiner oder *gleich* intervallgrenze
             RowAccu rowAccu = gruppen.computeIfAbsent( gruppe, key -> new RowAccu() );
             rowAccu.add( wb.eigentumsArt.get(), flaecheWald );
         }
         
-        // zeilen berechnen -> data source 
+        // data source 
         SimpleDataSource ds = new SimpleDataSource(
                 Column.Flaechengruppe.name(), 
                 Column.PrivatAnzahl.name(), Column.PrivatFlaeche.name(),
                 Column.KircheAnzahl.name(), Column.KircheFlaeche.name(),
-                Column.KoerpAnzahl.name(), Column.KoerpFlaeche.name() );
+                Column.KoerpAnzahl.name(), Column.KoerpFlaeche.name(),
+                Column.StaatAnzahl.name(), Column.StaatFlaeche.name() );
 
         int rowIndex = 0;
         for (Entry<Double,RowAccu> entry : gruppen.entrySet()) {
@@ -129,7 +145,8 @@ public class Report106b_1
             ds.put( Column.KircheFlaeche, rowIndex, entry.getValue().kircheFlaeche );
             ds.put( Column.KoerpAnzahl, rowIndex, entry.getValue().koerpAnzahl );
             ds.put( Column.KoerpFlaeche, rowIndex, entry.getValue().koerpFlaeche );
-            
+            ds.put( Column.StaatAnzahl, rowIndex, entry.getValue().staatAnzahl );
+            ds.put( Column.StaatFlaeche, rowIndex, entry.getValue().staatFlaeche );
             rowIndex ++;
         }
 
@@ -160,13 +177,21 @@ public class Report106b_1
         TextColumnBuilder<Double> koerpFlaecheCol = col
                 .column( "KdöR\nFläche", Column.KoerpFlaeche.name(), type.doubleType() )
                 .setValueFormatter( hanf );
+        TextColumnBuilder<Integer> staatAnzahlCol = col
+                .column( "Staat\nAnzahl", Column.StaatAnzahl.name(), type.integerType() )
+                .setHorizontalAlignment( HorizontalAlignment.RIGHT )
+                .setValueFormatter( anzahlFormatter );
+        TextColumnBuilder<Double> staatFlaecheCol = col
+                .column( "Staat\nFläche", Column.StaatFlaeche.name(), type.doubleType() )
+                .setValueFormatter( hanf );
 
         return newReport( 
                 "Meldeliste Anzahl Waldbesitzer nach Größengruppen (Agrarbericht)",
                 "Basis: Waldfläche der Waldbesitzer" )
                 .setPageFormat( PageType.A4, PageOrientation.LANDSCAPE )
                 .setDataSource( ds )
-                .columns( gruppeColumn, privatAnzahlCol, privatFlaecheCol, kircheAnzahlCol, kircheFlaecheCol, koerpAnzahlCol, koerpFlaecheCol )
+                .columns( gruppeColumn, privatAnzahlCol, privatFlaecheCol, kircheAnzahlCol, kircheFlaecheCol, 
+                        koerpAnzahlCol, koerpFlaecheCol, staatAnzahlCol, staatFlaecheCol )
                 //.columnGrid( gruppeColumn, privatAnzahlCol, privatFlaecheCol, kircheAnzahlCol, kircheFlaecheCol, koerpAnzahlCol, koerpFlaecheCol )
                 //.subtotalsAtSummary()
                 //.subtotalsAtSummary( DynamicReports.sbt.sum( anzahlColumn ).setValueFormatter( anzahlFormatter ) )
@@ -177,7 +202,9 @@ public class Report106b_1
                         Subtotals.sum( kircheAnzahlCol ), 
                         Subtotals.sum( kircheFlaecheCol ).setValueFormatter( hanf ),
                         Subtotals.sum( koerpAnzahlCol ), 
-                        Subtotals.sum( koerpFlaecheCol ).setValueFormatter( hanf ) )
+                        Subtotals.sum( koerpFlaecheCol ).setValueFormatter( hanf ),
+                        Subtotals.sum( staatAnzahlCol ), 
+                        Subtotals.sum( staatFlaecheCol ).setValueFormatter( hanf ) )
                 .sortBy( asc( gruppeColumn ) );
     }
 
@@ -189,6 +216,6 @@ public class Report106b_1
         public String format( Double value, ReportParameters params ) {
             return value > 0d ? "bis " + value.intValue() + " ha" : "Unbekannt";
         }
-
     }
+    
 }
