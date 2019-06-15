@@ -63,8 +63,8 @@ public class Report106b_1
 
     
     class RowAccu {
-        public int      koerpAnzahl, kircheAnzahl, privatAnzahl, staatAnzahl, bvvgAnzahl;
-        public double   koerpFlaeche, kircheFlaeche, privatFlaeche, staatFlaeche, bvvgFlaeche;
+        public int      koerpAnzahl, kircheAnzahl, privatAnzahl, staatAnzahl;
+        public double   koerpFlaeche, kircheFlaeche, privatFlaeche, staatFlaeche;
         
         public RowAccu add( Waldeigentumsart eigentumsart, double flaeche ) {
             switch (eigentumsart) {
@@ -72,11 +72,6 @@ public class Report106b_1
                 case Staat_Sachsen: {
                     staatFlaeche += flaeche;
                     staatAnzahl ++;
-                    break;
-                }
-                case BVVG: {
-                    bvvgAnzahl ++;
-                    bvvgFlaeche += flaeche;
                     break;
                 }
                 case Kirche42:
@@ -91,6 +86,7 @@ public class Report106b_1
                     koerpAnzahl ++;
                     break;
                 }
+                case BVVG:
                 case Privat: {
                     privatFlaeche += flaeche;
                     privatAnzahl ++;
