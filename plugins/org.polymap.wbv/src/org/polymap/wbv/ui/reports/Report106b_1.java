@@ -193,13 +193,13 @@ public class Report106b_1
                 //.subtotalsAtSummary( DynamicReports.sbt.sum( anzahlColumn ).setValueFormatter( anzahlFormatter ) )
 //                .subtotalsAtSummary( sbt.sum( gesamtColumn ).setValueFormatter( hanf ) )
                 .subtotalsAtSummary( 
-                        Subtotals.sum( privatAnzahlCol ), 
+                        Subtotals.sum( privatAnzahlCol ).setValueFormatter( anzahlFormatter ), 
                         Subtotals.sum( privatFlaecheCol ).setValueFormatter( hanf ),
-                        Subtotals.sum( kircheAnzahlCol ), 
+                        Subtotals.sum( kircheAnzahlCol ).setValueFormatter( anzahlFormatter ), 
                         Subtotals.sum( kircheFlaecheCol ).setValueFormatter( hanf ),
-                        Subtotals.sum( koerpAnzahlCol ), 
+                        Subtotals.sum( koerpAnzahlCol ).setValueFormatter( anzahlFormatter ), 
                         Subtotals.sum( koerpFlaecheCol ).setValueFormatter( hanf ),
-                        Subtotals.sum( staatAnzahlCol ), 
+                        Subtotals.sum( staatAnzahlCol ).setValueFormatter( anzahlFormatter ), 
                         Subtotals.sum( staatFlaecheCol ).setValueFormatter( hanf ) )
                 .sortBy( asc( gruppeColumn ) );
     }
