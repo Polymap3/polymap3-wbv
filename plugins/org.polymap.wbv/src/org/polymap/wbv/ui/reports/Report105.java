@@ -78,7 +78,7 @@ public class Report105
 
         // report
         TextColumnBuilder<String> nameColumn = col.column( "Waldbesitzer", new NameExpr() );
-        TextColumnBuilder<Double> flaecheColumn = col.column( "Fläche (Wald)", "gesamtWald", type.doubleType() )
+        TextColumnBuilder<Double> flaecheColumn = col.column( "Fläche (Wald) in ha", "gesamtWald", type.doubleType() )
                 .setValueFormatter( new NumberFormatter( 1, 4, 100, 4 ) );
 
         return report()
