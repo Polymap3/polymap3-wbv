@@ -304,8 +304,9 @@ public class ReportTest {
 
 
     @SuppressWarnings( "hiding" )
-    private void executeTest( EntityRepository entityRepository, List<Waldbesitzer> wbs, WbvReport report, String name,
-            int counter ) throws DRException, JRException, IOException, FileNotFoundException {
+    private void executeTest( EntityRepository entityRepository, List<Waldbesitzer> wbs, 
+            WbvReport<JasperReportBuilder> report, String name, int counter ) 
+            throws DRException, JRException, IOException, FileNotFoundException {
         report.setViewerEntities( wbs );
         JasperReportBuilder builder = report.build();
         File file = new File( name + counter + ".pdf" );

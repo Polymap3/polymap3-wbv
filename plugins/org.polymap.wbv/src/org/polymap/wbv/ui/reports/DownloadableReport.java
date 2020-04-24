@@ -14,6 +14,9 @@
  */
 package org.polymap.wbv.ui.reports;
 
+import java.util.Deque;
+import java.util.List;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -37,34 +40,39 @@ import org.polymap.rap.updownload.download.DownloadService;
  * {@link ContentProvider} for the download service. In this case the report is
  * {@link #build()} and executed asynchronously inside an {@link UIJob}.
  * 
+ * @param <R> The type of the report builder ({@link JasperReportBuilder} for example).
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public abstract class DownloadableReport
+public abstract class DownloadableReport<R>
         implements DownloadService.ContentProvider {
 
-    private static Log log = LogFactory.getLog( DownloadableReport.class );
+    private static final Log log = LogFactory.getLog( DownloadableReport.class );
     
     /**
-     * 
+     * Decouples the creation of the content of an individual report from building
+     * the particular report output format.
      */
     public enum OutputType {
         PDF( "application/pdf", "PDF" ) {
-            public void create( JasperReportBuilder report, OutputStream out ) throws Exception { report.toPdf( out ); }
+            public void create( Object report, OutputStream out ) throws Exception { ((JasperReportBuilder)report).toPdf( out ); }
         },
         HTML( "text/html", "HTML" ) {
-            public void create( JasperReportBuilder report, OutputStream out ) throws Exception { report.toHtml( out ); }
+            public void create( Object report, OutputStream out ) throws Exception { ((JasperReportBuilder)report).toHtml( out ); }
         },
         ODT( "application/vnd.oasis.opendocument.text", "LibreOffice" ) {
-            public void create( JasperReportBuilder report, OutputStream out ) throws Exception { report.toOdt( out ); }
+            public void create( Object report, OutputStream out ) throws Exception { ((JasperReportBuilder)report).toOdt( out ); }
         },
         ODS( "application/vnd.oasis.opendocument.spreadsheet", "LibreOffice" ) {
-            public void create( JasperReportBuilder report, OutputStream out ) throws Exception { report.toOds( out ); }
+            public void create( Object report, OutputStream out ) throws Exception { ((JasperReportBuilder)report).toOds( out ); }
         },
         DOCX( "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "MS-Word" ) {
-            public void create( JasperReportBuilder report, OutputStream out ) throws Exception { report.toDocx( out ); }
+            public void create( Object report, OutputStream out ) throws Exception { ((JasperReportBuilder)report).toDocx( out ); }
         },
         XLSX( "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "MS-Excel" ) {
-            public void create( JasperReportBuilder report, OutputStream out ) throws Exception { report.toXlsx( out ); }
+            public void create( Object report, OutputStream out ) throws Exception { ((JasperReportBuilder)report).toXlsx( out ); }
+        },
+        CSV( "text/csv", "CSV" ) {
+            public void create( Object report, OutputStream out ) throws Exception { CsvBuilder.toExcelCsv( (Deque<List>)report, out ); }
         };
         
         public String      mimeType;
@@ -80,7 +88,7 @@ public abstract class DownloadableReport
             return name().toLowerCase();
         }
         
-        public abstract void create( JasperReportBuilder report, OutputStream out ) throws Exception;
+        public abstract void create( Object report, OutputStream out ) throws Exception;
     }
 
     
@@ -96,7 +104,7 @@ public abstract class DownloadableReport
 
     public abstract String getName();
     
-    public abstract JasperReportBuilder build() throws DRException, JRException, IOException;
+    public abstract R build() throws DRException, JRException, IOException;
 
 
     // ContentProvider ************************************
@@ -149,9 +157,14 @@ public abstract class DownloadableReport
         @Override
         protected void runWithException( IProgressMonitor monitor ) throws Exception {
             try {
-                JasperReportBuilder report = build();
+                R report = build();
                 if (log.isDebugEnabled()) {
-                    report.toJrXml( System.out );
+                    if (report != null && report instanceof JasperReportBuilder) {
+                        ((JasperReportBuilder)report).toJrXml( System.out );
+                    }
+                    else {
+                        System.out.println( "report is null!" );
+                    }
                 }
 
                 outputType.create( report, out );

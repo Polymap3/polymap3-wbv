@@ -70,6 +70,7 @@ import org.polymap.wbv.WbvPlugin;
 import org.polymap.wbv.model.Revier;
 import org.polymap.wbv.model.Waldbesitzer;
 import org.polymap.wbv.model.WbvRepository;
+import org.polymap.wbv.ui.reports.AddressExport;
 import org.polymap.wbv.ui.reports.DownloadableReport.OutputType;
 import org.polymap.wbv.ui.reports.WbvReport;
 
@@ -241,7 +242,7 @@ public class StartPanel
                 try {
                     if (reports.getSelectionIndex() > 0) {
                         WbvReport report = WbvReport.factories.get( reports.getSelectionIndex()-1 ).get();
-                        report.setOutputType( OutputType.PDF );
+                        report.setOutputType( report instanceof AddressExport ? OutputType.CSV : OutputType.PDF );
                         report.setViewerEntities( viewer.getInput() );
                         String url = DownloadService.registerContent( report );
 

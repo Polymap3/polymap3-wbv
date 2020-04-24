@@ -51,7 +51,7 @@ import net.sf.jasperreports.engine.JRException;
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
 public class Report106b_1
-        extends WbvReport {
+        extends WbvReport<JasperReportBuilder> {
 
     private static final Log log = LogFactory.getLog( Report106b_1.class );
 

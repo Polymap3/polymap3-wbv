@@ -60,8 +60,8 @@ import net.sf.dynamicreports.report.definition.ReportParameters;
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public abstract class WbvReport
-        extends EntityReport {
+public abstract class WbvReport<R>
+        extends EntityReport<R> {
 
     private static final Log log = LogFactory.getLog( WbvReport.class );
 
@@ -71,7 +71,8 @@ public abstract class WbvReport
             Report105.class,
             Report106.class,
             Report106b_1.class,
-            Report106c.class );
+            Report106c.class,
+            AddressExport.class );
     
     public static final List<Supplier<WbvReport>> factories = Lists.transform( reports, cl -> () -> {
             try {

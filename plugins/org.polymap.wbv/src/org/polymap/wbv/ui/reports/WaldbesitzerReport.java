@@ -24,6 +24,7 @@ import com.google.common.base.Strings;
 import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer;
 
+import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.expression.AbstractComplexExpression;
 import net.sf.dynamicreports.report.definition.ReportParameters;
 
@@ -32,7 +33,7 @@ import net.sf.dynamicreports.report.definition.ReportParameters;
  * @author Joerg Reichert <joerg@mapzone.io>
  */
 public abstract class WaldbesitzerReport
-        extends WbvReport {
+        extends WbvReport<JasperReportBuilder> {
     
     protected String besitzerName( Waldbesitzer wb ) {
         Kontakt besitzer = wb.besitzer();

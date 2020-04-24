@@ -53,8 +53,8 @@ import org.polymap.wbv.ui.reports.WbvReport.NumberFormatter;
  *
  * @author <a href="http://www.polymap.de">Falko Bräutigam</a>
  */
-public abstract class EntityReport
-        extends DownloadableReport {
+public abstract class EntityReport<R>
+        extends DownloadableReport<R> {
 
     private static final Log log = LogFactory.getLog( EntityReport.class );
 

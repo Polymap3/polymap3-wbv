@@ -60,7 +60,7 @@ import net.sf.jasperreports.engine.data.JsonDataSource;
  * @author Joerg Reichert <joerg@mapzone.io>
  */
 public class Report106c
-        extends WbvReport {
+        extends WbvReport<JasperReportBuilder> {
 
     private static Log      log = LogFactory.getLog( Report106c.class );
 
