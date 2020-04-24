@@ -35,7 +35,7 @@ import net.sf.jasperreports.engine.JRException;
  * @author falko
  */
 public class AddressExport
-        extends WbvReport<Deque<List>> {
+        extends WbvReport<Deque<List<?>>> {
 
     private static final Log log = LogFactory.getLog( AddressExport.class );
 
@@ -46,8 +46,8 @@ public class AddressExport
 
 
     @Override
-    public Deque<List> build() throws DRException, JRException, IOException {
-        Deque<List> result = new ArrayDeque<>( 1024 );
+    public Deque<List<?>> build() throws DRException, JRException, IOException {
+        Deque<List<?>> result = new ArrayDeque<>( 1024 );
         
         for (Waldbesitzer wb : gesuchteWaldbesitzer()) {
             Kontakt besitzer = wb.besitzer();

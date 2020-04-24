@@ -231,7 +231,7 @@ public class StartPanel
         // reports
         final Combo reports = new Combo( body, SWT.BORDER | SWT.READ_ONLY );
         reports.add( "Auswertung wählen..." );
-        for (Supplier<WbvReport> factory : WbvReport.factories) {
+        for (Supplier<WbvReport<?>> factory : WbvReport.factories) {
             reports.add( factory.get().getName() );
         }
         reports.setVisibleItemCount( 8 );
@@ -241,7 +241,7 @@ public class StartPanel
             public void widgetSelected( SelectionEvent ev ) {
                 try {
                     if (reports.getSelectionIndex() > 0) {
-                        WbvReport report = WbvReport.factories.get( reports.getSelectionIndex()-1 ).get();
+                        WbvReport<?> report = WbvReport.factories.get( reports.getSelectionIndex()-1 ).get();
                         report.setOutputType( report instanceof AddressExport ? OutputType.CSV : OutputType.PDF );
                         report.setViewerEntities( viewer.getInput() );
                         String url = DownloadService.registerContent( report );

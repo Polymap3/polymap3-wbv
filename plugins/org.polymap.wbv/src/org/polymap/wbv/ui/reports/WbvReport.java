@@ -65,7 +65,7 @@ public abstract class WbvReport<R>
 
     private static final Log log = LogFactory.getLog( WbvReport.class );
 
-    private static final List<Class<? extends WbvReport>> reports = Arrays.asList( 
+    private static final List<Class<? extends WbvReport<?>>> reports = Arrays.asList( 
             Report102.class, 
             Report103.class,
             Report105.class,
@@ -74,9 +74,9 @@ public abstract class WbvReport<R>
             Report106c.class,
             AddressExport.class );
     
-    public static final List<Supplier<WbvReport>> factories = Lists.transform( reports, cl -> () -> {
+    public static final List<Supplier<WbvReport<?>>> factories = Lists.transform( reports, cl -> () -> {
             try {
-                WbvReport report = cl.newInstance();
+                WbvReport<?> report = cl.newInstance();
                 return BatikApplication.instance().getContext().propagate( report );
             }
             catch (Exception e) {
@@ -167,7 +167,7 @@ public abstract class WbvReport<R>
     }
     
     
-    public EntityReport setViewerEntities( Iterable<Waldbesitzer> entities ) {
+    public EntityReport<R> setViewerEntities( Iterable<Waldbesitzer> entities ) {
         this.viewerEntities = entities;
         return this;
     }

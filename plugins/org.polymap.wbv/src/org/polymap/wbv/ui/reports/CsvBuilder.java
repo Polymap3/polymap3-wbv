@@ -36,12 +36,12 @@ public class CsvBuilder {
     private static final Log log = LogFactory.getLog( CsvBuilder.class );
 
     
-    public static void toExcelCsv( Deque<List> lines, OutputStream out ) throws IOException {
+    public static void toExcelCsv( Deque<List<?>> lines, OutputStream out ) throws IOException {
         // quoteChar, delimiterChar, endOfLineSymbols
         CsvPreference prefs = CsvPreference.EXCEL_NORTH_EUROPE_PREFERENCE; //  // new CsvPreference( '"', ',', "\r\n" );
         ICsvListWriter csv = new CsvListWriter( new OutputStreamWriter( out, "UTF-8" ), prefs );
         
-        for (List line : lines) {
+        for (List<?> line : lines) {
             csv.write( line );
         }
         csv.close();

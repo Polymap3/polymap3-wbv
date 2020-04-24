@@ -72,7 +72,7 @@ public abstract class DownloadableReport<R>
             public void create( Object report, OutputStream out ) throws Exception { ((JasperReportBuilder)report).toXlsx( out ); }
         },
         CSV( "text/csv", "CSV" ) {
-            public void create( Object report, OutputStream out ) throws Exception { CsvBuilder.toExcelCsv( (Deque<List>)report, out ); }
+            public void create( Object report, OutputStream out ) throws Exception { CsvBuilder.toExcelCsv( (Deque<List<?>>)report, out ); }
         };
         
         public String      mimeType;
@@ -97,7 +97,7 @@ public abstract class DownloadableReport<R>
     protected OutputType                    outputType;
     
     
-    public DownloadableReport setOutputType( OutputType outputType ) {
+    public DownloadableReport<R> setOutputType( OutputType outputType ) {
         this.outputType = outputType;
         return this;
     }
