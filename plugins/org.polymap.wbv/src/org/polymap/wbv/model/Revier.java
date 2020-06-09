@@ -47,10 +47,10 @@ public class Revier {
     /**
      * Alle Reviere: Reviername -> {@link Revier}
      */
-    public static Lazy<Map<String,Revier>> all = new CachedLazyInit( new Supplier<Map<String,Revier>>() {
+    public static Lazy<Map<String,Revier>> all = new CachedLazyInit<>( new Supplier<Map<String,Revier>>() {
         public Map<String,Revier> get() {
             UnitOfWork uow = WbvRepository.newUnitOfWork();
-            Map<String,Revier> result = new TreeMap();
+            Map<String,Revier> result = new TreeMap<>();
             ResultSet<Gemarkung> gmks = uow.query( Gemarkung.class ).execute();
             for (Gemarkung gemarkung : gmks) {
                 String name = gemarkung.revier.get();
@@ -73,13 +73,14 @@ public class Revier {
      * auch diese Instanzen von {@link Gemarkung} aus einer globalen
      * {@link UnitOfWork}, die nicht mehr gültig ist.
      */
-    public List<Gemarkung>          gemarkungen = new ArrayList( 128 );
+    public List<Gemarkung>          gemarkungen = new ArrayList<>( 128 );
+    
 
     /**
      * Eine {@link BooleanExpression}, die {@link Waldbesitzer} nach diesem Revier
      * einschränkt.
      */
-    public Lazy<BooleanExpression>  waldbesitzerFilter = new CachedLazyInit( () -> {
+    public Lazy<BooleanExpression>  waldbesitzerFilter = new CachedLazyInit<>( () -> {
         Waldbesitzer wb = Expressions.template( Waldbesitzer.class, WbvRepository.repo() );
         Flurstueck fl = Expressions.template( Flurstueck.class, WbvRepository.repo() );
         

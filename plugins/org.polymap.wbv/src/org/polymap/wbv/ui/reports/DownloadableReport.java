@@ -14,8 +14,8 @@
  */
 package org.polymap.wbv.ui.reports;
 
-import java.util.Deque;
 import java.util.List;
+import java.util.function.Supplier;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,7 +72,7 @@ public abstract class DownloadableReport<R>
             public void create( Object report, OutputStream out ) throws Exception { ((JasperReportBuilder)report).toXlsx( out ); }
         },
         CSV( "text/csv", "CSV" ) {
-            public void create( Object report, OutputStream out ) throws Exception { CsvBuilder.toExcelCsv( (Deque<List<?>>)report, out ); }
+            public void create( Object report, OutputStream out ) throws Exception { CsvBuilder.toExcelCsv( (Supplier<List<?>>)report, out ); }
         };
         
         public String      mimeType;

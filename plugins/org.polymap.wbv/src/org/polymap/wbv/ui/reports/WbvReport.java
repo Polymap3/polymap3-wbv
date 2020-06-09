@@ -72,7 +72,8 @@ public abstract class WbvReport<R>
             Report106.class,
             Report106b_1.class,
             Report106c.class,
-            AddressExport.class );
+            AddressExport.class,
+            AddressExportAlle.class );
     
     public static final List<Supplier<WbvReport<?>>> factories = Lists.transform( reports, cl -> () -> {
             try {

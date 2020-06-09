@@ -14,9 +14,9 @@
  */
 package org.polymap.wbv.ui.reports;
 
-import java.util.Deque;
 import java.util.List;
-
+import java.util.ListIterator;
+import java.util.function.Supplier;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -28,20 +28,27 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
+ * 
  * @author falko
- *
  */
 public class CsvBuilder {
 
     private static final Log log = LogFactory.getLog( CsvBuilder.class );
 
     
-    public static void toExcelCsv( Deque<List<?>> lines, OutputStream out ) throws IOException {
+    public static void toExcelCsv( Supplier<List<?>> lines, OutputStream out ) throws IOException {
         // quoteChar, delimiterChar, endOfLineSymbols
         CsvPreference prefs = CsvPreference.EXCEL_NORTH_EUROPE_PREFERENCE; //  // new CsvPreference( '"', ',', "\r\n" );
-        ICsvListWriter csv = new CsvListWriter( new OutputStreamWriter( out, "UTF-8" ), prefs );
+        ICsvListWriter csv = new CsvListWriter( new OutputStreamWriter( out, "ISO-8859-1" ), prefs );
         
-        for (List<?> line : lines) {
+        for (List<?> line = lines.get(); line != null; line = lines.get()) {
+            for (@SuppressWarnings( "rawtypes" )
+            ListIterator it = line.listIterator(); it.hasNext(); ) {
+                if (it.next() == null) {
+                    it.set( "" );
+                }
+            }
+            //line = line.stream().map( elm -> ObjectUtils.defaultIfNull( elm, "" ) ).collect( Collectors.toList() );
             csv.write( line );
         }
         csv.close();

@@ -14,16 +14,20 @@
  */
 package org.polymap.wbv.ui.reports;
 
-import java.util.ArrayDeque;
 import java.util.Arrays;
-import java.util.Deque;
+import java.util.Iterator;
 import java.util.List;
+import java.util.function.Supplier;
 
 import java.io.IOException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.google.common.collect.FluentIterable;
+
+import org.polymap.wbv.model.Flurstueck;
+import org.polymap.wbv.model.Gemarkung;
 import org.polymap.wbv.model.Kontakt;
 import org.polymap.wbv.model.Waldbesitzer;
 
@@ -35,7 +39,7 @@ import net.sf.jasperreports.engine.JRException;
  * @author falko
  */
 public class AddressExport
-        extends WbvReport<Deque<List<?>>> {
+        extends WbvReport<Supplier<List<?>>> {
 
     private static final Log log = LogFactory.getLog( AddressExport.class );
 
@@ -45,22 +49,48 @@ public class AddressExport
     }
 
 
+    protected Iterator<Flurstueck> flurstuecke() {
+        return FluentIterable.from( gesuchteWaldbesitzer() )
+                .transformAndConcat( wb -> wb.flurstuecke( revier.get() ) )
+                .iterator();
+    }
+
+
     @Override
-    public Deque<List<?>> build() throws DRException, JRException, IOException {
-        Deque<List<?>> result = new ArrayDeque<>( 1024 );
-        
-        for (Waldbesitzer wb : gesuchteWaldbesitzer()) {
-            Kontakt besitzer = wb.besitzer();
-            result.push( Arrays.asList( 
-                    besitzer.anrede.get(), 
-                    besitzer.name.get(),
-                    besitzer.vorname.get(), 
-                    besitzer.strasse.get(),
-                    besitzer.plz.get(),
-                    besitzer.ort.get(),
-                    besitzer.ortsteil.get(),
-                    besitzer.land.get() ) );
-        }
-        return result;
+    public Supplier<List<?>> build() throws DRException, JRException, IOException {
+        Iterator<Flurstueck> it = flurstuecke();
+
+        return () -> {
+            if (it.hasNext()) {
+                Flurstueck flurstueck = it.next();
+                Waldbesitzer wb = flurstueck.waldbesitzer();
+                Kontakt besitzer = wb.besitzer();
+                Gemarkung gemarkung = flurstueck.gemarkung.get();
+                
+                return Arrays.asList(
+                        gemarkung != null ? gemarkung.revier.get() : "",
+                        gemarkung != null ? gemarkung.gemeinde.get() : "",
+                        gemarkung != null ? gemarkung.gemarkung.get() : "",
+                        flurstueck.flaeche.get(),
+                        flurstueck.flaecheWald.get(),
+                        
+                        besitzer.anrede.get(), 
+                        besitzer.name.get(),
+                        besitzer.vorname.get(), 
+                        besitzer.strasse.get(),
+                        besitzer.plz.get(),
+                        besitzer.ort.get(),
+                        besitzer.ortsteil.get(),
+                        besitzer.land.get(), 
+                        
+                        besitzer.email.get(),
+                        besitzer.telefon1.get(),
+                        besitzer.telefon2.get(),
+                        besitzer.fax.get() );
+            }
+            else {
+                return null;
+            }
+        };
     }
 }

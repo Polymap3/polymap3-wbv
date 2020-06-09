@@ -234,7 +234,7 @@ public class StartPanel
         for (Supplier<WbvReport<?>> factory : WbvReport.factories) {
             reports.add( factory.get().getName() );
         }
-        reports.setVisibleItemCount( 8 );
+        reports.setVisibleItemCount( 10 );
         reports.select( 0 );
         reports.addSelectionListener( new SelectionAdapter() {
             @Override
@@ -260,7 +260,7 @@ public class StartPanel
             
         // searchField
         FulltextIndex fulltext = WbvRepository.fulltextIndex();
-        EntitySearchField search = new EntitySearchField<Waldbesitzer>( body, fulltext, uow, Waldbesitzer.class ) {
+        EntitySearchField<Waldbesitzer> search = new EntitySearchField<Waldbesitzer>( body, fulltext, uow, Waldbesitzer.class ) {
             @Override
             protected void doSearch( String _queryString ) throws Exception {
                 super.doSearch( _queryString );
