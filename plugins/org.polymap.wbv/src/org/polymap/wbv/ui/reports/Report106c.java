@@ -31,6 +31,7 @@ import java.io.IOException;
 
 import org.json.JSONObject;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -133,7 +134,7 @@ public class Report106c
                         sum = 0d;
                         for (Flurstueck f : gemarkung2Flurstuecke.get( (String)gemarkungObj.id() )) {
                             if (flurstuecke2Art.get( f.hashCode() ).equals( art )) {
-                                sum += f.flaecheWald.get();
+                                sum += ObjectUtils.firstNonNull( f.flaecheWald.get(), f.flaeche.get(), Double.valueOf( 0d ) );
                             }
                         }
                         resultObj.put( art, sum );

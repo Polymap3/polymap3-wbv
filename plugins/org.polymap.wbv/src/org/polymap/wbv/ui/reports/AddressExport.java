@@ -21,6 +21,7 @@ import java.util.function.Supplier;
 
 import java.io.IOException;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -71,8 +72,9 @@ public class AddressExport
                         gemarkung != null ? gemarkung.revier.get() : "",
                         gemarkung != null ? gemarkung.gemeinde.get() : "",
                         gemarkung != null ? gemarkung.gemarkung.get() : "",
-                        flurstueck.flaeche.get(),
-                        flurstueck.flaecheWald.get(),
+                        EntityReport.nf.format( ObjectUtils.defaultIfNull( flurstueck.flaeche.get(), 0d ) ),
+                        EntityReport.nf.format( ObjectUtils.defaultIfNull( flurstueck.flaecheWald.get(), 0d ) ),
+                        flurstueck.zaehlerNenner.get(),
                         
                         besitzer.anrede.get(), 
                         besitzer.name.get(),
